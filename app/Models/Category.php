@@ -14,10 +14,12 @@ class Category extends Model
         'slug',
         'parent_id',
         'sub_title',
+        'description',      // new
         'meta_title',
         'meta_description',
         'image',
-        'size_chart_image',
+        'icon',             // new
+        'pastel_bg',        // new
         'sort_order',
 
         'is_popular',
@@ -27,6 +29,14 @@ class Category extends Model
         'is_featured',
         'show_in_navbar',
         'is_sub_category',
+    ];
+
+    protected $casts = [
+        'status'          => 'boolean',
+        'is_popular'      => 'boolean',
+        'is_featured'     => 'boolean',
+        'show_in_navbar'  => 'boolean',
+        'is_sub_category' => 'boolean',
     ];
 
     /*
@@ -41,17 +51,33 @@ class Category extends Model
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    // Children
+    // Children (ignore soft deleted)
     public function children()
     {
         return $this->hasMany(Category::class, 'parent_id')
-            ->whereNull('deleted_at'); // ✅ ignore soft deleted
+            ->whereNull('deleted_at');
     }
 
+    public function categoryAttributes()
+    {
+        return $this->hasMany(CategoryAttribute::class);
+    }
+
+    // Products directly under category
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'category_id');
+    }
+
+    // Products where this category is selected as subcategory
+    public function subCategoryProducts()
+    {
+        return $this->hasMany(Product::class, 'subcategory_id');
+    }
 
     /*
     |--------------------------------------------------------------------------
-    | SCOPES (🔥 VERY USEFUL)
+    | SCOPES
     |--------------------------------------------------------------------------
     */
 
@@ -73,9 +99,15 @@ class Category extends Model
         return $query->whereNotNull('parent_id');
     }
 
+    // Default display order
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('sort_order')->orderBy('name');
+    }
+
     /*
     |--------------------------------------------------------------------------
-    | ACCESSORS (CLEAN UI)
+    | ACCESSORS
     |--------------------------------------------------------------------------
     */
 
@@ -87,23 +119,5 @@ class Category extends Model
     public function getIsChildAttribute()
     {
         return !is_null($this->parent_id);
-    }
-
-
-    public function categoryAttributes()
-    {
-        return $this->hasMany(CategoryAttribute::class);
-    }
-
-    // Products directly under category
-    public function products()
-    {
-        return $this->hasMany(Product::class, 'category_id');
-    }
-
-    // Products where this category is selected as subcategory
-    public function subCategoryProducts()
-    {
-        return $this->hasMany(Product::class, 'subcategory_id');
     }
 }

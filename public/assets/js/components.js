@@ -48,13 +48,7 @@ export const Components = {
       </button>
     `;
 
-    const viewCartBtn = toast.querySelector('.toast-view-cart');
-    if (viewCartBtn) {
-      viewCartBtn.onclick = () => {
-        Components.openCartDrawer(prefix);
-        toast.remove();
-      };
-    }
+
 
     container.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
@@ -161,7 +155,7 @@ export const Components = {
             </div>
 
             <div class="flex items-center justify-between pt-3 border-t border-brand-border text-xs font-heading">
-              <a href="${prefix}pages/product.html?slug=${product.slug}" class="text-brand-blue hover:text-brand-orange font-bold flex items-center gap-1.5 transition">
+              <a href="${prefix}product?slug=${product.slug}" class="text-brand-blue hover:text-brand-orange font-bold flex items-center gap-1.5 transition">
                 <span>View Full Details & Specs</span>
                 <i class="fa-solid fa-arrow-right text-[10px]"></i>
               </a>
@@ -226,184 +220,6 @@ export const Components = {
     };
   },
 
-  // Open Cart Drawer ("YOUR PLAY BAG")
-  openCartDrawer(prefix = '') {
-    let drawer = document.getElementById('cart-drawer');
-    if (!drawer) {
-      drawer = document.createElement('div');
-      drawer.id = 'cart-drawer';
-      document.body.appendChild(drawer);
-    }
-
-    const cart = State.getCart();
-    const count = State.getCartCount();
-    const calc = State.getCartCalculations();
-
-    drawer.innerHTML = `
-      <div id="cart-drawer-backdrop" class="drawer-backdrop fixed inset-0 z-50 bg-black/60 backdrop-blur-xs transition-opacity"></div>
-      <div class="cart-drawer-panel fixed top-0 right-0 bottom-0 w-full max-w-md bg-white z-50 shadow-2xl flex flex-col justify-between">
-        
-        <!-- Drawer Header -->
-        <div class="p-4 border-b border-brand-border flex items-center justify-between bg-warm-cream">
-          <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-soft-orange text-brand-orange flex items-center justify-center text-base">
-              <i class="fa-solid fa-bag-shopping"></i>
-            </div>
-            <div>
-              <h3 class="font-heading font-bold text-dark-navy text-lg leading-tight">YOUR PLAY BAG</h3>
-              <p class="text-[11px] text-brand-muted font-sans">${count} ${count === 1 ? 'item' : 'items'} ready for fun</p>
-            </div>
-          </div>
-          <button id="close-cart-drawer" class="w-8 h-8 rounded-full hover:bg-gray-100 text-dark-navy flex items-center justify-center transition cursor-pointer">
-            <i class="fa-solid fa-xmark text-lg"></i>
-          </button>
-        </div>
-
-        <!-- Free Shipping Progress Bar -->
-        <div class="bg-soft-blue px-4 py-3 border-b border-blue-100">
-          ${calc.amountForFreeShipping > 0 ? `
-            <div class="text-xs text-brand-blue font-semibold mb-1.5 flex justify-between font-heading">
-              <span>Add <strong>₹${calc.amountForFreeShipping}</strong> more for <strong>FREE Delivery</strong></span>
-              <span>${calc.freeShippingPercent}%</span>
-            </div>
-            <div class="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
-              <div class="bg-brand-orange h-2 rounded-full transition-all duration-500" style="width: ${calc.freeShippingPercent}%"></div>
-            </div>
-          ` : `
-            <div class="text-xs text-emerald-700 font-bold flex items-center gap-1.5 font-heading">
-              <i class="fa-solid fa-circle-check text-emerald-500 text-sm"></i>
-              <span>🎉 YAY! You unlocked <strong>FREE Standard Delivery</strong></span>
-            </div>
-          `}
-        </div>
-
-        <!-- Drawer Items List -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-3.5">
-          ${cart.length === 0 ? `
-            <div class="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-              <div class="w-20 h-20 rounded-3xl bg-soft-orange flex items-center justify-center text-brand-orange text-3xl shadow-inner">
-                <i class="fa-solid fa-bag-shopping"></i>
-              </div>
-              <div>
-                <h4 class="font-heading font-bold text-dark-navy text-lg">Your play bag is empty</h4>
-                <p class="text-xs text-body-text mt-1 max-w-xs font-sans">Looks like your play bag is empty. Let's find something fun!</p>
-              </div>
-              <a href="${prefix}pages/shop.html" class="inline-block btn-play-orange text-xs px-6 py-3 rounded-xl transition">
-                START SHOPPING →
-              </a>
-            </div>
-          ` : `
-            ${cart.map(item => `
-              <div class="flex gap-3 pb-3 border-b border-brand-border items-center">
-                <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-contain rounded-xl bg-soft-blue p-1.5 border border-brand-border shrink-0">
-                <div class="flex-1 min-w-0">
-                  <h4 class="text-xs font-bold font-heading text-dark-navy line-clamp-1 hover:text-brand-orange transition">
-                    <a href="${prefix}pages/product.html?slug=${item.slug}">${item.name}</a>
-                  </h4>
-                  <div class="text-xs font-extrabold font-heading text-brand-navy mt-0.5">₹${item.price.toLocaleString()}</div>
-                  <div class="flex items-center justify-between mt-1.5">
-                    <div class="flex items-center border border-brand-border rounded-lg bg-white shadow-2xs">
-                      <button class="drawer-qty-minus px-2 py-0.5 text-xs text-brand-navy hover:text-brand-orange font-bold" data-id="${item.id}">-</button>
-                      <span class="px-2 text-xs font-bold text-dark-navy font-heading">${item.quantity}</span>
-                      <button class="drawer-qty-plus px-2 py-0.5 text-xs text-brand-navy hover:text-brand-orange font-bold" data-id="${item.id}">+</button>
-                    </div>
-                    <button class="drawer-remove-item text-xs text-red-400 hover:text-red-600 transition p-1 cursor-pointer" data-id="${item.id}" title="Remove">
-                      <i class="fa-regular fa-trash-can"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            `).join('')}
-          `}
-        </div>
-
-        <!-- Drawer Footer Summary -->
-        ${cart.length > 0 ? `
-          <div class="p-4 border-t border-brand-border bg-warm-cream space-y-3">
-            <div class="space-y-1.5 text-xs font-sans">
-              <div class="flex justify-between text-brand-muted">
-                <span>Subtotal:</span>
-                <span class="font-bold text-dark-navy font-heading">₹${calc.subtotal.toLocaleString()}</span>
-              </div>
-              ${calc.discount > 0 ? `
-                <div class="flex justify-between text-emerald-600 font-semibold font-heading">
-                  <span>Coupon Discount (${calc.coupon}):</span>
-                  <span>-₹${calc.discount.toLocaleString()}</span>
-                </div>
-              ` : ''}
-              <div class="flex justify-between text-brand-muted">
-                <span>Estimated Shipping:</span>
-                <span>${calc.shipping === 0 ? '<strong class="text-emerald-600 font-heading">FREE</strong>' : `₹${calc.shipping}`}</span>
-              </div>
-              <div class="flex justify-between text-sm font-bold text-dark-navy pt-2 border-t border-brand-border font-heading">
-                <span>Total Amount:</span>
-                <span class="text-brand-navy">₹${calc.total.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div class="space-y-2 pt-1 font-heading">
-              <a href="${prefix}pages/checkout.html" class="w-full btn-play-orange py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs sm:text-sm text-center">
-                <span>CHECKOUT NOW</span>
-                <i class="fa-solid fa-arrow-right text-xs"></i>
-              </a>
-              <a href="${prefix}pages/cart.html" class="w-full bg-white hover:bg-soft-blue text-brand-blue border border-brand-blue/30 font-bold py-2.5 px-4 rounded-xl transition text-xs text-center block">
-                GO TO CART →
-              </a>
-            </div>
-          </div>
-        ` : ''}
-      </div>
-    `;
-
-    // Activate
-    setTimeout(() => {
-      drawer.querySelector('.drawer-backdrop')?.classList.add('active');
-      drawer.querySelector('.cart-drawer-panel')?.classList.add('active');
-    }, 10);
-
-    // Event Binders
-    const closeDrawer = () => {
-      const backdrop = drawer.querySelector('.drawer-backdrop');
-      const panel = drawer.querySelector('.cart-drawer-panel');
-      if (backdrop) backdrop.classList.remove('active');
-      if (panel) panel.classList.remove('active');
-      setTimeout(() => drawer.remove(), 350);
-    };
-
-    drawer.querySelector('#close-cart-drawer')?.addEventListener('click', closeDrawer);
-    drawer.querySelector('#cart-drawer-backdrop')?.addEventListener('click', closeDrawer);
-
-    drawer.querySelectorAll('.drawer-qty-minus').forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.getAttribute('data-id');
-        const item = cart.find(i => i.id === Number(id));
-        if (item) {
-          State.updateCartQty(id, item.quantity - 1);
-          Components.openCartDrawer(prefix);
-        }
-      };
-    });
-
-    drawer.querySelectorAll('.drawer-qty-plus').forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.getAttribute('data-id');
-        const item = cart.find(i => i.id === Number(id));
-        if (item) {
-          State.updateCartQty(id, item.quantity + 1);
-          Components.openCartDrawer(prefix);
-        }
-      };
-    });
-
-    drawer.querySelectorAll('.drawer-remove-item').forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.getAttribute('data-id');
-        State.removeFromCart(id);
-        Components.showToast('Item removed from your play bag', 'info');
-        Components.openCartDrawer(prefix);
-      };
-    });
-  },
 
   // Render Product Card
   renderProductCard(product, prefix = '') {
@@ -440,7 +256,7 @@ export const Components = {
             </div>
 
             <!-- Product Image (Edge to edge with zero left/right padding) -->
-            <a href="${prefix}pages/product.html?slug=${product.slug}" class="w-full h-full flex items-center justify-center p-0 overflow-hidden">
+            <a href="${prefix}product?slug=${product.slug}" class="w-full h-full flex items-center justify-center p-0 overflow-hidden">
               <img src="${product.images[0]}" alt="${product.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
             </a>
 
@@ -461,7 +277,7 @@ export const Components = {
             </div>
 
             <h3 class="product-title font-heading font-bold text-dark-navy text-xs sm:text-sm line-clamp-2 mb-1.5 hover:text-brand-orange transition min-h-[2rem] sm:min-h-[2.5rem] leading-snug">
-              <a href="${prefix}pages/product.html?slug=${product.slug}">${product.name}</a>
+              <a href="${prefix}product?slug=${product.slug}">${product.name}</a>
             </h3>
 
             <div class="flex items-center gap-1.5 mb-2 sm:mb-2.5">
@@ -495,7 +311,7 @@ export const Components = {
     const bgClass = cat.pastelBg || 'bg-soft-orange';
     const cleanTagline = (cat.tagline || 'EXPLORE').replace('→', '').trim();
     return `
-      <a href="${prefix}pages/shop.html?category=${cat.slug}" class="category-card group ${bgClass} border border-brand-border/80 hover:border-brand-orange/40 p-2 sm:p-2.5 xl:p-3 rounded-2xl xl:rounded-3xl flex flex-col items-center justify-between text-center shadow-2xs hover:shadow-md transition-all duration-300">
+      <a href="${prefix}shop?category=${cat.slug}" class="category-card group ${bgClass} border border-brand-border/80 hover:border-brand-orange/40 p-2 sm:p-2.5 xl:p-3 rounded-2xl xl:rounded-3xl flex flex-col items-center justify-between text-center shadow-2xs hover:shadow-md transition-all duration-300">
         <div class="w-full aspect-square bg-white rounded-xl sm:rounded-2xl overflow-hidden mb-2 relative flex items-center justify-center p-1 sm:p-1.5 shadow-2xs border border-white/70">
           <img src="${cat.image}" alt="${cat.name}" class="w-full h-full object-cover rounded-lg sm:rounded-xl group-hover:scale-108 transition-transform duration-500 ease-out" loading="lazy">
           <span class="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-brand-orange text-white flex items-center justify-center shadow-md text-[10px] sm:text-xs group-hover:scale-110 group-hover:bg-brand-navy border-2 border-white transition duration-200">
@@ -531,7 +347,7 @@ export const Components = {
               <span><i class="fa-regular fa-clock mr-1 text-brand-blue"></i>${blog.readTime}</span>
             </div>
             <h3 class="font-heading font-bold text-dark-navy text-base md:text-lg mb-2 group-hover:text-brand-orange transition line-clamp-2">
-              <a href="${prefix}pages/blog-detail.html?slug=${blog.slug}">${blog.title}</a>
+              <a href="${prefix}blog-detail?slug=${blog.slug}">${blog.title}</a>
             </h3>
             <p class="text-xs md:text-sm text-body-text line-clamp-3 leading-relaxed mb-4 font-sans">
               ${blog.excerpt}
@@ -539,7 +355,7 @@ export const Components = {
           </div>
         </div>
         <div class="px-5 pb-5">
-          <a href="${prefix}pages/blog-detail.html?slug=${blog.slug}" class="text-brand-blue hover:text-brand-orange text-xs md:text-sm font-bold font-heading flex items-center gap-1.5 transition">
+          <a href="${prefix}blog-detail?slug=${blog.slug}" class="text-brand-blue hover:text-brand-orange text-xs md:text-sm font-bold font-heading flex items-center gap-1.5 transition">
             <span>Read Full Article</span>
             <i class="fa-solid fa-arrow-right text-xs"></i>
           </a>
@@ -565,7 +381,7 @@ export const Components = {
           </div>
           <!-- Right-aligned Help Contact (Desktop & Tablet) -->
           <div class="hidden sm:flex items-center gap-2 text-white/90 shrink-0 absolute right-0 top-1/2 -translate-y-1/2">
-            <a href="${prefix}pages/contact.html" class="hover:text-play-yellow transition flex items-center gap-1 text-[10px] sm:text-xs font-semibold">
+            <a href="${prefix}contact" class="hover:text-play-yellow transition flex items-center gap-1 text-[10px] sm:text-xs font-semibold">
               <i class="fa-solid fa-headset text-play-yellow text-[10px] sm:text-xs"></i>
               <span>Need Help? Contact Us</span>
             </a>
@@ -584,14 +400,14 @@ export const Components = {
                 <i class="fa-solid fa-bars text-xl"></i>
               </button>
 
-              <a href="${prefix}index.html" class="flex items-center gap-2 shrink-0">
+              <a href="${prefix}index" class="flex items-center gap-2 shrink-0">
                 <img src="${prefix}assets/logo.png" alt="Aparatus Pastime - Kids Toys & Sports" class="h-9 sm:h-11 md:h-12 w-auto object-contain">
               </a>
             </div>
 
             <!-- SEARCH BAR (CENTER) -->
             <div class="hidden md:flex flex-1 max-w-xl relative">
-              <form action="${prefix}pages/search.html" method="GET" class="w-full relative">
+              <form action="${prefix}search" method="GET" class="w-full relative">
                 <input 
                   type="text" 
                   name="q" 
@@ -612,7 +428,7 @@ export const Components = {
                   <span class="text-[11px] font-bold uppercase tracking-wider text-brand-muted">POPULAR SEARCHES</span>
                   <div class="flex flex-wrap gap-1.5 mt-2 font-sans">
                     ${['Building Blocks', 'Board Games', 'Football', 'STEM Toys', 'Outdoor Games', 'Birthday Gifts'].map(term => `
-                      <a href="${prefix}pages/search.html?q=${encodeURIComponent(term)}" class="text-xs bg-soft-blue hover:bg-soft-orange text-dark-navy hover:text-brand-orange px-3 py-1 rounded-full transition font-semibold">
+                      <a href="${prefix}search?q=${encodeURIComponent(term)}" class="text-xs bg-soft-blue hover:bg-soft-orange text-dark-navy hover:text-brand-orange px-3 py-1 rounded-full transition font-semibold">
                         <i class="fa-solid fa-sparkles text-[10px] text-play-yellow mr-1"></i>${term}
                       </a>
                     `).join('')}
@@ -630,7 +446,7 @@ export const Components = {
             <div class="flex items-center gap-1 sm:gap-2.5">
               
               <!-- Wishlist -->
-              <a href="${prefix}account/wishlist.html" class="relative p-2 text-dark-navy hover:text-brand-orange rounded-xl transition" title="Wishlist">
+              <a href="${prefix}account/wishlist" class="relative p-2 text-dark-navy hover:text-brand-orange rounded-xl transition" title="Wishlist">
                 <i class="fa-regular fa-heart text-lg sm:text-xl"></i>
                 <span id="header-wishlist-count" class="${wishlistCount > 0 ? '' : 'hidden'} absolute top-0.5 right-0.5 bg-brand-orange text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center font-heading">
                   ${wishlistCount}
@@ -647,7 +463,7 @@ export const Components = {
 
               <!-- Account Dropdown -->
               <div class="relative group">
-                <a href="${prefix}account/dashboard.html" class="flex items-center gap-1.5 p-2 text-dark-navy hover:text-brand-orange rounded-xl transition">
+                <a href="${prefix}account/dashboard" class="flex items-center gap-1.5 p-2 text-dark-navy hover:text-brand-orange rounded-xl transition">
                   <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-soft-blue text-brand-blue flex items-center justify-center text-sm">
                     <i class="fa-solid fa-user"></i>
                   </div>
@@ -661,25 +477,25 @@ export const Components = {
                     <p class="text-xs text-brand-muted font-sans">Welcome to Playroom,</p>
                     <p class="text-sm font-bold text-dark-navy truncate">${user.isLoggedIn ? `${user.firstName} ${user.lastName}` : 'Guest Explorer'}</p>
                   </div>
-                  <a href="${prefix}account/dashboard.html" class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
+                  <a href="${prefix}account/dashboard" class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
                     <i class="fa-solid fa-gauge mr-2 text-brand-blue"></i>My Playroom
                   </a>
-                  <a href="${prefix}account/orders.html" class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
+                  <a href="${prefix}account/orders" class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
                     <i class="fa-solid fa-box mr-2 text-brand-blue"></i>My Orders
                   </a>
-                  <a href="${prefix}account/wishlist.html" class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
+                  <a href="${prefix}account/wishlist" class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
                     <i class="fa-solid fa-heart mr-2 text-brand-orange"></i>My Wishlist
                   </a>
-                  <a href="${prefix}account/addresses.html" class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
+                  <a href="${prefix}account/addresses" class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
                     <i class="fa-solid fa-location-dot mr-2 text-brand-blue"></i>Addresses
                   </a>
                   <div class="border-t border-brand-border mt-1 pt-1">
                     ${user.isLoggedIn ? `
-                      <a href="${prefix}pages/login.html" id="header-logout-btn" class="block px-4 py-2 text-xs text-red-500 hover:bg-red-50 transition">
+                      <a href="${prefix}login" id="header-logout-btn" class="block px-4 py-2 text-xs text-red-500 hover:bg-red-50 transition">
                         <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i>Sign Out
                       </a>
                     ` : `
-                      <a href="${prefix}pages/login.html" class="block px-4 py-2 text-xs text-brand-blue font-bold hover:bg-soft-blue transition">
+                      <a href="${prefix}login" class="block px-4 py-2 text-xs text-brand-blue font-bold hover:bg-soft-blue transition">
                         <i class="fa-solid fa-lock mr-2"></i>Sign In / Join Club
                       </a>
                     `}
@@ -693,7 +509,7 @@ export const Components = {
 
           <!-- MOBILE SEARCH BAR (BELOW MAIN ROW) -->
           <div class="mt-2 md:hidden">
-            <form action="${prefix}pages/search.html" method="GET" class="relative">
+            <form action="${prefix}search" method="GET" class="relative">
               <input 
                 type="text" 
                 name="q" 
@@ -710,17 +526,17 @@ export const Components = {
           <div class="max-w-[1440px] mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 flex items-center justify-center min-h-[46px] xl:min-h-[50px] relative">
             <div class="flex items-center justify-center gap-1 lg:gap-1.5 xl:gap-2.5 py-1 mx-auto">
               
-              <a href="${prefix}index.html" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'home' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
+              <a href="${prefix}index" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'home' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
                 <i class="fa-solid fa-house-chimney text-[11px] xl:text-xs ${activeNav === 'home' ? 'text-brand-orange' : 'text-slate-400'}"></i>
                 <span>Home</span>
               </a>
 
-              <a href="${prefix}pages/shop.html" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'shop' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
+              <a href="${prefix}shop" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'shop' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
                 <i class="fa-solid fa-bag-shopping text-[11px] xl:text-xs ${activeNav === 'shop' ? 'text-brand-orange' : 'text-slate-400'}"></i>
                 <span>Shop</span>
               </a>
 
-              <a href="${prefix}pages/categories.html" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'categories' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
+              <a href="${prefix}categories" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'categories' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
                 <i class="fa-solid fa-shapes text-[11px] xl:text-xs ${activeNav === 'categories' ? 'text-brand-orange' : 'text-slate-400'}"></i>
                 <span>Categories</span>
               </a>
@@ -761,7 +577,7 @@ export const Components = {
                           </div>
                           <ul class="space-y-0.5 xl:space-y-1 text-xs font-semibold font-sans">
                             <li>
-                              <a href="${prefix}pages/shop.html?category=toys" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=toys" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-orange-100 text-brand-orange flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-cubes"></i>
@@ -775,7 +591,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=games" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=games" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-dice-d20"></i>
@@ -789,7 +605,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=sports" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=sports" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-blue-100 text-brand-blue flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-futbol"></i>
@@ -803,7 +619,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=outdoor" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=outdoor" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-compass"></i>
@@ -817,7 +633,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=educational" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=educational" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-atom"></i>
@@ -831,7 +647,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=activity" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=activity" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-palette"></i>
@@ -845,7 +661,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=gifts" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=gifts" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-gift"></i>
@@ -861,7 +677,7 @@ export const Components = {
                           </ul>
                         </div>
                         <div class="pt-2 border-t border-orange-200 mt-1.5 xl:mt-2">
-                          <a href="${prefix}pages/categories.html" class="inline-flex items-center gap-1.5 text-brand-orange hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
+                          <a href="${prefix}categories" class="inline-flex items-center gap-1.5 text-brand-orange hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
                             <span>View All Categories</span>
                             <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
                           </a>
@@ -884,7 +700,7 @@ export const Components = {
                           </div>
                           <ul class="space-y-0.5 xl:space-y-1.5 text-xs font-semibold font-sans">
                             <li>
-                              <a href="${prefix}pages/shop.html?age=0-2" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?age=0-2" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-orange-500 text-white font-heading font-bold text-[9px] xl:text-[10px] flex items-center justify-center shadow-2xs group-hover/link:scale-105 transition shrink-0">
                                     0–2
@@ -901,7 +717,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?age=3-5" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?age=3-5" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-amber-500 text-white font-heading font-bold text-[9px] xl:text-[10px] flex items-center justify-center shadow-2xs group-hover/link:scale-105 transition shrink-0">
                                     3–5
@@ -918,7 +734,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?age=6-8" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?age=6-8" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-brand-blue text-white font-heading font-bold text-[9px] xl:text-[10px] flex items-center justify-center shadow-2xs group-hover/link:scale-105 transition shrink-0">
                                     6–8
@@ -935,7 +751,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?age=9-12" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?age=9-12" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-emerald-600 text-white font-heading font-bold text-[9px] xl:text-[10px] flex items-center justify-center shadow-2xs group-hover/link:scale-105 transition shrink-0">
                                     9–12
@@ -952,7 +768,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?age=12+" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?age=12+" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-purple-600 text-white font-heading font-bold text-[9px] xl:text-[10px] flex items-center justify-center shadow-2xs group-hover/link:scale-105 transition shrink-0">
                                     12+
@@ -971,7 +787,7 @@ export const Components = {
                           </ul>
                         </div>
                         <div class="pt-2 border-t border-blue-200 mt-1.5 xl:mt-2">
-                          <a href="${prefix}pages/shop.html" class="inline-flex items-center gap-1.5 text-brand-blue hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
+                          <a href="${prefix}shop" class="inline-flex items-center gap-1.5 text-brand-blue hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
                             <span>Find by Milestone Guide</span>
                             <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
                           </a>
@@ -994,7 +810,7 @@ export const Components = {
                           </div>
                           <ul class="space-y-0.5 xl:space-y-1 text-xs font-semibold font-sans">
                             <li>
-                              <a href="${prefix}pages/shop.html?category=toys" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=toys" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-orange-100 text-brand-orange flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-cubes"></i>
@@ -1008,7 +824,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=sports" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=sports" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-blue-100 text-brand-blue flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-person-running"></i>
@@ -1022,7 +838,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=games" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=games" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-brain"></i>
@@ -1036,7 +852,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=activity" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=activity" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-palette"></i>
@@ -1050,7 +866,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=educational" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=educational" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-flask"></i>
@@ -1064,7 +880,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=outdoor" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=outdoor" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-trophy"></i>
@@ -1080,7 +896,7 @@ export const Components = {
                           </ul>
                         </div>
                         <div class="pt-2 border-t border-amber-200 mt-1.5 xl:mt-2">
-                          <a href="${prefix}pages/shop.html" class="inline-flex items-center gap-1.5 text-amber-600 hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
+                          <a href="${prefix}shop" class="inline-flex items-center gap-1.5 text-amber-600 hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
                             <span>Explore All Themes</span>
                             <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
                           </a>
@@ -1103,7 +919,7 @@ export const Components = {
                           </div>
                           <ul class="space-y-0.5 xl:space-y-1 text-xs font-semibold font-sans">
                             <li>
-                              <a href="${prefix}pages/new-arrivals.html" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}new-arrivals" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-orange-100 text-brand-orange flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-sparkles"></i>
@@ -1117,7 +933,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?filter=bestseller" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?filter=bestseller" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-red-100 text-red-500 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-fire"></i>
@@ -1131,7 +947,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?maxPrice=499" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?maxPrice=499" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-coins"></i>
@@ -1145,7 +961,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?maxPrice=999" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?maxPrice=999" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-blue-100 text-brand-blue flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-tags"></i>
@@ -1159,7 +975,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?category=gifts" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?category=gifts" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-gift"></i>
@@ -1173,7 +989,7 @@ export const Components = {
                               </a>
                             </li>
                             <li>
-                              <a href="${prefix}pages/shop.html?filter=trending" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                              <a href="${prefix}shop?filter=trending" class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
                                 <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
                                   <div class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
                                     <i class="fa-solid fa-chart-line"></i>
@@ -1189,7 +1005,7 @@ export const Components = {
                           </ul>
                         </div>
                         <div class="pt-2 border-t border-rose-200 mt-1.5 xl:mt-2">
-                          <a href="${prefix}pages/shop.html" class="inline-flex items-center gap-1.5 text-rose-600 hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
+                          <a href="${prefix}shop" class="inline-flex items-center gap-1.5 text-rose-600 hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
                             <span>Browse All Curations</span>
                             <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
                           </a>
@@ -1224,7 +1040,7 @@ export const Components = {
                               <span class="text-[10px] xl:text-xs text-brand-muted line-through font-normal">₹2,899</span>
                               <span class="text-[8px] xl:text-[9px] font-bold text-white bg-brand-orange px-1.5 py-0.2 rounded-full">24% OFF</span>
                             </div>
-                            <a href="${prefix}pages/product.html?slug=magnetic-learning-set" class="w-full btn-play-orange text-[10px] xl:text-xs py-1.5 xl:py-2 px-2 rounded-lg xl:rounded-xl text-center block transition font-heading font-bold text-white shadow-md hover:shadow-lg truncate">
+                            <a href="${prefix}product?slug=magnetic-learning-set" class="w-full btn-play-orange text-[10px] xl:text-xs py-1.5 xl:py-2 px-2 rounded-lg xl:rounded-xl text-center block transition font-heading font-bold text-white shadow-md hover:shadow-lg truncate">
                               PLAY SOMETHING NEW →
                             </a>
                           </div>
@@ -1267,7 +1083,7 @@ export const Components = {
                           <span>Free Gift Wrap</span>
                         </span>
                       </div>
-                      <a href="${prefix}pages/shop.html" class="text-brand-orange hover:text-dark-navy font-bold flex items-center gap-1 transition shrink-0 ml-auto">
+                      <a href="${prefix}shop" class="text-brand-orange hover:text-dark-navy font-bold flex items-center gap-1 transition shrink-0 ml-auto">
                         <span>Browse Entire Catalog (500+ Toys)</span>
                         <i class="fa-solid fa-arrow-right text-[9px]"></i>
                       </a>
@@ -1277,24 +1093,24 @@ export const Components = {
                 </div>
               </div>
 
-              <a href="${prefix}pages/new-arrivals.html" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'new-arrivals' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
+              <a href="${prefix}new-arrivals" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'new-arrivals' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
                 <i class="fa-solid fa-wand-magic-sparkles text-[11px] xl:text-xs text-emerald-500"></i>
                 <span>New Arrivals</span>
                 <span class="bg-emerald-100 text-emerald-700 text-[8px] xl:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full hidden xl:inline-block leading-none">NEW</span>
               </a>
 
-              <a href="${prefix}pages/shop.html?filter=bestseller" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'bestsellers' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
+              <a href="${prefix}shop?filter=bestseller" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'bestsellers' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
                 <i class="fa-solid fa-fire text-[11px] xl:text-xs text-amber-500"></i>
                 <span>Best Sellers</span>
                 <span class="bg-amber-100 text-amber-800 text-[8px] xl:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full hidden xl:inline-block leading-none">HOT</span>
               </a>
 
-              <a href="${prefix}pages/shop.html" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'age' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
+              <a href="${prefix}shop" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'age' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
                 <i class="fa-solid fa-child-reaching text-[11px] xl:text-xs text-purple-500"></i>
                 <span>Shop By Age</span>
               </a>
 
-              <a href="${prefix}pages/contact.html" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'contact' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
+              <a href="${prefix}contact" class="px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 ${activeNav === 'contact' ? 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold' : 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs'}">
                 <i class="fa-solid fa-headset text-[11px] xl:text-xs text-brand-blue"></i>
                 <span>Contact</span>
               </a>
@@ -1322,7 +1138,7 @@ export const Components = {
           <!-- Drawer Top Brand Bar -->
           <div class="p-3.5 sm:p-4 bg-gradient-to-b from-[#FFF9F5] to-white border-b border-brand-border/80 flex items-center justify-between shrink-0">
             <div class="flex items-center gap-2.5">
-              <a href="${prefix}index.html" class="flex items-center gap-2">
+              <a href="${prefix}index" class="flex items-center gap-2">
                 <img src="${prefix}assets/logo.png" alt="Aparatus" class="h-8 sm:h-9 w-auto object-contain">
               </a>
               <span class="text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-soft-orange text-brand-orange border border-orange-200 shadow-2xs font-heading">
@@ -1349,14 +1165,14 @@ export const Components = {
                 </p>
               </div>
             </div>
-            <a href="${user.isLoggedIn ? `${prefix}account/dashboard.html` : `${prefix}pages/login.html`}" class="text-[10px] font-bold font-heading text-brand-blue hover:text-white hover:bg-brand-blue bg-white px-2.5 py-1 rounded-lg border border-blue-200/80 shrink-0 shadow-2xs transition">
+            <a href="${user.isLoggedIn ? `${prefix}account/dashboard` : `${prefix}login`}" class="text-[10px] font-bold font-heading text-brand-blue hover:text-white hover:bg-brand-blue bg-white px-2.5 py-1 rounded-lg border border-blue-200/80 shrink-0 shadow-2xs transition">
               ${user.isLoggedIn ? 'Dashboard' : 'Sign In'}
             </a>
           </div>
 
           <!-- Drawer Search Bar Quick Access -->
           <div class="px-3.5 sm:px-4 pt-3 shrink-0">
-            <form action="${prefix}pages/search.html" method="GET" class="relative">
+            <form action="${prefix}search" method="GET" class="relative">
               <input 
                 type="text" 
                 name="q" 
@@ -1372,7 +1188,7 @@ export const Components = {
             
             <!-- Quick Core Navigation Grid -->
             <div class="grid grid-cols-2 gap-2">
-              <a href="${prefix}index.html" class="flex items-center gap-2 p-2 rounded-xl bg-orange-50/80 border border-orange-200/80 hover:bg-orange-100/80 text-dark-navy hover:text-brand-orange transition shadow-2xs group">
+              <a href="${prefix}index" class="flex items-center gap-2 p-2 rounded-xl bg-orange-50/80 border border-orange-200/80 hover:bg-orange-100/80 text-dark-navy hover:text-brand-orange transition shadow-2xs group">
                 <div class="w-7 h-7 rounded-lg bg-brand-orange text-white flex items-center justify-center text-xs shadow-2xs shrink-0 group-hover:scale-105 transition">
                   <i class="fa-solid fa-house-chimney"></i>
                 </div>
@@ -1381,7 +1197,7 @@ export const Components = {
                   <div class="text-[9px] text-brand-muted font-sans truncate">Playroom Hub</div>
                 </div>
               </a>
-              <a href="${prefix}pages/shop.html" class="flex items-center gap-2 p-2 rounded-xl bg-blue-50/80 border border-blue-200/80 hover:bg-blue-100/80 text-dark-navy hover:text-brand-blue transition shadow-2xs group">
+              <a href="${prefix}shop" class="flex items-center gap-2 p-2 rounded-xl bg-blue-50/80 border border-blue-200/80 hover:bg-blue-100/80 text-dark-navy hover:text-brand-blue transition shadow-2xs group">
                 <div class="w-7 h-7 rounded-lg bg-brand-blue text-white flex items-center justify-center text-xs shadow-2xs shrink-0 group-hover:scale-105 transition">
                   <i class="fa-solid fa-bag-shopping"></i>
                 </div>
@@ -1390,7 +1206,7 @@ export const Components = {
                   <div class="text-[9px] text-brand-muted font-sans truncate">All Products</div>
                 </div>
               </a>
-              <a href="${prefix}pages/new-arrivals.html" class="flex items-center gap-2 p-2 rounded-xl bg-emerald-50/80 border border-emerald-200/80 hover:bg-emerald-100/80 text-dark-navy hover:text-emerald-700 transition shadow-2xs group">
+              <a href="${prefix}new-arrivals" class="flex items-center gap-2 p-2 rounded-xl bg-emerald-50/80 border border-emerald-200/80 hover:bg-emerald-100/80 text-dark-navy hover:text-emerald-700 transition shadow-2xs group">
                 <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-2xs shrink-0 group-hover:scale-105 transition">
                   <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </div>
@@ -1402,7 +1218,7 @@ export const Components = {
                   <div class="text-[9px] text-brand-muted font-sans truncate">Fresh Drops</div>
                 </div>
               </a>
-              <a href="${prefix}pages/shop.html?filter=bestseller" class="flex items-center gap-2 p-2 rounded-xl bg-amber-50/80 border border-amber-200/80 hover:bg-amber-100/80 text-dark-navy hover:text-amber-700 transition shadow-2xs group">
+              <a href="${prefix}shop?filter=bestseller" class="flex items-center gap-2 p-2 rounded-xl bg-amber-50/80 border border-amber-200/80 hover:bg-amber-100/80 text-dark-navy hover:text-amber-700 transition shadow-2xs group">
                 <div class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shadow-2xs shrink-0 group-hover:scale-105 transition">
                   <i class="fa-solid fa-fire"></i>
                 </div>
@@ -1447,7 +1263,7 @@ export const Components = {
               
               <div class="mobile-drawer-accordion-content space-y-1 pt-2.5 mt-2 border-t border-orange-200/70 text-xs font-semibold font-sans">
                 ${categories.map(c => `
-                  <a href="${prefix}pages/shop.html?category=${c.slug}" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-brand-orange group/item">
+                  <a href="${prefix}shop?category=${c.slug}" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-brand-orange group/item">
                     <div class="flex items-center gap-2 min-w-0">
                       <div class="w-6 h-6 rounded-lg bg-orange-100 text-brand-orange flex items-center justify-center text-[10px] group-hover/item:scale-110 transition shrink-0">
                         <i class="fa-solid ${c.icon}"></i>
@@ -1460,7 +1276,7 @@ export const Components = {
                   </a>
                 `).join('')}
                 <div class="pt-1.5 border-t border-orange-100">
-                  <a href="${prefix}pages/categories.html" class="flex items-center justify-center gap-1.5 text-[11px] font-bold font-heading text-brand-orange hover:text-dark-navy py-1 transition">
+                  <a href="${prefix}categories" class="flex items-center justify-center gap-1.5 text-[11px] font-bold font-heading text-brand-orange hover:text-dark-navy py-1 transition">
                     <span>View All Categories</span>
                     <i class="fa-solid fa-arrow-right text-[9px]"></i>
                   </a>
@@ -1487,7 +1303,7 @@ export const Components = {
               </button>
 
               <div class="mobile-drawer-accordion-content hidden space-y-1 pt-2.5 mt-2 border-t border-blue-200/70 text-xs font-semibold font-sans">
-                <a href="${prefix}pages/shop.html?age=0-2" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-brand-orange group/item">
+                <a href="${prefix}shop?age=0-2" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-brand-orange group/item">
                   <div class="flex items-center gap-2 min-w-0">
                     <div class="w-6 h-6 rounded-lg bg-orange-500 text-white font-heading font-bold text-[9px] flex items-center justify-center shadow-2xs shrink-0">0–2</div>
                     <div class="min-w-0">
@@ -1498,7 +1314,7 @@ export const Components = {
                   <i class="fa-solid fa-chevron-right text-[8px] text-slate-400 group-hover/item:text-brand-orange transition shrink-0"></i>
                 </a>
 
-                <a href="${prefix}pages/shop.html?age=3-5" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-amber-600 group/item">
+                <a href="${prefix}shop?age=3-5" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-amber-600 group/item">
                   <div class="flex items-center gap-2 min-w-0">
                     <div class="w-6 h-6 rounded-lg bg-amber-500 text-white font-heading font-bold text-[9px] flex items-center justify-center shadow-2xs shrink-0">3–5</div>
                     <div class="min-w-0">
@@ -1509,7 +1325,7 @@ export const Components = {
                   <i class="fa-solid fa-chevron-right text-[8px] text-slate-400 group-hover/item:text-amber-600 transition shrink-0"></i>
                 </a>
 
-                <a href="${prefix}pages/shop.html?age=6-8" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-brand-blue group/item">
+                <a href="${prefix}shop?age=6-8" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-brand-blue group/item">
                   <div class="flex items-center gap-2 min-w-0">
                     <div class="w-6 h-6 rounded-lg bg-brand-blue text-white font-heading font-bold text-[9px] flex items-center justify-center shadow-2xs shrink-0">6–8</div>
                     <div class="min-w-0">
@@ -1520,7 +1336,7 @@ export const Components = {
                   <i class="fa-solid fa-chevron-right text-[8px] text-slate-400 group-hover/item:text-brand-blue transition shrink-0"></i>
                 </a>
 
-                <a href="${prefix}pages/shop.html?age=9-12" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-emerald-600 group/item">
+                <a href="${prefix}shop?age=9-12" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-emerald-600 group/item">
                   <div class="flex items-center gap-2 min-w-0">
                     <div class="w-6 h-6 rounded-lg bg-emerald-600 text-white font-heading font-bold text-[9px] flex items-center justify-center shadow-2xs shrink-0">9–12</div>
                     <div class="min-w-0">
@@ -1531,7 +1347,7 @@ export const Components = {
                   <i class="fa-solid fa-chevron-right text-[8px] text-slate-400 group-hover/item:text-emerald-600 transition shrink-0"></i>
                 </a>
 
-                <a href="${prefix}pages/shop.html?age=12+" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-purple-600 group/item">
+                <a href="${prefix}shop?age=12+" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-purple-600 group/item">
                   <div class="flex items-center gap-2 min-w-0">
                     <div class="w-6 h-6 rounded-lg bg-purple-600 text-white font-heading font-bold text-[9px] flex items-center justify-center shadow-2xs shrink-0">12+</div>
                     <div class="min-w-0">
@@ -1543,7 +1359,7 @@ export const Components = {
                 </a>
 
                 <div class="pt-1.5 border-t border-blue-100">
-                  <a href="${prefix}pages/shop.html" class="flex items-center justify-center gap-1.5 text-[11px] font-bold font-heading text-brand-blue hover:text-dark-navy py-1 transition">
+                  <a href="${prefix}shop" class="flex items-center justify-center gap-1.5 text-[11px] font-bold font-heading text-brand-blue hover:text-dark-navy py-1 transition">
                     <span>Find by Milestone Guide</span>
                     <i class="fa-solid fa-arrow-right text-[9px]"></i>
                   </a>
@@ -1571,28 +1387,28 @@ export const Components = {
 
               <div class="mobile-drawer-accordion-content hidden pt-2.5 mt-2 border-t border-amber-200/70">
                 <div class="grid grid-cols-2 gap-2">
-                  <a href="${prefix}pages/shop.html?tag=creative" class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
+                  <a href="${prefix}shop?tag=creative" class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
                     <div class="w-6 h-6 rounded-lg bg-pink-100 text-pink-500 flex items-center justify-center text-xs mb-1 group-hover/btn:scale-110 transition">
                       <i class="fa-solid fa-palette"></i>
                     </div>
                     <span class="font-heading font-bold text-dark-navy text-[11px] group-hover/btn:text-pink-600 truncate w-full">Arts & Crafts</span>
                     <span class="text-[8px] text-brand-muted font-sans">DIY & Painting</span>
                   </a>
-                  <a href="${prefix}pages/shop.html?tag=sports" class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
+                  <a href="${prefix}shop?tag=sports" class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
                     <div class="w-6 h-6 rounded-lg bg-blue-100 text-brand-blue flex items-center justify-center text-xs mb-1 group-hover/btn:scale-110 transition">
                       <i class="fa-solid fa-volleyball"></i>
                     </div>
                     <span class="font-heading font-bold text-dark-navy text-[11px] group-hover/btn:text-brand-blue truncate w-full">Active Play</span>
                     <span class="text-[8px] text-brand-muted font-sans">Fitness & Fun</span>
                   </a>
-                  <a href="${prefix}pages/shop.html?tag=mind" class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
+                  <a href="${prefix}shop?tag=mind" class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
                     <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs mb-1 group-hover/btn:scale-110 transition">
                       <i class="fa-solid fa-brain"></i>
                     </div>
                     <span class="font-heading font-bold text-dark-navy text-[11px] group-hover/btn:text-emerald-600 truncate w-full">Brain Teasers</span>
                     <span class="text-[8px] text-brand-muted font-sans">Logic & IQ</span>
                   </a>
-                  <a href="${prefix}pages/shop.html?tag=pretend" class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
+                  <a href="${prefix}shop?tag=pretend" class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
                     <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xs mb-1 group-hover/btn:scale-110 transition">
                       <i class="fa-solid fa-masks-theater"></i>
                     </div>
@@ -1605,7 +1421,7 @@ export const Components = {
 
             <!-- 4. FEATURED SPOTLIGHT & BEST SELLER (Fresh Emerald) -->
             <div class="mobile-drawer-accordion-card bg-[#F4FAF6] border border-emerald-200/90 rounded-2xl p-3 shadow-2xs">
-              <a href="${prefix}pages/product-details.html?id=1" class="flex items-center gap-3 bg-white p-2 rounded-xl border border-emerald-100 hover:border-emerald-300 transition group/spotlight">
+              <a href="${prefix}product-details?id=1" class="flex items-center gap-3 bg-white p-2 rounded-xl border border-emerald-100 hover:border-emerald-300 transition group/spotlight">
                 <div class="w-14 h-14 rounded-lg overflow-hidden bg-slate-50 shrink-0 relative">
                   <img src="${prefix}assets/images/products/soccer-ball.jpg" alt="Match Pro Football" class="w-full h-full object-cover group-hover/spotlight:scale-105 transition duration-300">
                   <span class="absolute top-0.5 left-0.5 bg-brand-orange text-white text-[7px] font-bold px-1 rounded font-heading">
@@ -1640,26 +1456,26 @@ export const Components = {
                 <p class="text-[9px] text-purple-100 font-sans">
                   Use code <span class="font-mono font-bold text-amber-300 bg-purple-800/60 px-1 py-0.5 rounded">PLAY15</span> at checkout
                 </p>
-                <a href="${prefix}pages/new-arrivals.html" class="inline-block bg-white text-purple-700 hover:bg-amber-300 hover:text-purple-950 font-heading font-bold text-[9px] px-2.5 py-1 rounded-md transition shadow-2xs">
+                <a href="${prefix}new-arrivals" class="inline-block bg-white text-purple-700 hover:bg-amber-300 hover:text-purple-950 font-heading font-bold text-[9px] px-2.5 py-1 rounded-md transition shadow-2xs">
                   Claim Discount Now →
                 </a>
               </div>
 
               <!-- Quick Customer Links in Drawer -->
               <div class="pt-1 grid grid-cols-2 gap-1.5 text-[10px] font-heading font-semibold text-dark-navy">
-                <a href="${prefix}pages/track-order.html" class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
+                <a href="${prefix}track-order" class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
                   <i class="fa-solid fa-truck-fast text-[10px] text-purple-600"></i>
                   <span>Track Order</span>
                 </a>
-                <a href="${prefix}pages/faq.html" class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
+                <a href="${prefix}faq" class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
                   <i class="fa-regular fa-circle-question text-[10px] text-purple-600"></i>
                   <span>Help & FAQ</span>
                 </a>
-                <a href="${prefix}pages/contact.html" class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
+                <a href="${prefix}contact" class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
                   <i class="fa-solid fa-headset text-[10px] text-purple-600"></i>
                   <span>Contact Us</span>
                 </a>
-                <a href="${prefix}pages/about.html" class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
+                <a href="${prefix}about" class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
                   <i class="fa-solid fa-book-open text-[10px] text-purple-600"></i>
                   <span>Our Story</span>
                 </a>
@@ -1684,7 +1500,7 @@ export const Components = {
             </div>
 
             <!-- Primary Big CTA -->
-            <a href="${user.isLoggedIn ? `${prefix}account/dashboard.html` : `${prefix}pages/login.html`}" class="w-full btn-play-blue text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-md font-heading font-bold">
+            <a href="${user.isLoggedIn ? `${prefix}account/dashboard` : `${prefix}login`}" class="w-full btn-play-blue text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-md font-heading font-bold">
               <i class="fa-regular fa-user"></i>
               <span>${user.isLoggedIn ? 'MY PLAYROOM DASHBOARD' : 'SIGN IN / JOIN PLAY CLUB'}</span>
               <i class="fa-solid fa-arrow-right text-[10px] ml-auto"></i>
@@ -1802,7 +1618,7 @@ export const Components = {
             <div class="lg:col-span-4 space-y-4">
               
               <!-- Brand Identity -->
-              <a href="${prefix}index.html" class="inline-block bg-white p-3 rounded-2xl shadow-lg border border-white/40 hover:scale-105 transition-transform duration-300">
+              <a href="${prefix}index" class="inline-block bg-white p-3 rounded-2xl shadow-lg border border-white/40 hover:scale-105 transition-transform duration-300">
                 <img src="${prefix}assets/logo.png" alt="Aparatus Pastime" class="h-10 w-auto object-contain">
               </a>
 
@@ -1872,14 +1688,14 @@ export const Components = {
                   <span>SHOP</span>
                 </h4>
                 <ul class="space-y-2 text-white/80">
-                  <li><a href="${prefix}pages/shop.html?category=toys" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Kids Toys</a></li>
-                  <li><a href="${prefix}pages/shop.html?category=games" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Board Games</a></li>
-                  <li><a href="${prefix}pages/shop.html?category=sports" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Sports Goods</a></li>
-                  <li><a href="${prefix}pages/shop.html?category=outdoor" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Outdoor Play</a></li>
-                  <li><a href="${prefix}pages/shop.html?category=educational" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>STEM Kits</a></li>
-                  <li><a href="${prefix}pages/shop.html?category=activity" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Creative Arts</a></li>
-                  <li><a href="${prefix}pages/shop.html?category=gifts" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Gifts & Sets</a></li>
-                  <li><a href="${prefix}pages/categories.html" class="hover:text-play-yellow transition flex items-center gap-1.5 font-bold text-play-yellow/90"><i class="fa-solid fa-arrow-right text-[9px]"></i>All Categories</a></li>
+                  <li><a href="${prefix}shop?category=toys" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Kids Toys</a></li>
+                  <li><a href="${prefix}shop?category=games" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Board Games</a></li>
+                  <li><a href="${prefix}shop?category=sports" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Sports Goods</a></li>
+                  <li><a href="${prefix}shop?category=outdoor" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Outdoor Play</a></li>
+                  <li><a href="${prefix}shop?category=educational" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>STEM Kits</a></li>
+                  <li><a href="${prefix}shop?category=activity" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Creative Arts</a></li>
+                  <li><a href="${prefix}shop?category=gifts" class="hover:text-play-yellow transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Gifts & Sets</a></li>
+                  <li><a href="${prefix}categories" class="hover:text-play-yellow transition flex items-center gap-1.5 font-bold text-play-yellow/90"><i class="fa-solid fa-arrow-right text-[9px]"></i>All Categories</a></li>
                 </ul>
               </div>
 
@@ -1890,14 +1706,14 @@ export const Components = {
                   <span>BY AGE</span>
                 </h4>
                 <ul class="space-y-2 text-white/80">
-                  <li><a href="${prefix}pages/shop.html?age=0-2" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>0–2 Years</a></li>
-                  <li><a href="${prefix}pages/shop.html?age=3-5" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>3–5 Years</a></li>
-                  <li><a href="${prefix}pages/shop.html?age=6-8" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>6–8 Years</a></li>
-                  <li><a href="${prefix}pages/shop.html?age=9-12" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>9–12 Years</a></li>
-                  <li><a href="${prefix}pages/shop.html?age=12+" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>12+ Years</a></li>
-                  <li><a href="${prefix}pages/new-arrivals.html" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>New Arrivals</a></li>
-                  <li><a href="${prefix}pages/shop.html?filter=bestseller" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Best Sellers</a></li>
-                  <li><a href="${prefix}pages/shop.html?filter=trending" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Trending Now</a></li>
+                  <li><a href="${prefix}shop?age=0-2" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>0–2 Years</a></li>
+                  <li><a href="${prefix}shop?age=3-5" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>3–5 Years</a></li>
+                  <li><a href="${prefix}shop?age=6-8" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>6–8 Years</a></li>
+                  <li><a href="${prefix}shop?age=9-12" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>9–12 Years</a></li>
+                  <li><a href="${prefix}shop?age=12+" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>12+ Years</a></li>
+                  <li><a href="${prefix}new-arrivals" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>New Arrivals</a></li>
+                  <li><a href="${prefix}shop?filter=bestseller" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Best Sellers</a></li>
+                  <li><a href="${prefix}shop?filter=trending" class="hover:text-sky-blue transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Trending Now</a></li>
                 </ul>
               </div>
 
@@ -1908,13 +1724,13 @@ export const Components = {
                   <span>HELP & CARE</span>
                 </h4>
                 <ul class="space-y-2 text-white/80">
-                  <li><a href="${prefix}pages/track-order.html" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Track Order</a></li>
-                  <li><a href="${prefix}pages/faq.html" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Help & FAQ</a></li>
-                  <li><a href="${prefix}pages/contact.html" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Contact Us</a></li>
-                  <li><a href="${prefix}pages/shipping-policy.html" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Shipping Info</a></li>
-                  <li><a href="${prefix}pages/returns.html" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Easy Returns</a></li>
-                  <li><a href="${prefix}pages/cancellation-policy.html" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Cancellation</a></li>
-                  <li><a href="${prefix}pages/payment-policy.html" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Payment Safety</a></li>
+                  <li><a href="${prefix}track-order" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Track Order</a></li>
+                  <li><a href="${prefix}faq" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Help & FAQ</a></li>
+                  <li><a href="${prefix}contact" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Contact Us</a></li>
+                  <li><a href="${prefix}shipping-policy" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Shipping Info</a></li>
+                  <li><a href="${prefix}returns" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Easy Returns</a></li>
+                  <li><a href="${prefix}cancellation-policy" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Cancellation</a></li>
+                  <li><a href="${prefix}payment-policy" class="hover:text-mint transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Payment Safety</a></li>
                   <li><a href="https://wa.me/919876543210" target="_blank" rel="noopener" class="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1.5 font-semibold"><i class="fa-brands fa-whatsapp text-[11px]"></i>Live WhatsApp</a></li>
                 </ul>
               </div>
@@ -1926,14 +1742,14 @@ export const Components = {
                   <span>MY ACCOUNT</span>
                 </h4>
                 <ul class="space-y-2 text-white/80">
-                  <li><a href="${prefix}account/dashboard.html" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Dashboard</a></li>
-                  <li><a href="${prefix}account/orders.html" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>My Orders</a></li>
-                  <li><a href="${prefix}account/wishlist.html" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>My Wishlist</a></li>
-                  <li><a href="${prefix}account/addresses.html" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Saved Addresses</a></li>
-                  <li><a href="${prefix}account/reviews.html" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Product Reviews</a></li>
-                  <li><a href="${prefix}account/profile.html" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Profile Details</a></li>
-                  <li><a href="${prefix}account/password.html" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Change Password</a></li>
-                  <li><a href="${prefix}account/notifications.html" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Notifications</a></li>
+                  <li><a href="${prefix}account/dashboard" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Dashboard</a></li>
+                  <li><a href="${prefix}account/orders" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>My Orders</a></li>
+                  <li><a href="${prefix}account/wishlist" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>My Wishlist</a></li>
+                  <li><a href="${prefix}account/addresses" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Saved Addresses</a></li>
+                  <li><a href="${prefix}account/reviews" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Product Reviews</a></li>
+                  <li><a href="${prefix}account/profile" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Profile Details</a></li>
+                  <li><a href="${prefix}account/password" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Change Password</a></li>
+                  <li><a href="${prefix}account/notifications" class="hover:text-purple-play transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Notifications</a></li>
                 </ul>
               </div>
 
@@ -1944,14 +1760,14 @@ export const Components = {
                   <span>ABOUT & INFO</span>
                 </h4>
                 <ul class="space-y-2 text-white/80">
-                  <li><a href="${prefix}pages/about.html" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Our Story</a></li>
-                  <li><a href="${prefix}pages/blog.html" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Playroom Blog</a></li>
-                  <li><a href="${prefix}pages/about.html" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Safety Standards</a></li>
-                  <li><a href="${prefix}pages/terms.html" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Terms of Service</a></li>
-                  <li><a href="${prefix}pages/privacy-policy.html" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Privacy Policy</a></li>
-                  <li><a href="${prefix}pages/cookie-policy.html" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Cookie Policy</a></li>
-                  <li><a href="${prefix}pages/search.html" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Search Toys</a></li>
-                  <li><a href="${prefix}pages/shop.html" class="hover:text-soft-coral transition flex items-center gap-1.5 font-bold text-soft-coral/90"><i class="fa-solid fa-arrow-right text-[9px]"></i>View Catalog</a></li>
+                  <li><a href="${prefix}about" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Our Story</a></li>
+                  <li><a href="${prefix}blog" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Playroom Blog</a></li>
+                  <li><a href="${prefix}about" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Safety Standards</a></li>
+                  <li><a href="${prefix}terms" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Terms of Service</a></li>
+                  <li><a href="${prefix}privacy-policy" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Privacy Policy</a></li>
+                  <li><a href="${prefix}cookie-policy" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Cookie Policy</a></li>
+                  <li><a href="${prefix}search" class="hover:text-soft-coral transition flex items-center gap-1.5"><i class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Search Toys</a></li>
+                  <li><a href="${prefix}shop" class="hover:text-soft-coral transition flex items-center gap-1.5 font-bold text-soft-coral/90"><i class="fa-solid fa-arrow-right text-[9px]"></i>View Catalog</a></li>
                 </ul>
               </div>
 
@@ -1967,15 +1783,15 @@ export const Components = {
                 <span>POPULAR PLAY TOPICS:</span>
               </span>
               <div class="flex flex-wrap items-center gap-2 text-xs font-sans">
-                <a href="${prefix}pages/shop.html?category=educational" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#STEMRobotics</a>
-                <a href="${prefix}pages/shop.html?category=toys" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#MagneticTiles</a>
-                <a href="${prefix}pages/shop.html?category=sports" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#KashmirWillowCricket</a>
-                <a href="${prefix}pages/shop.html?category=games" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#BoardGamesNight</a>
-                <a href="${prefix}pages/shop.html?category=outdoor" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#OutdoorAdventures</a>
-                <a href="${prefix}pages/shop.html?category=activity" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#ArtStudioEasel</a>
-                <a href="${prefix}pages/shop.html?category=gifts" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#BirthdayGiftSets</a>
-                <a href="${prefix}pages/shop.html?age=3-5" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#PreschoolPlay</a>
-                <a href="${prefix}pages/shop.html?age=9-12" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#STEMforKids</a>
+                <a href="${prefix}shop?category=educational" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#STEMRobotics</a>
+                <a href="${prefix}shop?category=toys" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#MagneticTiles</a>
+                <a href="${prefix}shop?category=sports" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#KashmirWillowCricket</a>
+                <a href="${prefix}shop?category=games" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#BoardGamesNight</a>
+                <a href="${prefix}shop?category=outdoor" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#OutdoorAdventures</a>
+                <a href="${prefix}shop?category=activity" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#ArtStudioEasel</a>
+                <a href="${prefix}shop?category=gifts" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#BirthdayGiftSets</a>
+                <a href="${prefix}shop?age=3-5" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#PreschoolPlay</a>
+                <a href="${prefix}shop?age=9-12" class="bg-white/10 hover:bg-brand-orange hover:text-white px-3 py-1 rounded-full text-white/80 transition">#STEMforKids</a>
               </div>
             </div>
           </div>
@@ -2024,22 +1840,22 @@ export const Components = {
       <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-border z-40 px-2 py-1.5 shadow-lg">
         <div class="grid grid-cols-5 gap-1 text-center font-heading text-[10px]">
           
-          <a href="${prefix}index.html" class="flex flex-col items-center py-1 rounded-xl transition ${activeTab === 'home' ? 'text-brand-orange font-bold' : 'text-brand-muted hover:text-dark-navy'}">
+          <a href="${prefix}index" class="flex flex-col items-center py-1 rounded-xl transition ${activeTab === 'home' ? 'text-brand-orange font-bold' : 'text-brand-muted hover:text-dark-navy'}">
             <i class="fa-solid fa-house text-base mb-0.5"></i>
             <span>Home</span>
           </a>
 
-          <a href="${prefix}pages/shop.html" class="flex flex-col items-center py-1 rounded-xl transition ${activeTab === 'shop' ? 'text-brand-orange font-bold' : 'text-brand-muted hover:text-dark-navy'}">
+          <a href="${prefix}shop" class="flex flex-col items-center py-1 rounded-xl transition ${activeTab === 'shop' ? 'text-brand-orange font-bold' : 'text-brand-muted hover:text-dark-navy'}">
             <i class="fa-solid fa-store text-base mb-0.5"></i>
             <span>Shop</span>
           </a>
 
-          <a href="${prefix}pages/categories.html" class="flex flex-col items-center py-1 rounded-xl transition ${activeTab === 'categories' ? 'text-brand-orange font-bold' : 'text-brand-muted hover:text-dark-navy'}">
+          <a href="${prefix}categories" class="flex flex-col items-center py-1 rounded-xl transition ${activeTab === 'categories' ? 'text-brand-orange font-bold' : 'text-brand-muted hover:text-dark-navy'}">
             <i class="fa-solid fa-shapes text-base mb-0.5"></i>
             <span>Categories</span>
           </a>
 
-          <a href="${prefix}account/wishlist.html" class="relative flex flex-col items-center py-1 rounded-xl transition ${activeTab === 'wishlist' ? 'text-brand-orange font-bold' : 'text-brand-muted hover:text-dark-navy'}">
+          <a href="${prefix}account/wishlist" class="relative flex flex-col items-center py-1 rounded-xl transition ${activeTab === 'wishlist' ? 'text-brand-orange font-bold' : 'text-brand-muted hover:text-dark-navy'}">
             <i class="fa-regular fa-heart text-base mb-0.5"></i>
             <span class="${wishCount > 0 ? '' : 'hidden'} absolute top-0 right-3 bg-brand-orange text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
               ${wishCount}
@@ -2047,7 +1863,7 @@ export const Components = {
             <span>Wishlist</span>
           </a>
 
-          <a href="${prefix}account/dashboard.html" class="flex flex-col items-center py-1 rounded-xl transition ${activeTab === 'account' ? 'text-brand-orange font-bold' : 'text-brand-muted hover:text-dark-navy'}">
+          <a href="${prefix}account/dashboard" class="flex flex-col items-center py-1 rounded-xl transition ${activeTab === 'account' ? 'text-brand-orange font-bold' : 'text-brand-muted hover:text-dark-navy'}">
             <i class="fa-regular fa-user text-base mb-0.5"></i>
             <span>Account</span>
           </a>
@@ -2149,7 +1965,7 @@ export const Components = {
 
           if (matched.length > 0 && liveProductsContainer) {
             liveProductsContainer.innerHTML = matched.map(p => `
-              <a href="${prefix}pages/product.html?slug=${p.slug}" class="flex items-center gap-2.5 p-2 hover:bg-soft-blue rounded-xl transition">
+              <a href="${prefix}product?slug=${p.slug}" class="flex items-center gap-2.5 p-2 hover:bg-soft-blue rounded-xl transition">
                 <img src="${p.images[0]}" class="w-9 h-9 object-contain bg-soft-blue rounded-lg border border-brand-border">
                 <div class="flex-1 min-w-0">
                   <div class="text-xs font-bold text-dark-navy truncate font-heading">${p.name}</div>
@@ -2180,28 +1996,18 @@ export const Components = {
       });
     }
 
-    // 4. Quick View Event Delegation
-    document.addEventListener('click', (e) => {
-      const qvBtn = e.target.closest('.quick-view-btn');
-      if (qvBtn) {
-        e.preventDefault();
-        const id = qvBtn.getAttribute('data-id');
-        Components.openQuickView(id, prefix);
-      }
-    });
-
-    // 5. Add To Cart Event Delegation
-    document.addEventListener('click', (e) => {
-      const atcBtn = e.target.closest('.add-to-cart-btn');
-      if (atcBtn) {
-        e.preventDefault();
-        const id = atcBtn.getAttribute('data-id');
-        const prod = State.addToCart(id, 1);
-        if (prod) {
-          Components.showToast(`${prod.name} added to your play bag!`, 'orange', prefix);
-        }
-      }
-    });
+    // // 5. Add To Cart Event Delegation
+    // document.addEventListener('click', (e) => {
+    //   const atcBtn = e.target.closest('.add-to-cart-btn');
+    //   if (atcBtn) {
+    //     e.preventDefault();
+    //     const id = atcBtn.getAttribute('data-id');
+    //     const prod = State.addToCart(id, 1);
+    //     if (prod) {
+    //       Components.showToast(`${prod.name} added to your play bag!`, 'orange', prefix);
+    //     }
+    //   }
+    // });
 
     // 6. Wishlist Toggle Event Delegation
     document.addEventListener('click', (e) => {

@@ -69,16 +69,80 @@ use App\Http\Controllers\Admin\{
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\FrontController;
-
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CustomerAuthController;   
 
 Route::middleware('maintenance.mode')->group(function () {
 
     Route::controller(FrontController::class)->group(function () {
         Route::get('/', 'home')->name('home');
+        Route::get('/shop', 'shop')->name('shop');
+        Route::get('/categories', 'categories')->name('categories');
+        Route::get('/product/{slug?}', 'productDetail')->name('product');
+        Route::get('/quick-view/{id}', 'quickView')->name('product.quick-view');
+
+        Route::view('/about', 'front-pages.about')->name('about');
+        Route::view('/blogs', 'front-pages.blog')->name('blogs');
+        Route::view('/blog-detail/{slug}', 'front-pages.blog-detail')->name('blog.show');
+        Route::view('/cart', 'front-pages.cart')->name('cart');
+        Route::view('/checkout', 'front-pages.checkout')->name('checkout');
+        Route::view('/cancellation-policy', 'front-pages.cancellation-policy')->name('cancellations');
+        Route::view('/contact', 'front-pages.contact')->name('contact');
+        Route::view('/cookie-policy', 'front-pages.cookie-policy')->name('cookie-policy');
+        Route::view('/faq', 'front-pages.faq')->name('faq');
+        Route::view('/forgot-password', 'front-pages.forgot-password')->name('forgot-password');
+        Route::view('/reset-password', 'front-pages.reset-password')->name('reset-password');
+        Route::view('/new-arrivals', 'front-pages.new-arrivals')->name('new-arrivals');
+        Route::view('/order-success', 'front-pages.order-success')->name('order-success');
+        Route::view('/track-order', 'front-pages.track-order')->name('track-order');
+        Route::view('/privacy-policy', 'front-pages.privacy-policy')->name('privacy-policy');
+        Route::view('/payment-policy', 'front-pages.payment-policy')->name('payment-policy');
+        Route::view('/search', 'front-pages.search')->name('search');
+        Route::view('/returns', 'front-pages.returns')->name('returns');
+        Route::view('/shipping-policy', 'front-pages.shipping-policy')->name('shipping-policy');
+        Route::view('/terms', 'front-pages.terms')->name('terms');
+
+        // Account area
+        Route::prefix('account')->name('account.')->group(function () {
+            Route::view('/dashboard', 'front-pages.dashboard')->name('dashboard');
+            Route::view('/orders', 'front-pages.orders')->name('orders');
+            Route::view('/order-detail', 'front-pages.order-detail')->name('order-detail');
+            Route::view('/track-order', 'front-pages.track-order')->name('track-order');
+            Route::view('/wishlist', 'front-pages.wishlist')->name('wishlist');
+            Route::view('/reviews', 'front-pages.reviews')->name('reviews');
+            Route::view('/addresses', 'front-pages.addresses')->name('addresses');
+            Route::view('/profile', 'front-pages.profile')->name('profile');
+            Route::view('/password', 'front-pages.password')->name('password');
+            Route::view('/notifications', 'front-pages.notifications')->name('notifications');
+        });
     });
 
+
+    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+    Route::get('/cart', [CartController::class, 'cart'])->name('cart');
+    Route::delete('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.update');
+    Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+    Route::post('/cart/apply-coupon', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply');
+    Route::post('/cart/remove-coupon', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
+    Route::get('/cart/mini', [CartController::class, 'mini'])->name('cart.mini');
+
+
+    // ── Guest auth pages ──
+    Route::prefix('user')->name('user.')->group(function () {
+    Route::get('/login', [CustomerAuthController::class, 'loginForm'])->name('login');
+    Route::post('/login', [CustomerAuthController::class, 'login'])->name('login.submit')->middleware('throttle:10,1');
+
+    Route::get('/register', [CustomerAuthController::class, 'registerForm'])->name('register');
+    Route::post('/register', [CustomerAuthController::class, 'register'])->name('register.submit')->middleware('throttle:10,1');
+
+    Route::get('/auth/google', [CustomerAuthController::class, 'redirectToGoogle'])->name('google');
+    Route::get('/auth/google/callback', [CustomerAuthController::class, 'handleGoogleCallback'])->name('google.callback');
+
+    Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('logout');
 });
 
+});
 
 
 // Admin Routes list

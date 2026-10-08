@@ -126,6 +126,15 @@
     }
     .slug-input { padding-left: 76px !important; }
 
+    /* ── Icon input with live preview ───────────────────────── */
+    .icon-input-wrap { display: flex; align-items: center; gap: 10px; }
+    .icon-preview {
+        width: 38px; height: 38px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        background: var(--bg); color: var(--accent); font-size: 16px;
+    }
+
     /* ── Image panel ────────────────────────────────────────── */
     .current-image-wrap {
         border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -155,8 +164,7 @@
     #newPreviewWrap img { max-width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border); }
     #newPreviewWrap button { font-size: 12px; color: var(--red); background: none; border: none; cursor: pointer; padding: 0; margin-top: 6px; }
 
-
-       #sizeChartPreviewWrap { display: none; margin-top: 12px; text-align: center; }
+    #sizeChartPreviewWrap { display: none; margin-top: 12px; text-align: center; }
     #sizeChartPreviewWrap img { max-width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border); }
     #sizeChartPreviewWrap button { font-size: 12px; color: var(--red); background: none; border: none; cursor: pointer; padding: 0; margin-top: 6px; }
 
@@ -239,7 +247,7 @@
                                 <div class="field-group">
                                     <label class="field-label">Name <span class="req">*</span></label>
                                     <input type="text" name="name" id="name"
-                                        value="{{ $category->name }}"
+                                        value="{{ old('name', $category->name) }}"
                                         class="field-input" required>
                                 </div>
 
@@ -248,7 +256,7 @@
                                     <div class="slug-wrap">
                                         <span class="slug-prefix">/cat/</span>
                                         <input type="text" name="slug" id="slug"
-                                            value="{{ $category->slug }}"
+                                            value="{{ old('slug', $category->slug) }}"
                                             class="field-input slug-input">
                                     </div>
                                     <div class="field-hint">Edit to customise the URL slug.</div>
@@ -257,8 +265,16 @@
                                 <div class="field-group">
                                     <label class="field-label">Sub Title</label>
                                     <input type="text" name="sub_title"
-                                        value="{{ $category->sub_title }}"
+                                        value="{{ old('sub_title', $category->sub_title) }}"
                                         class="field-input">
+                                </div>
+
+                                <!-- NEW: Description -->
+                                <div class="field-group">
+                                    <label class="field-label">Description</label>
+                                    <textarea name="description" class="field-textarea" maxlength="1000"
+                                        placeholder="Shown on the storefront category card">{{ old('description', $category->description) }}</textarea>
+                                    <div class="field-hint">Max 1000 characters.</div>
                                 </div>
 
                                 <div class="field-group">
@@ -267,7 +283,7 @@
                                         <option value="">— None (top-level) —</option>
                                         @foreach($parents as $parent)
                                             <option value="{{ $parent->id }}"
-                                                {{ $category->parent_id == $parent->id ? 'selected' : '' }}>
+                                                {{ old('parent_id', $category->parent_id) == $parent->id ? 'selected' : '' }}>
                                                 {{ $parent->name }}
                                             </option>
                                         @endforeach
@@ -277,7 +293,7 @@
                                 <div class="field-group">
                                     <label class="field-label">Sort Order</label>
                                     <input type="number" name="sort_order"
-                                        value="{{ $category->sort_order }}"
+                                        value="{{ old('sort_order', $category->sort_order) }}"
                                         class="field-input" style="max-width:120px">
                                     <div class="field-hint">Lower numbers appear first.</div>
                                 </div>
@@ -295,13 +311,13 @@
                                 <div class="field-group">
                                     <label class="field-label">Meta Title</label>
                                     <input type="text" name="meta_title"
-                                        value="{{ $category->meta_title }}"
+                                        value="{{ old('meta_title', $category->meta_title) }}"
                                         class="field-input">
                                 </div>
 
                                 <div class="field-group">
                                     <label class="field-label">Meta Description</label>
-                                    <textarea name="meta_description" class="field-textarea">{{ $category->meta_description }}</textarea>
+                                    <textarea name="meta_description" class="field-textarea">{{ old('meta_description', $category->meta_description) }}</textarea>
                                 </div>
 
                             </div>
@@ -344,51 +360,39 @@
                                         </button>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                <hr style="margin:20px 0">
+                        <!-- NEW: Card Appearance -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>Card Appearance</h5>
+                            </div>
+                            <div class="section-card-body">
 
-<h6 style="font-size:13px;font-weight:600;margin-bottom:12px">
-    Size Chart Image
-</h6>
+                                <div class="field-group">
+                                    <label class="field-label">Icon</label>
+                                    <div class="icon-input-wrap">
+                                        <div class="icon-preview">
+                                            <i id="iconPreview" class="fa-solid {{ old('icon', $category->icon) }}"></i>
+                                        </div>
+                                        <input type="text" name="icon" id="iconInput" class="field-input"
+                                            value="{{ old('icon', $category->icon) }}" maxlength="100"
+                                            placeholder="e.g. fa-futbol">
+                                    </div>
+                                    <div class="field-hint">FontAwesome class name, without <code>fa-solid</code>.</div>
+                                </div>
 
-@if($category->size_chart_image)
-    <div class="current-image-wrap" id="currentSizeChartWrap">
-        <img src="{{ asset('storage/'.$category->size_chart_image) }}">
-        <div class="current-image-info">
-            <strong>Current Size Chart</strong>
-            Upload a new image below to replace it.
-        </div>
-    </div>
-@endif
-
-<div class="file-upload-area" id="sizeChartUploadArea">
-    <input type="file"
-           name="size_chart_image"
-           accept="image/*"
-           id="sizeChartInput">
-
-    <div class="upload-icon">
-        <i class="fa fa-table"></i>
-    </div>
-
-    <p>
-        {{ $category->size_chart_image ? 'Replace Size Chart' : 'Upload Size Chart' }}
-    </p>
-
-    <small>PNG, JPG, WEBP</small>
-</div>
-
-<div id="sizeChartPreviewWrap" style="display:none;margin-top:12px;text-align:center">
-    <img id="sizeChartPreviewImg"
-         src=""
-         style="max-width:100%;border-radius:8px;border:1px solid #ddd;">
-
-    <div>
-        <button type="button" onclick="clearSizeChart()">
-            <i class="fa fa-times"></i> Remove
-        </button>
-    </div>
-</div>
+                                <div class="field-group">
+                                    <label class="field-label">Card Background</label>
+                                    @php $bg = old('pastel_bg', $category->pastel_bg); @endphp
+                                    <select name="pastel_bg" class="field-select">
+                                        <option value="bg-soft-blue"   {{ $bg == 'bg-soft-blue'   ? 'selected' : '' }}>Soft Blue</option>
+                                        <option value="bg-soft-orange" {{ $bg == 'bg-soft-orange' ? 'selected' : '' }}>Soft Orange</option>
+                                        <option value="bg-soft-yellow" {{ $bg == 'bg-soft-yellow' ? 'selected' : '' }}>Soft Yellow</option>
+                                    </select>
+                                    <div class="field-hint">Pastel colour of the card on the storefront.</div>
+                                </div>
 
                             </div>
                         </div>
@@ -487,6 +491,11 @@ $('#name').on('keyup', function () {
     }
 });
 
+// Live icon preview
+document.getElementById('iconInput').addEventListener('input', function () {
+    document.getElementById('iconPreview').className = 'fa-solid ' + this.value.trim();
+});
+
 // Disable button + spinner on submit
 document.querySelector('form').addEventListener('submit', function () {
     const btn = document.getElementById('updateBtn');
@@ -517,44 +526,5 @@ function clearNewImage() {
     if (cur) cur.style.display = 'flex';
 }
 
-document.getElementById('sizeChartInput')?.addEventListener('change', function () {
 
-    const file = this.files[0];
-
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = function (e) {
-
-        document.getElementById('sizeChartPreviewImg').src = e.target.result;
-
-        document.getElementById('sizeChartPreviewWrap').style.display = 'block';
-
-        document.getElementById('sizeChartUploadArea').style.display = 'none';
-
-        const current = document.getElementById('currentSizeChartWrap');
-
-        if (current) {
-            current.style.display = 'none';
-        }
-    };
-
-    reader.readAsDataURL(file);
-});
-
-function clearSizeChart() {
-
-    document.getElementById('sizeChartInput').value = '';
-
-    document.getElementById('sizeChartPreviewWrap').style.display = 'none';
-
-    document.getElementById('sizeChartUploadArea').style.display = 'block';
-
-    const current = document.getElementById('currentSizeChartWrap');
-
-    if (current) {
-        current.style.display = 'flex';
-    }
-}
 </script>

@@ -9,6 +9,33 @@ use Illuminate\Support\Str;
 
 class AttributeController extends Controller
 {
+    private const TYPES = ['button', 'dropdown', 'image', 'color_swatch', 'radio'];
+
+    private function rules(): array
+    {
+        return [
+            'name'           => 'required|max:255',
+            'type'           => 'required|in:' . implode(',', self::TYPES),
+            'icon'           => ['nullable', 'string', 'max:100', 'regex:/^[a-z0-9\- ]+$/i'],
+            'has_values'     => 'required|boolean',
+            'status'         => 'required|boolean',
+            'show_in_navbar' => 'required|boolean',
+        ];
+    }
+
+    private function payload(Request $request): array
+    {
+        return [
+            'name'           => $request->name,
+            'slug'           => Str::slug($request->name),
+            'type'           => $request->type,
+            'icon'           => trim((string) $request->icon) ?: null,
+            'has_values'     => $request->has_values,
+            'status'         => $request->status,
+            'show_in_navbar' => $request->show_in_navbar,
+        ];
+    }
+
     public function index()
     {
         $attributes = Attribute::latest()->paginate(20);
@@ -18,35 +45,16 @@ class AttributeController extends Controller
 
     public function create()
     {
-        $types = [
-            'button',
-            'dropdown',
-            'image',
-            'color_swatch',
-            'radio',
-        ];
+        $types = self::TYPES;
 
         return view('admin.attributes.create', compact('types'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|max:255',
-            'type' => 'required|in:button,dropdown,image,color_swatch,radio',
-            'has_values' => 'required|boolean',
-            'status' => 'required|boolean',
-            'show_in_navbar' => 'required|boolean',
-        ]);
+        $request->validate($this->rules());
 
-        Attribute::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'type' => $request->type,
-            'has_values' => $request->has_values,
-            'status' => $request->status,
-            'show_in_navbar' => $request->show_in_navbar,
-        ]);
+        Attribute::create($this->payload($request));
 
         return redirect()
             ->route('admin.attributes.index')
@@ -55,35 +63,16 @@ class AttributeController extends Controller
 
     public function edit(Attribute $attribute)
     {
-        $types = [
-            'button',
-            'dropdown',
-            'image',
-            'color_swatch',
-            'radio',
-        ];
+        $types = self::TYPES;
 
         return view('admin.attributes.edit', compact('attribute', 'types'));
     }
 
     public function update(Request $request, Attribute $attribute)
     {
-        $request->validate([
-            'name' => 'required|max:255',
-            'type' => 'required|in:button,dropdown,image,color_swatch,radio',
-            'has_values' => 'required|boolean',
-            'status' => 'required|boolean',
-            'show_in_navbar' => 'required|boolean',
-        ]);
+        $request->validate($this->rules());
 
-        $attribute->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'type' => $request->type,
-            'has_values' => $request->has_values,
-            'status' => $request->status,
-            'show_in_navbar' => $request->show_in_navbar,
-        ]);
+        $attribute->update($this->payload($request));
 
         return redirect()
             ->route('admin.attributes.index')

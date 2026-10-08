@@ -18,6 +18,8 @@ return new class extends Migration {
                 ->constrained()
                 ->cascadeOnDelete();
 
+            $table->string('type')->default('price');
+
             $table->string('sku')->nullable();
 
             $table->decimal('mrp', 12, 2)->default(0);
@@ -30,6 +32,7 @@ return new class extends Migration {
             $table->decimal('discount', 12, 2)->default(0);
 
             $table->decimal('price', 12, 2)->default(0);
+
 
             $table->integer('stock')->default(0);
 

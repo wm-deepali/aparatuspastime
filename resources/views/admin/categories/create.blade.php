@@ -248,6 +248,27 @@
             padding-left: 76px !important;
         }
 
+        /* ── Icon input with live preview ───────────────────────── */
+        .icon-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-preview {
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            color: var(--accent);
+            font-size: 16px;
+        }
+
         /* ── File upload ────────────────────────────────────────── */
         .file-upload-area {
             border: 2px dashed var(--border);
@@ -399,7 +420,7 @@
                                 <div class="field-group">
                                     <label class="field-label">Name <span class="req">*</span></label>
                                     <input type="text" name="name" id="name" class="field-input" required
-                                        placeholder="e.g. Electronics">
+                                        value="{{ old('name') }}" placeholder="e.g. Electronics">
                                 </div>
 
                                 <div class="field-group">
@@ -407,7 +428,7 @@
                                     <div class="slug-wrap">
                                         <span class="slug-prefix">/cat/</span>
                                         <input type="text" name="slug" id="slug" class="field-input slug-input"
-                                            placeholder="auto-generated">
+                                            value="{{ old('slug') }}" placeholder="auto-generated">
                                     </div>
                                     <div class="field-hint">Auto-filled from name. Edit to customise the URL.</div>
                                 </div>
@@ -415,7 +436,16 @@
                                 <div class="field-group">
                                     <label class="field-label">Sub Title</label>
                                     <input type="text" name="sub_title" class="field-input"
-                                        placeholder="Short description shown below the title">
+                                        value="{{ old('sub_title') }}"
+                                        placeholder="Short line shown below the title">
+                                </div>
+
+                                <!-- NEW: Description -->
+                                <div class="field-group">
+                                    <label class="field-label">Description</label>
+                                    <textarea name="description" class="field-textarea" maxlength="1000"
+                                        placeholder="Shown on the storefront category card">{{ old('description') }}</textarea>
+                                    <div class="field-hint">Max 1000 characters.</div>
                                 </div>
 
                                 <div class="field-group">
@@ -423,7 +453,10 @@
                                     <select name="parent_id" class="field-select">
                                         <option value="">— None (top-level) —</option>
                                         @foreach($parents as $parent)
-                                            <option value="{{ $parent->id }}">{{ $parent->name }}</option>
+                                            <option value="{{ $parent->id }}"
+                                                {{ old('parent_id') == $parent->id ? 'selected' : '' }}>
+                                                {{ $parent->name }}
+                                            </option>
                                         @endforeach
                                     </select>
                                     <div class="field-hint">Leave blank to create a top-level category.</div>
@@ -432,7 +465,7 @@
                                 <div class="field-group">
                                     <label class="field-label">Sort Order</label>
                                     <input type="number" name="sort_order" class="field-input" placeholder="0"
-                                        style="max-width:120px">
+                                        value="{{ old('sort_order') }}" style="max-width:120px">
                                     <div class="field-hint">Lower numbers appear first.</div>
                                 </div>
 
@@ -449,13 +482,14 @@
                                 <div class="field-group">
                                     <label class="field-label">Meta Title</label>
                                     <input type="text" name="meta_title" class="field-input"
+                                        value="{{ old('meta_title') }}"
                                         placeholder="Page title for search engines">
                                 </div>
 
                                 <div class="field-group">
                                     <label class="field-label">Meta Description</label>
                                     <textarea name="meta_description" class="field-textarea"
-                                        placeholder="Brief description shown in search results (150–160 chars recommended)"></textarea>
+                                        placeholder="Brief description shown in search results (150–160 chars recommended)">{{ old('meta_description') }}</textarea>
                                 </div>
 
                             </div>
@@ -490,40 +524,41 @@
                                     </div>
                                 </div>
 
-                                <div style="margin-top:20px;border-top:1px solid #e5e5e5;padding-top:20px">
+                            </div>
+                        </div>
 
-                                    <label class="field-label">Size Chart Image</label>
+                        <!-- NEW: Card Appearance -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>Card Appearance</h5>
+                            </div>
+                            <div class="section-card-body">
 
-                                    <div class="file-upload-area" id="sizeChartUploadArea">
-                                        <input type="file" name="size_chart_image" accept="image/*" id="sizeChartInput">
-
-                                        <div class="upload-icon">
-                                            <i class="fa fa-table"></i>
+                                <div class="field-group">
+                                    <label class="field-label">Icon</label>
+                                    <div class="icon-input-wrap">
+                                        <div class="icon-preview">
+                                            <i id="iconPreview" class="fa-solid {{ old('icon') }}"></i>
                                         </div>
-
-                                        <p>Upload Size Chart</p>
-                                        <small>PNG, JPG, WEBP</small>
+                                        <input type="text" name="icon" id="iconInput" class="field-input"
+                                            value="{{ old('icon') }}" maxlength="100"
+                                            placeholder="e.g. fa-futbol">
                                     </div>
+                                    <div class="field-hint">FontAwesome class name, without <code>fa-solid</code>.</div>
+                                </div>
 
-                                    <div id="sizeChartPreview" style="display:none;margin-top:12px;text-align:center">
-
-                                        <img id="sizeChartPreviewImg" src=""
-                                            style="max-width:100%;border-radius:8px;border:1px solid #ddd;">
-
-                                        <div style="margin-top:8px">
-                                            <button type="button" onclick="clearSizeChart()"
-                                                style="font-size:12px;color:red;background:none;border:none;cursor:pointer;">
-                                                <i class="fa fa-times"></i> Remove
-                                            </button>
-                                        </div>
-                                    </div>
-
+                                <div class="field-group">
+                                    <label class="field-label">Card Background</label>
+                                    <select name="pastel_bg" class="field-select">
+                                        <option value="bg-soft-blue"   {{ old('pastel_bg') == 'bg-soft-blue'   ? 'selected' : '' }}>Soft Blue</option>
+                                        <option value="bg-soft-orange" {{ old('pastel_bg') == 'bg-soft-orange' ? 'selected' : '' }}>Soft Orange</option>
+                                        <option value="bg-soft-yellow" {{ old('pastel_bg') == 'bg-soft-yellow' ? 'selected' : '' }}>Soft Yellow</option>
+                                    </select>
+                                    <div class="field-hint">Pastel colour of the card on the storefront.</div>
                                 </div>
 
                             </div>
                         </div>
-
-
 
                         <!-- Settings -->
                         <div class="section-card">
@@ -616,6 +651,11 @@
         }
     });
 
+    // Live icon preview
+    document.getElementById('iconInput').addEventListener('input', function () {
+        document.getElementById('iconPreview').className = 'fa-solid ' + this.value.trim();
+    });
+
     // Image preview
     document.getElementById('imageInput').addEventListener('change', function () {
         const file = this.files[0];
@@ -633,35 +673,6 @@
         document.getElementById('imageInput').value = '';
         document.getElementById('imagePreview').style.display = 'none';
         document.getElementById('uploadArea').style.display = 'block';
-    }
-
-    document.getElementById('sizeChartInput').addEventListener('change', function () {
-
-        const file = this.files[0];
-
-        if (!file) return;
-
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-
-            document.getElementById('sizeChartPreviewImg').src = e.target.result;
-
-            document.getElementById('sizeChartPreview').style.display = 'block';
-
-            document.getElementById('sizeChartUploadArea').style.display = 'none';
-        };
-
-        reader.readAsDataURL(file);
-    });
-
-    function clearSizeChart() {
-
-        document.getElementById('sizeChartInput').value = '';
-
-        document.getElementById('sizeChartPreview').style.display = 'none';
-
-        document.getElementById('sizeChartUploadArea').style.display = 'block';
     }
 
 </script>

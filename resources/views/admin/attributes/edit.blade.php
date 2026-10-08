@@ -404,7 +404,8 @@
                     <div>
                         <div class="attr-identity-name">{{ $attribute->name }}</div>
                         <div class="attr-identity-id">ID #{{ $attribute->id }} &nbsp;·&nbsp;
-                            {{ ucfirst($attribute->type) }}</div>
+                            {{ ucfirst($attribute->type) }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -443,6 +444,18 @@
                                                 <span class="type-name">{{ ucfirst(str_replace('_', ' ', $type)) }}</span>
                                             </label>
                                         @endforeach
+                                    </div>
+                                </div>
+
+                                <div class="field-group">
+                                    <label class="field-label">Icon</label>
+                                    <input type="text" name="icon" class="field-input"
+                                        value="{{ old('icon', $attribute->icon) }}"
+                                        placeholder="e.g. fa-solid fa-palette">
+                                    <div class="field-hint">
+                                        FontAwesome class for the product page specifications card
+                                        (e.g. <code>fa-solid fa-palette</code>, <code>fa-solid fa-ruler</code>).
+                                        Leave blank to use the default icon.
                                     </div>
                                 </div>
 

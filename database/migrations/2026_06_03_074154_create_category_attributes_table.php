@@ -26,6 +26,12 @@ return new class extends Migration {
 
             $table->boolean('used_for_variant')->default(false);
 
+            $table->boolean('price_dependent')->default(false);
+            $table->boolean('image_dependent')->default(false);
+            $table->boolean('stock_dependent')->default(false);
+            $table->boolean('sku_dependent')->default(false);
+            $table->boolean('is_selectable')->default(true);
+
             $table->boolean('show_in_filter')->default(false);
 
             $table->boolean('show_on_listing')->default(false);

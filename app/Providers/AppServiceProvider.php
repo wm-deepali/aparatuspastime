@@ -19,6 +19,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+
+        View::composer('layouts.app', function ($view) {
+            $cart = auth('customer')->check()
+                ? \App\Models\Cart::where('user_id', auth('customer')->id())->first()
+                : \App\Models\Cart::where('session_id', session()->getId())->first();
+
+            $view->with('cartCount', $cart ? (int) $cart->items()->sum('quantity') : 0);
+        });
         View::composer('*', function ($view) {
             $general = \App\Models\Setting::first();
 
@@ -30,6 +38,6 @@ class AppServiceProvider extends ServiceProvider
         });
 
 
-        
+
     }
 }

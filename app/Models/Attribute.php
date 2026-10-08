@@ -9,6 +9,7 @@ class Attribute extends Model
     protected $fillable = [
         'name',
         'slug',
+        'icon',
         'type',
         'has_values',
         'status',

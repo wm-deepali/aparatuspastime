@@ -1,75 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.app')
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>Aparatus Pastime | Kids Toys, Games & Sports Goods - Play. Learn. Explore.</title>
-  <meta name="description"
-    content="Discover premium curated kids toys, board games, sports goods, tactical puzzles, and educational STEM sets at Aparatus Pastime. Built for active play, curiosity, and family fun.">
+@section('title', 'Aparatus Pastime | Kids Toys, Games & Sports Goods - Play. Learn. Explore.')
+@section('meta_description', 'Discover premium curated kids toys, board games, sports goods, tactical puzzles, and educational STEM sets at Aparatus Pastime. Built for active play, curiosity, and family fun.')
+@section('active_nav', 'home')
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="{{ asset('assets/logo.png') }}">
-
-  <!-- Google Fonts: Outfit & Nunito -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet">
-
-  <!-- Font Awesome 6 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-
-  <!-- Tailwind CSS CDN with Custom Brand Tokens -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'brand-blue': '#1261A0',
-            'brand-navy': '#073B73',
-            'brand-orange': '#F58220',
-            'brand-bright-orange': '#FF9F1C',
-            'play-yellow': '#FFD447',
-            'sky-blue': '#7DD3FC',
-            'mint': '#8FE3CF',
-            'soft-coral': '#FF8A80',
-            'purple-play': '#A78BFA',
-            'warm-cream': '#FFFDF7',
-            'soft-blue': '#F0F8FF',
-            'soft-yellow': '#FFF9E6',
-            'soft-mint': '#F0FFF9',
-            'soft-orange': '#FFF4EA',
-            'soft-purple': '#F5F3FF',
-            'soft-sky': '#F0F9FF',
-            'dark-navy': '#172B4D',
-            'body-text': '#465466',
-            'brand-muted': '#7A8795',
-            'brand-border': '#E8EDF2',
-          },
-          fontFamily: {
-            sans: ['Nunito', 'sans-serif'],
-            heading: ['Outfit', 'sans-serif'],
-            body: ['Nunito', 'sans-serif'],
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}">
-</head>
-
-<body class="has-bottom-nav bg-warm-cream text-body-text">
-
-  <!-- HEADER CONTAINER (Injected dynamically) -->
-  <div id="header-root"></div>
-
-  <!-- MAIN HOMEPAGE CONTENT -->
-  <main>
+@section('content')
 
     <!-- 1. FULL WIDTH HERO SLIDER (1920x480-520px Desktop, 390x320px Mobile) -->
     <section class="relative bg-brand-navy overflow-hidden">
@@ -91,32 +26,28 @@
           <div class="relative max-w-7xl mx-auto px-4 sm:px-8 md:px-12 w-full h-full flex items-center z-10">
             <div class="max-w-xl text-white space-y-2.5 sm:space-y-4 py-4 sm:py-6">
 
-              <!-- Tag Badge with Star Deco -->
               <div
                 class="inline-flex items-center gap-1.5 sm:gap-2 bg-brand-orange text-white text-[10px] sm:text-xs font-bold font-heading px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full shadow-md tracking-wider uppercase">
                 <i class="fa-solid fa-sparkles text-play-yellow"></i>
                 <span>EXPLORE & IMAGINE • PLAYTIME SPECIALS</span>
               </div>
 
-              <!-- Main Title -->
               <h1
                 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-heading leading-tight tracking-tight text-white drop-shadow-md">
                 BIG FUN<br><span class="text-play-yellow">STARTS HERE</span>
               </h1>
 
-              <!-- Subtitle -->
               <p class="text-xs sm:text-sm md:text-base text-white/90 font-sans leading-relaxed max-w-md line-clamp-2 sm:line-clamp-none">
                 Discover toys, games and activities made for curious little minds. Built for joyful discovery,
                 creativity, and lasting childhood memories.
               </p>
 
-              <!-- Buttons -->
               <div class="pt-1 sm:pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-                <a href="pages/shop.html?category=toys"
+                <a href="{{ route('shop') }}?category=toys"
                   class="btn-play-orange text-xs sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-xl shadow-lg flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
                   <span>SHOP TOYS →</span>
                 </a>
-                <a href="pages/categories.html"
+                <a href="{{ route('categories') }}"
                   class="bg-white/20 hover:bg-white/30 text-white text-xs sm:text-sm font-bold font-heading px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl border border-white/40 backdrop-blur-md transition whitespace-nowrap">
                   EXPLORE ALL CATEGORIES
                 </a>
@@ -155,11 +86,11 @@
               </p>
 
               <div class="pt-1 sm:pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-                <a href="pages/shop.html?category=educational"
+                <a href="{{ route('shop') }}?category=educational"
                   class="btn-play-orange text-xs sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-xl shadow-lg flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
                   <span>EXPLORE LEARNING →</span>
                 </a>
-                <a href="pages/shop.html?filter=trending"
+                <a href="{{ route('shop') }}?filter=trending"
                   class="bg-white/20 hover:bg-white/30 text-white text-xs sm:text-sm font-bold font-heading px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl border border-white/40 backdrop-blur-md transition whitespace-nowrap">
                   TRENDING NOW
                 </a>
@@ -198,11 +129,11 @@
               </p>
 
               <div class="pt-1 sm:pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-                <a href="pages/shop.html?category=outdoor"
+                <a href="{{ route('shop') }}?category=outdoor"
                   class="btn-play-orange text-xs sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-xl shadow-lg flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
                   <span>SHOP OUTDOOR PLAY →</span>
                 </a>
-                <a href="pages/shop.html?category=sports"
+                <a href="{{ route('shop') }}?category=sports"
                   class="bg-white/20 hover:bg-white/30 text-white text-xs sm:text-sm font-bold font-heading px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl border border-white/40 backdrop-blur-md transition whitespace-nowrap">
                   SPORTS GEAR
                 </a>
@@ -241,11 +172,11 @@
               </p>
 
               <div class="pt-1 sm:pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-                <a href="pages/shop.html?category=gifts"
+                <a href="{{ route('shop') }}?category=gifts"
                   class="btn-play-orange text-xs sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-xl shadow-lg flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
                   <span>SHOP GIFTS →</span>
                 </a>
-                <a href="pages/shop.html?filter=bestseller"
+                <a href="{{ route('shop') }}?filter=bestseller"
                   class="bg-white/20 hover:bg-white/30 text-white text-xs sm:text-sm font-bold font-heading px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl border border-white/40 backdrop-blur-md transition whitespace-nowrap">
                   TOP BEST SELLERS
                 </a>
@@ -254,7 +185,7 @@
           </div>
         </div>
 
-        <!-- Sleek Floating Navigation Arrows (Visible on sm and up) -->
+        <!-- Floating Navigation Arrows (sm and up) -->
         <button id="hero-prev"
           class="hidden sm:flex absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 hover:bg-brand-orange text-white items-center justify-center transition backdrop-blur-md z-20 shadow-lg border border-white/30 cursor-pointer"
           aria-label="Previous Slide">
@@ -392,7 +323,7 @@
             </p>
           </div>
 
-          <!-- Tabs: NEW ARRIVALS / BEST SELLERS / TRENDING (Single line on all viewports) -->
+          <!-- Tabs: NEW ARRIVALS / BEST SELLERS / TRENDING -->
           <div
             class="w-full sm:w-auto overflow-x-auto no-scrollbar flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 bg-soft-blue p-1 sm:p-1.5 rounded-2xl border border-brand-border self-start sm:self-auto font-heading">
             <button id="tab-new-arrivals"
@@ -416,7 +347,7 @@
         </div>
 
         <div class="mt-10 text-center">
-          <a href="pages/shop.html"
+          <a href="{{ route('shop') }}"
             class="inline-flex items-center gap-2 btn-play-blue text-xs sm:text-sm px-8 py-3.5 rounded-xl shadow-md transition font-heading">
             <span>DISCOVER ALL PRODUCTS</span>
             <i class="fa-solid fa-arrow-right text-xs"></i>
@@ -472,7 +403,7 @@
                 <span class="text-xs font-bold text-brand-orange bg-soft-orange px-2 py-0.5 rounded-full">21% OFF</span>
               </div>
               <div class="pt-2">
-                <a href="pages/product.html?slug=magnetic-learning-set"
+                <a href="{{ route('product', ['slug' => 'magnetic-learning-set']) }}"
                   class="inline-flex items-center gap-2 btn-play-orange text-xs px-6 py-2.5 rounded-xl shadow-xs transition font-heading">
                   <span>VIEW PRODUCT</span>
                   <i class="fa-solid fa-arrow-right text-xs"></i>
@@ -508,7 +439,7 @@
                 <span class="text-xs font-bold text-brand-orange bg-soft-orange px-2 py-0.5 rounded-full">23% OFF</span>
               </div>
               <div class="pt-2">
-                <a href="pages/product.html?slug=classic-football"
+                <a href="{{ route('product', ['slug' => 'classic-football']) }}"
                   class="inline-flex items-center gap-2 btn-play-blue text-xs px-6 py-2.5 rounded-xl shadow-xs transition font-heading">
                   <span>VIEW PRODUCT</span>
                   <i class="fa-solid fa-arrow-right text-xs"></i>
@@ -542,7 +473,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
 
           <!-- 0-2 -->
-          <a href="pages/shop.html?age=0-2"
+          <a href="{{ route('shop') }}?age=0-2"
             class="age-card bg-soft-orange border border-orange-200 p-4 sm:p-5 flex flex-col items-center text-center group">
             <div
               class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl text-brand-orange mb-3 group-hover:scale-110 transition">
@@ -554,7 +485,7 @@
           </a>
 
           <!-- 3-5 -->
-          <a href="pages/shop.html?age=3-5"
+          <a href="{{ route('shop') }}?age=3-5"
             class="age-card bg-soft-yellow border border-amber-200 p-4 sm:p-5 flex flex-col items-center text-center group">
             <div
               class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl text-amber-500 mb-3 group-hover:scale-110 transition">
@@ -566,7 +497,7 @@
           </a>
 
           <!-- 6-8 -->
-          <a href="pages/shop.html?age=6-8"
+          <a href="{{ route('shop') }}?age=6-8"
             class="age-card bg-soft-blue border border-blue-200 p-4 sm:p-5 flex flex-col items-center text-center group">
             <div
               class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl text-brand-blue mb-3 group-hover:scale-110 transition">
@@ -578,7 +509,7 @@
           </a>
 
           <!-- 9-12 -->
-          <a href="pages/shop.html?age=9-12"
+          <a href="{{ route('shop') }}?age=9-12"
             class="age-card bg-soft-mint border border-emerald-200 p-4 sm:p-5 flex flex-col items-center text-center group">
             <div
               class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl text-emerald-600 mb-3 group-hover:scale-110 transition">
@@ -590,7 +521,7 @@
           </a>
 
           <!-- 12+ -->
-          <a href="pages/shop.html?age=12+"
+          <a href="{{ route('shop') }}?age=12+"
             class="age-card bg-soft-purple border border-purple-200 p-4 sm:p-5 flex flex-col items-center text-center group col-span-2 sm:col-span-1">
             <div
               class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl text-purple-600 mb-3 group-hover:scale-110 transition">
@@ -625,7 +556,7 @@
 
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
 
-          <a href="pages/shop.html?category=toys"
+          <a href="{{ route('shop') }}?category=toys"
             class="interest-card bg-soft-orange border border-orange-200 p-4 text-center group">
             <div
               class="w-12 h-12 rounded-2xl bg-brand-orange text-white flex items-center justify-center text-lg mx-auto mb-2 shadow-xs group-hover:scale-110 transition">
@@ -635,7 +566,7 @@
             <span class="text-[11px] text-body-text font-sans">Blocks & Magnetics</span>
           </a>
 
-          <a href="pages/shop.html?category=activity"
+          <a href="{{ route('shop') }}?category=activity"
             class="interest-card bg-soft-yellow border border-amber-200 p-4 text-center group">
             <div
               class="w-12 h-12 rounded-2xl bg-amber-400 text-dark-navy flex items-center justify-center text-lg mx-auto mb-2 shadow-xs group-hover:scale-110 transition">
@@ -645,7 +576,7 @@
             <span class="text-[11px] text-body-text font-sans">Art & Craft Kits</span>
           </a>
 
-          <a href="pages/shop.html?category=sports"
+          <a href="{{ route('shop') }}?category=sports"
             class="interest-card bg-soft-blue border border-blue-200 p-4 text-center group">
             <div
               class="w-12 h-12 rounded-2xl bg-brand-blue text-white flex items-center justify-center text-lg mx-auto mb-2 shadow-xs group-hover:scale-110 transition">
@@ -655,7 +586,7 @@
             <span class="text-[11px] text-body-text font-sans">Football & Sports</span>
           </a>
 
-          <a href="pages/shop.html?category=games"
+          <a href="{{ route('shop') }}?category=games"
             class="interest-card bg-soft-purple border border-purple-200 p-4 text-center group">
             <div
               class="w-12 h-12 rounded-2xl bg-purple-500 text-white flex items-center justify-center text-lg mx-auto mb-2 shadow-xs group-hover:scale-110 transition">
@@ -665,7 +596,7 @@
             <span class="text-[11px] text-body-text font-sans">Puzzles & Tactics</span>
           </a>
 
-          <a href="pages/shop.html?category=educational"
+          <a href="{{ route('shop') }}?category=educational"
             class="interest-card bg-soft-mint border border-emerald-200 p-4 text-center group">
             <div
               class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-lg mx-auto mb-2 shadow-xs group-hover:scale-110 transition">
@@ -675,7 +606,7 @@
             <span class="text-[11px] text-body-text font-sans">STEM Science Labs</span>
           </a>
 
-          <a href="pages/shop.html?category=outdoor"
+          <a href="{{ route('shop') }}?category=outdoor"
             class="interest-card bg-soft-coral border border-rose-200 p-4 text-center group">
             <div
               class="w-12 h-12 rounded-2xl bg-soft-coral text-white flex items-center justify-center text-lg mx-auto mb-2 shadow-xs group-hover:scale-110 transition">
@@ -690,7 +621,7 @@
       </div>
     </section>
 
-    <!-- 8. STEM SECTION ("SMART PLAY STARTS HERE" - Soft Mint Background) -->
+    <!-- 8. STEM SECTION ("SMART PLAY STARTS HERE") -->
     <section class="py-12 md:py-16 bg-soft-mint border-y border-emerald-100">
       <div class="max-w-7xl mx-auto px-4">
 
@@ -714,7 +645,7 @@
             </p>
           </div>
 
-          <a href="pages/shop.html?category=educational"
+          <a href="{{ route('shop') }}?category=educational"
             class="btn-play-blue text-xs sm:text-sm px-6 py-3 rounded-xl shadow-xs self-start lg:self-auto font-heading">
             <span>EXPLORE STEM KITS →</span>
           </a>
@@ -727,7 +658,7 @@
       </div>
     </section>
 
-    <!-- 9. OUTDOOR PLAY SECTION ("LET'S GET OUTSIDE" - Soft Blue Background) -->
+    <!-- 9. OUTDOOR PLAY SECTION ("LET'S GET OUTSIDE") -->
     <section class="py-12 md:py-16 bg-soft-blue border-b border-blue-100">
       <div class="max-w-7xl mx-auto px-4">
 
@@ -746,7 +677,7 @@
             </p>
           </div>
 
-          <a href="pages/shop.html?category=outdoor"
+          <a href="{{ route('shop') }}?category=outdoor"
             class="btn-play-orange text-xs sm:text-sm px-6 py-3 rounded-xl shadow-xs self-start lg:self-auto font-heading">
             <span>SHOP OUTDOOR PLAY →</span>
           </a>
@@ -787,7 +718,7 @@
               game triumphs.
             </p>
             <div class="pt-2">
-              <a href="pages/shop.html"
+              <a href="{{ route('shop') }}"
                 class="inline-flex items-center gap-2 btn-play-orange text-xs sm:text-sm px-8 py-3.5 rounded-xl shadow-lg transition font-heading">
                 <span>SHOP NOW →</span>
               </a>
@@ -895,7 +826,6 @@
 
           <!-- Rating Trust Badge & Navigation Controls -->
           <div class="flex items-center gap-3 sm:gap-4 self-start md:self-auto">
-            <!-- Mini Trust Stat -->
             <div class="hidden sm:flex items-center gap-2 bg-soft-yellow/80 border border-amber-200 px-3 py-1.5 rounded-2xl shadow-2xs">
               <div class="flex text-amber-400 text-xs gap-0.5">
                 <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
@@ -904,7 +834,6 @@
               <span class="text-[11px] text-brand-muted font-sans">(1,200+ Reviews)</span>
             </div>
 
-            <!-- Arrow Buttons -->
             <div class="flex items-center gap-2">
               <button id="testimonial-prev"
                 class="w-10 h-10 rounded-full bg-white hover:bg-brand-orange text-dark-navy hover:text-white border border-brand-border hover:border-brand-orange shadow-2xs flex items-center justify-center transition cursor-pointer"
@@ -923,7 +852,7 @@
         <!-- Testimonials Carousel Viewport -->
         <div id="testimonial-slider-container" class="relative overflow-hidden select-none -mx-2 px-2 py-2">
           <div id="testimonial-track" class="flex transition-transform duration-500 ease-out">
-            
+
             <!-- Slide 1: Pooja Sharma -->
             <div class="testimonial-slide w-full md:w-1/2 lg:w-1/3 shrink-0 px-2 sm:px-3">
               <div class="bg-gradient-to-br from-soft-yellow/90 via-white to-soft-yellow/40 border border-amber-200/90 p-6 sm:p-7 rounded-3xl flex flex-col justify-between h-full relative overflow-hidden shadow-2xs hover:shadow-md hover:-translate-y-1 transition duration-300">
@@ -1156,7 +1085,7 @@
               Ideas, guides and inspiration for better playtime.
             </p>
           </div>
-          <a href="pages/blog.html"
+          <a href="{{ route('blogs') }}"
             class="text-xs sm:text-sm font-bold font-heading text-brand-blue hover:text-brand-orange transition flex items-center gap-1.5 self-start sm:self-auto">
             <span>VIEW ALL INSPIRATION</span>
             <i class="fa-solid fa-arrow-right text-xs"></i>
@@ -1170,15 +1099,10 @@
       </div>
     </section>
 
-  </main>
+@endsection
 
-  <!-- FOOTER CONTAINER (Injected dynamically) -->
-  <div id="footer-root"></div>
-
-  <!-- MOBILE BOTTOM NAV CONTAINER -->
-  <div id="mobile-bottom-nav-root"></div>
-
-  <!-- JAVASCRIPT INITIALIZATION SCRIPT -->
+@push('scripts')
+  <!-- HOMEPAGE SCRIPT -->
   <script type="module">
     import { products } from '{{ asset("assets/js/data/products.js") }}';
     import { categories } from '{{ asset("assets/js/data/categories.js") }}';
@@ -1186,21 +1110,14 @@
     import { Components } from '{{ asset("assets/js/components.js") }}';
 
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Render Header, Footer, Bottom Nav
-      document.getElementById('header-root').innerHTML = Components.renderHeader('home', '');
-      document.getElementById('footer-root').innerHTML = Components.renderFooter('');
-      document.getElementById('mobile-bottom-nav-root').innerHTML = Components.renderMobileBottomNav('home', '');
 
-      // 2. Initialize Global interactions (Cart drawer, search, quick view, wishlist)
-      Components.initGlobalInteractions('');
-
-      // 3. Render Categories Grid (All 7 categories with individual pastel styling)
+      // 1. Render Categories Grid (All 7 categories with individual pastel styling)
       const categoriesGrid = document.getElementById('home-categories-grid');
       if (categoriesGrid) {
         categoriesGrid.innerHTML = categories.map(cat => Components.renderCategoryCard(cat, '')).join('');
       }
 
-      // 4. Render Trending Products with Tabs Switcher
+      // 2. Render Trending Products with Tabs Switcher
       const trendingGrid = document.getElementById('home-trending-grid');
       const tabNewArrivals = document.getElementById('tab-new-arrivals');
       const tabBestSellers = document.getElementById('tab-best-sellers');
@@ -1248,27 +1165,27 @@
         renderTrending('trending');
       });
 
-      // 5. Render STEM Products Grid (4 items)
+      // 3. Render STEM Products Grid (4 items)
       const stemGrid = document.getElementById('home-stem-grid');
       if (stemGrid) {
         const stemProds = products.filter(p => p.category === 'educational' || p.ageGroup === '9-12').slice(0, 4);
         stemGrid.innerHTML = stemProds.map(p => Components.renderProductCard(p, '')).join('');
       }
 
-      // 6. Render Outdoor Products Grid (4 items)
+      // 4. Render Outdoor Products Grid (4 items)
       const outdoorGrid = document.getElementById('home-outdoor-grid');
       if (outdoorGrid) {
         const outdoorProds = products.filter(p => p.category === 'outdoor' || p.category === 'sports').slice(0, 4);
         outdoorGrid.innerHTML = outdoorProds.map(p => Components.renderProductCard(p, '')).join('');
       }
 
-      // 7. Render Blog Articles (3 cards)
+      // 5. Render Blog Articles (3 cards)
       const blogsGrid = document.getElementById('home-blogs-grid');
       if (blogsGrid) {
         blogsGrid.innerHTML = blogs.slice(0, 3).map(blog => Components.renderBlogCard(blog, '')).join('');
       }
 
-      // 8. Hero Slider Carousel logic
+      // 6. Hero Slider Carousel logic
       const slides = document.querySelectorAll('.hero-slide');
       const dots = document.querySelectorAll('.hero-dot');
       let currentSlide = 0;
@@ -1332,14 +1249,14 @@
         if (touchEndX > touchStartX + 40) prevSlide();
       }, { passive: true });
 
-      // 9. Testimonial Carousel Logic ("WHAT PARENTS ARE SAYING")
+      // 7. Testimonial Carousel Logic ("WHAT PARENTS ARE SAYING")
       const tTrack = document.getElementById('testimonial-track');
       const tPrev = document.getElementById('testimonial-prev');
       const tNext = document.getElementById('testimonial-next');
       const tDotsContainer = document.getElementById('testimonial-dots');
       const tContainer = document.getElementById('testimonial-slider-container');
       const tSlides = document.querySelectorAll('.testimonial-slide');
-      
+
       let tIndex = 0;
       let tInterval = null;
 
@@ -1360,8 +1277,8 @@
         tDotsContainer.innerHTML = '';
         for (let i = 0; i <= maxIdx; i++) {
           const dot = document.createElement('button');
-          dot.className = i === tIndex 
-            ? 'w-7 h-2.5 bg-brand-orange rounded-full transition-all duration-300 cursor-pointer shadow-xs' 
+          dot.className = i === tIndex
+            ? 'w-7 h-2.5 bg-brand-orange rounded-full transition-all duration-300 cursor-pointer shadow-xs'
             : 'w-2.5 h-2.5 bg-gray-300 hover:bg-gray-400 rounded-full transition-all duration-300 cursor-pointer';
           dot.setAttribute('aria-label', `Go to testimonial slide ${i + 1}`);
           dot.addEventListener('click', () => {
@@ -1377,7 +1294,7 @@
         const maxIdx = getMaxIndex();
         if (tIndex > maxIdx) tIndex = maxIdx;
         if (tIndex < 0) tIndex = 0;
-        
+
         const cardPercentage = 100 / perView;
         if (tTrack) {
           tTrack.style.transform = `translateX(-${tIndex * cardPercentage}%)`;
@@ -1431,6 +1348,4 @@
       updateTestimonialSlider();
     });
   </script>
-</body>
-
-</html>
+@endpush

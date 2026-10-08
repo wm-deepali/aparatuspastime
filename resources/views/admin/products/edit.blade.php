@@ -23,13 +23,15 @@
             --green-bg: #e3f1ec;
             --red: #b22222;
             --red-bg: #fce8e8;
+            --amber: #916a00;
+            --amber-bg: #fff5cc;
             --radius-sm: 8px;
             --radius-md: 12px;
             --shadow-card: 0 1px 3px rgba(0, 0, 0, .08), 0 0 0 1px var(--border);
             --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        .edit-page {
+        .product-create-page {
             background: var(--bg);
             padding: 24px 28px;
             min-height: 100vh;
@@ -37,12 +39,12 @@
             color: var(--text-primary);
         }
 
-        .edit-page * {
+        .product-create-page * {
             box-sizing: border-box;
         }
 
         /* ── Page header ────────────────────────────────────────── */
-        .edit-page-header {
+        .page-header {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
@@ -51,7 +53,7 @@
             margin-bottom: 20px;
         }
 
-        .edit-page-header h1 {
+        .page-header h1 {
             font-size: 20px;
             font-weight: 650;
             color: var(--text-primary);
@@ -77,7 +79,7 @@
             margin: 0 5px;
         }
 
-        /* ── Identity chip ─────────────────────────────────────── */
+        /* ── Identity chip (edit only) ──────────────────────────── */
         .prod-identity {
             display: flex;
             align-items: center;
@@ -131,78 +133,44 @@
             gap: 6px;
         }
 
-        /* ── Buttons ────────────────────────────────────────────── */
-        .btn-primary-dash {
+        .pill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            background: var(--accent);
-            color: #fff !important;
-            border: none;
-            border-radius: var(--radius-sm);
-            padding: 8px 18px;
-            font-size: 13px;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
             font-weight: 600;
-            cursor: pointer;
-            text-decoration: none !important;
-            font-family: var(--font);
-            transition: background .15s;
-            box-shadow: 0 1px 3px rgba(48, 61, 137, .25);
         }
 
-        .btn-primary-dash:hover:not(:disabled) {
-            background: #252f70;
+        .pill::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
         }
 
-        .btn-primary-dash:disabled {
-            opacity: .65;
-            cursor: not-allowed;
+        .pill-active {
+            background: var(--green-bg);
+            color: var(--green);
         }
 
-        .btn-secondary-dash {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--surface);
-            color: var(--text-primary) !important;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 8px 18px;
-            font-size: 13px;
-            font-weight: 500;
-            text-decoration: none !important;
-            font-family: var(--font);
-            transition: background .15s;
-            cursor: pointer;
+        .pill-active::before {
+            background: var(--green);
         }
 
-        .btn-secondary-dash:hover {
-            background: var(--bg);
+        .pill-inactive {
+            background: var(--red-bg);
+            color: var(--red);
         }
 
-        .btn-accent-outline {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--accent-light);
-            color: var(--accent) !important;
-            border: 1px solid rgba(48, 61, 137, .25);
-            border-radius: var(--radius-sm);
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none !important;
-            font-family: var(--font);
-            transition: background .15s;
-        }
-
-        .btn-accent-outline:hover {
-            background: #e3e5f7;
+        .pill-inactive::before {
+            background: var(--red);
         }
 
         /* ── Layout ─────────────────────────────────────────────── */
-        .edit-layout {
+        .product-layout {
             display: grid;
             grid-template-columns: 1fr 320px;
             gap: 20px;
@@ -210,7 +178,7 @@
         }
 
         @media(max-width:960px) {
-            .edit-layout {
+            .product-layout {
                 grid-template-columns: 1fr;
             }
         }
@@ -277,6 +245,7 @@
         .field-select,
         .field-textarea {
             width: 100%;
+            height: 38px;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             padding: 0 12px;
@@ -288,17 +257,6 @@
             font-family: var(--font);
         }
 
-        .field-input,
-        .field-select {
-            height: 38px;
-        }
-
-        .field-textarea {
-            padding: 10px 12px;
-            resize: vertical;
-            min-height: 90px;
-        }
-
         .field-input:focus,
         .field-select:focus,
         .field-textarea:focus {
@@ -306,10 +264,17 @@
             box-shadow: 0 0 0 3px rgba(48, 61, 137, .12);
         }
 
+        .field-textarea {
+            height: auto;
+            padding: 10px 12px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
         .field-input[readonly] {
             background: var(--bg);
             color: var(--text-secondary);
-            cursor: not-allowed;
+            cursor: default;
         }
 
         .field-hint {
@@ -320,11 +285,15 @@
 
         /* ── Slug prefix ────────────────────────────────────────── */
         .slug-wrap {
-            display: flex;
+            position: relative;
         }
 
         .slug-prefix {
-            display: inline-flex;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            display: flex;
             align-items: center;
             padding: 0 10px;
             background: var(--bg);
@@ -334,21 +303,22 @@
             font-size: 12px;
             color: var(--text-hint);
             white-space: nowrap;
+            pointer-events: none;
         }
 
-        .slug-wrap .field-input {
-            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        .slug-input {
+            padding-left: 68px !important;
         }
 
-        /* ── Price grid ─────────────────────────────────────────── */
-        .price-grid {
+        /* ── Pricing row ────────────────────────────────────────── */
+        .pricing-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 12px;
         }
 
-        @media(max-width:600px) {
-            .price-grid {
+        @media(max-width:640px) {
+            .pricing-grid {
                 grid-template-columns: 1fr 1fr;
             }
         }
@@ -357,14 +327,14 @@
             background: var(--accent-light);
             border: 1px solid #c7cdf5;
             border-radius: var(--radius-sm);
-            padding: 12px 16px;
+            padding: 14px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 14px;
+            margin-top: 16px;
         }
 
-        .final-price-box .fp-label {
+        .final-price-box .label {
             font-size: 12px;
             font-weight: 600;
             color: var(--accent);
@@ -372,8 +342,8 @@
             letter-spacing: .04em;
         }
 
-        .final-price-box .fp-value {
-            font-size: 20px;
+        .final-price-box .value {
+            font-size: 22px;
             font-weight: 700;
             color: var(--accent);
         }
@@ -385,68 +355,99 @@
             gap: 12px;
         }
 
-        /* ── Checkbox pill ──────────────────────────────────────── */
-        .check-pill {
+        /* ── Checkbox toggles ───────────────────────────────────── */
+        .check-toggle {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 9px 12px;
-            border: 1px solid var(--border);
+            gap: 10px;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
             border-radius: var(--radius-sm);
-            background: var(--surface);
             cursor: pointer;
-            transition: border-color .15s, background .15s;
-            font-size: 13px;
-            color: var(--text-primary);
+            transition: all .15s;
+            background: var(--surface);
             margin-bottom: 8px;
-            user-select: none;
         }
 
-        .check-pill:last-child {
-            margin-bottom: 0;
-        }
-
-        .check-pill:hover {
+        .check-toggle:hover {
             border-color: var(--accent);
             background: var(--accent-light);
         }
 
-        .check-pill input[type="checkbox"] {
+        .check-toggle input[type="checkbox"] {
             accent-color: var(--accent);
             width: 15px;
             height: 15px;
             flex-shrink: 0;
             cursor: pointer;
+            margin: 0;
         }
 
-        .check-pill input[type="checkbox"]:checked~span {
+        .check-toggle input[type="checkbox"]:checked~span {
             font-weight: 600;
             color: var(--accent);
         }
 
-        .check-pill:has(input:checked) {
+        .check-toggle:has(input:checked) {
             border-color: var(--accent);
             background: var(--accent-light);
         }
 
-        .check-pill-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0 12px;
+        .check-toggle span {
+            font-size: 13px;
+            color: var(--text-primary);
         }
 
-        @media(max-width:600px) {
-            .check-pill-grid {
-                grid-template-columns: 1fr;
-            }
+        /* ── Image / video upload ───────────────────────────────── */
+        .file-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 24px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .15s, background .15s;
+            position: relative;
         }
 
-        /* ── Media thumbnails ───────────────────────────────────── */
+        .file-upload-area:hover {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .file-upload-area input[type=file] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .file-upload-area .upload-icon {
+            font-size: 24px;
+            color: var(--text-hint);
+            margin-bottom: 8px;
+        }
+
+        .file-upload-area p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .file-upload-area small {
+            font-size: 11.5px;
+            color: var(--text-hint);
+        }
+
+        /* Thumb previews */
+        #previewContainer,
+        #videoPreviewContainer,
         .media-grid {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin-top: 4px;
+            margin-top: 14px;
         }
 
         .thumb-box {
@@ -454,39 +455,41 @@
         }
 
         .thumb-box img {
-            width: 80px;
-            height: 80px;
+            width: 76px;
+            height: 76px;
             border-radius: var(--radius-sm);
             object-fit: cover;
-            border: 1px solid var(--border);
+            border: 1.5px solid var(--border);
             display: block;
         }
 
         .thumb-box video {
-            width: 130px;
-            height: 80px;
+            width: 120px;
+            height: 76px;
             border-radius: var(--radius-sm);
             object-fit: cover;
-            border: 1px solid var(--border);
+            border: 1.5px solid var(--border);
             display: block;
             background: #000;
         }
 
-        .thumb-remove {
+        .remove-btn {
             position: absolute;
             top: -6px;
             right: -6px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
             background: var(--red);
             color: #fff;
             border: 2px solid #fff;
+            border-radius: 50%;
             font-size: 11px;
+            width: 20px;
+            height: 20px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            line-height: 1;
+            padding: 0;
         }
 
         .thumb-default {
@@ -500,55 +503,12 @@
             accent-color: var(--accent);
         }
 
-        /* ── Upload area ────────────────────────────────────────── */
-        .upload-area {
-            border: 2px dashed var(--border);
-            border-radius: var(--radius-sm);
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color .15s, background .15s;
-            position: relative;
-        }
-
-        .upload-area:hover {
-            border-color: var(--accent);
-            background: var(--accent-light);
-        }
-
-        .upload-area input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-            width: 100%;
-            height: 100%;
-        }
-
-        .upload-icon {
-            font-size: 20px;
-            color: var(--text-hint);
-            margin-bottom: 4px;
-        }
-
-        .upload-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .upload-sub {
-            font-size: 11.5px;
-            color: var(--text-hint);
-            margin-top: 2px;
-        }
-
-        /* ── Toggle rows (right sidebar) ────────────────────────── */
+        /* ── Settings toggle rows ───────────────────────────────── */
         .toggle-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px solid var(--bg);
         }
 
@@ -583,12 +543,12 @@
             background: var(--surface);
             outline: none;
             font-family: var(--font);
-            transition: border-color .15s, box-shadow .15s;
-            min-width: 100px;
+            min-width: 90px;
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238c9196'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 9px center;
+            transition: border-color .15s, box-shadow .15s;
         }
 
         .field-select-sm:focus {
@@ -596,135 +556,28 @@
             box-shadow: 0 0 0 3px rgba(48, 61, 137, .12);
         }
 
-        /* ── Status pills ───────────────────────────────────────── */
-        .pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 600;
-        }
-
-        .pill::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .pill-active {
-            background: var(--green-bg);
-            color: var(--green);
-        }
-
-        .pill-active::before {
-            background: var(--green);
-        }
-
-        .pill-inactive {
-            background: var(--red-bg);
-            color: var(--red);
-        }
-
-        .pill-inactive::before {
-            background: var(--red);
-        }
-
         /* ── Attributes (dynamic) ───────────────────────────────── */
-        #attribute-container .section-card,
-        #variant-container .section-card {
-            margin-bottom: 16px;
-        }
-
-        #variant-container table {
-            font-size: 12.5px;
-        }
-
-        #variant-container table th {
-            background: #fafafa;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-            color: var(--text-secondary);
-            font-weight: 650;
-            padding: 10px;
-        }
-
-        #variant-container table td {
-            padding: 8px 10px;
-            vertical-align: middle;
-        }
-
-        #variant-container .form-control,
-        #attribute-container .form-control {
-            height: 34px;
-            border-radius: var(--radius-sm);
-            font-size: 12.5px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            font-family: var(--font);
-            padding: 0 10px;
-            outline: none;
-            transition: border-color .15s, box-shadow .15s;
-        }
-
-        #variant-container .form-control:focus,
-        #attribute-container .form-control:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(48, 61, 137, .12);
-        }
-
-        .variant-name-cell {
-            font-weight: 600;
+        #attribute-container .section-card-body label {
+            font-size: 13px;
+            font-weight: 500;
             color: var(--text-primary);
-            white-space: nowrap;
         }
 
-        .variant-note {
-            font-size: 11.5px;
-            color: var(--text-hint);
-            padding: 10px 20px;
-            border-top: 1px solid var(--border);
-            background: #fafafa;
+        #attribute-container .check-toggle {
+            margin-bottom: 6px;
         }
 
-        #attribute-container .attr-check-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 6px;
-        }
-
-        #attribute-container .attr-check-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 10px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            background: var(--surface);
-            font-size: 12.5px;
-            cursor: pointer;
-            transition: border-color .12s, background .12s;
-        }
-
-        #attribute-container .attr-check-item:hover {
-            border-color: var(--accent);
+        .attr-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 650;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 20px;
             background: var(--accent-light);
-        }
-
-        #attribute-container .attr-check-item input {
-            accent-color: var(--accent);
-        }
-
-        #attribute-container .attr-check-item:has(input:checked) {
-            border-color: var(--accent);
-            background: var(--accent-light);
-            font-weight: 600;
             color: var(--accent);
+            margin-left: 6px;
         }
 
         /* ── Attribute accordion ─────────────────────────────────── */
@@ -811,20 +664,73 @@
             padding: 14px;
         }
 
-        .attr-badge {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: 650;
-            letter-spacing: .03em;
-            text-transform: uppercase;
-            padding: 2px 7px;
-            border-radius: 20px;
-            background: var(--accent-light);
-            color: var(--accent);
-            margin-left: 6px;
+        .attr-accordion-body .check-toggle {
+            margin-bottom: 6px;
         }
 
-        /* ── Content tabs (Description / Fabric Care / Shipping & Delivery / Exchange Policy / Customization / Delivery & Returns) ── */
+        .attr-accordion-body .check-toggle:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ── Variants table (dynamic) — also reused for Addons, What's In The Box, Benefits, Highlights ── */
+        .variants-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .variants-table thead th {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            color: var(--text-hint);
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            background: #fafafa;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .variants-table tbody tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .variants-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .variants-table tbody td {
+            padding: 10px 12px;
+            vertical-align: middle;
+        }
+
+        .variants-table .field-input {
+            height: 34px;
+            font-size: 13px;
+        }
+
+        .variants-table .field-select {
+            height: 34px;
+            font-size: 13px;
+        }
+
+        .variant-name-cell {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .variant-note {
+            font-size: 11.5px;
+            color: var(--text-hint);
+            padding: 10px 20px;
+            border-top: 1px solid var(--border);
+            background: #fafafa;
+        }
+
+        /* ── Content tabs (Description / How To Use / Delivery & Returns) ── */
         .content-tabs {
             display: flex;
             flex-wrap: wrap;
@@ -832,7 +738,6 @@
             padding: 10px 20px 0;
             border-bottom: 1px solid var(--border);
             background: #fafafa;
-            margin: -20px -20px 20px;
         }
 
         .content-tab-btn {
@@ -866,54 +771,76 @@
             display: block;
         }
 
-        /* ── Addon Options table (reuses the same look as variants table) ── */
-        .addon-table {
-            width: 100%;
-            border-collapse: collapse;
+        /* ── Buttons ────────────────────────────────────────────── */
+        .btn-primary-dash {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent);
+            color: #fff !important;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 9px 20px;
             font-size: 13px;
-        }
-
-        .addon-table thead th {
-            font-size: 11px;
             font-weight: 600;
-            letter-spacing: .05em;
-            text-transform: uppercase;
-            color: var(--text-hint);
-            padding: 10px 12px;
-            border-bottom: 1px solid var(--border);
-            background: #fafafa;
-            white-space: nowrap;
-            text-align: left;
+            cursor: pointer;
+            text-decoration: none !important;
+            font-family: var(--font);
+            transition: background .15s;
+            box-shadow: 0 1px 3px rgba(48, 61, 137, .25);
         }
 
-        .addon-table tbody tr {
-            border-bottom: 1px solid var(--border);
+        .btn-primary-dash:hover:not(:disabled) {
+            background: #252f70;
         }
 
-        .addon-table tbody tr:last-child {
-            border-bottom: none;
+        .btn-primary-dash:disabled {
+            opacity: .65;
+            cursor: not-allowed;
         }
 
-        .addon-table tbody td {
-            padding: 10px 12px;
-            vertical-align: middle;
-        }
-
-        .addon-table .field-input {
-            height: 34px;
+        .btn-secondary-dash {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface);
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 9px 20px;
             font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none !important;
+            font-family: var(--font);
+            transition: background .15s;
         }
 
-        /* ── CKEditor ───────────────────────────────────────────── */
-        .cke {
-            border-radius: var(--radius-sm) !important;
-            border: 1px solid var(--border) !important;
-            overflow: hidden;
+        .btn-secondary-dash:hover {
+            background: var(--bg);
         }
 
-        .cke_top {
-            background: #fafafa !important;
-            border-bottom: 1px solid var(--border) !important;
+        .btn-outline-accent {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-light);
+            color: var(--accent) !important;
+            border: 1.5px solid #c7cdf5;
+            border-radius: var(--radius-sm);
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none !important;
+            font-family: var(--font);
+            transition: all .15s;
+        }
+
+        .btn-outline-accent:hover {
+            background: var(--accent);
+            color: #fff !important;
+            border-color: var(--accent);
         }
 
         /* ── Action bar ─────────────────────────────────────────── */
@@ -930,12 +857,24 @@
             margin-top: 20px;
         }
 
+        /* CKEditor override */
+        .cke {
+            border-radius: var(--radius-sm) !important;
+            border: 1px solid var(--border) !important;
+            overflow: hidden;
+        }
+
+        .cke_top {
+            background: #fafafa !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+
         @media(max-width:768px) {
-            .edit-page {
+            .product-create-page {
                 padding: 16px;
             }
 
-            .price-grid {
+            .pricing-grid {
                 grid-template-columns: 1fr 1fr;
             }
 
@@ -953,106 +892,13 @@
         .variant-row-excluded select {
             background: #f1f2f4;
         }
-
-        /* ── Tag input (Search Suggestions) ─────────────────────────── */
-        .tag-input-wrap {
-            position: relative;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 8px 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            align-items: center;
-            background: var(--surface);
-            transition: border-color .15s, box-shadow .15s;
-        }
-
-        .tag-input-wrap:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(48, 61, 137, .12);
-        }
-
-        .tag-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .tag-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--accent-light);
-            color: var(--accent);
-            border: 1px solid #c7cdf5;
-            border-radius: 20px;
-            padding: 4px 6px 4px 12px;
-            font-size: 12.5px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .tag-remove {
-            background: transparent;
-            border: none;
-            color: var(--accent);
-            cursor: pointer;
-            font-size: 14px;
-            line-height: 1;
-            padding: 2px 4px;
-            border-radius: 50%;
-        }
-
-        .tag-remove:hover {
-            background: var(--accent);
-            color: #fff;
-        }
-
-        .tag-input-field {
-            flex: 1;
-            min-width: 140px;
-            border: none;
-            outline: none;
-            font-size: 13.5px;
-            font-family: var(--font);
-            padding: 4px 0;
-            background: transparent;
-        }
-
-        .tag-suggestions-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            margin-top: 4px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, .1);
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 50;
-            display: none;
-        }
-
-        .tag-suggestion-item {
-            padding: 8px 12px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        .tag-suggestion-item:hover {
-            background: var(--accent-light);
-            color: var(--accent);
-        }
     </style>
 
     <div class="app-content content container-fluid">
-        <div class="edit-page">
+        <div class="product-create-page">
 
             <!-- Page header -->
-            <div class="edit-page-header">
+            <div class="page-header">
                 <div>
                     <h1>Edit Product</h1>
                     <div class="crumb">
@@ -1107,7 +953,7 @@
                 @csrf
                 @method('PUT')
 
-                <div class="edit-layout">
+                <div class="product-layout">
 
                     <!-- ══════════ LEFT COLUMN ══════════ -->
                     <div>
@@ -1122,40 +968,36 @@
                                 <div class="field-group">
                                     <label class="field-label">Category <span class="req">*</span></label>
                                     <select name="category_id" id="category_id" class="field-select" required>
-                                        <option value="">Select Category</option>
+                                        <option value="">— Select Category —</option>
                                         @foreach($categories as $category)
-                                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                                {{ $category->name }}
-                                            </option>
+                                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
 
                                 <div class="field-group" id="subcategory-wrapper"
-                                    style="{{ $product->category_id ? '' : 'display:none' }}">
+                                    style="{{ $product->category_id && count($subcategories) ? '' : 'display:none' }}">
                                     <label class="field-label">Sub Category</label>
                                     <select name="subcategory_id" id="subcategory_id" class="field-select">
                                         <option value="">Select Sub Category</option>
                                         @foreach($subcategories as $subcategory)
-                                            <option value="{{ $subcategory->id }}" {{ old('subcategory_id', $product->subcategory_id) == $subcategory->id ? 'selected' : '' }}>
-                                                {{ $subcategory->name }}
-                                            </option>
+                                            <option value="{{ $subcategory->id }}" {{ old('subcategory_id', $product->subcategory_id) == $subcategory->id ? 'selected' : '' }}>{{ $subcategory->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
 
                                 <div class="field-group">
                                     <label class="field-label">Product Name <span class="req">*</span></label>
-                                    <input type="text" name="name" id="product_name" class="field-input"
-                                        value="{{ old('name', $product->name) }}" required>
+                                    <input type="text" name="name" id="product_name" class="field-input" required
+                                        value="{{ old('name', $product->name) }}" placeholder="e.g. Stunt Car">
                                 </div>
 
                                 <div class="field-group">
                                     <label class="field-label">Slug</label>
                                     <div class="slug-wrap">
-                                        <span class="slug-prefix">product/</span>
-                                        <input type="text" name="slug" id="slug" class="field-input"
-                                            value="{{ old('slug', $product->slug) }}">
+                                        <span class="slug-prefix">/p/</span>
+                                        <input type="text" name="slug" id="slug" class="field-input slug-input"
+                                            value="{{ old('slug', $product->slug) }}" placeholder="auto-generated">
                                     </div>
                                     <div class="field-hint">Optional — auto-generated from product name if left blank
                                     </div>
@@ -1163,8 +1005,8 @@
 
                                 <div class="field-group">
                                     <label class="field-label">Short Description</label>
-                                    <textarea name="short_description" class="field-textarea"
-                                        rows="3">{{ old('short_description', $product->short_description) }}</textarea>
+                                    <textarea name="short_description" class="field-textarea" rows="3"
+                                        placeholder="Brief summary shown on listing pages…">{{ old('short_description', $product->short_description) }}</textarea>
                                 </div>
 
                             </div>
@@ -1179,50 +1021,29 @@
                             <div class="content-tabs">
                                 <button type="button" class="content-tab-btn active"
                                     data-tab="description">Description</button>
-                                <button type="button" class="content-tab-btn" data-tab="fabric_care">Fabric
-                                    Care</button>
-                                <button type="button" class="content-tab-btn" data-tab="shipping_delivery">Shipping
-                                    &amp; Delivery</button>
-                                <button type="button" class="content-tab-btn" data-tab="exchange_policy">Exchange
-                                    Policy</button>
-                                <button type="button" class="content-tab-btn"
-                                    data-tab="customization_assistance">Customization/Assistance</button>
+                                <button type="button" class="content-tab-btn" data-tab="how_to_use">How To
+                                    Use / Care</button>
+                                <button type="button" class="content-tab-btn" data-tab="delivery_returns">Delivery
+                                    &amp; Returns</button>
                             </div>
 
                             <div class="section-card-body">
 
                                 <div class="content-tab-panel active" data-panel="description">
-                                    <textarea name="description" id="description" class="field-textarea"
-                                        style="min-height:140px">{{ old('description', $product->description) }}</textarea>
+                                    <textarea name="description" id="description"
+                                        class="field-textarea">{{ old('description', $product->description) }}</textarea>
                                 </div>
 
-                                <div class="content-tab-panel" data-panel="fabric_care">
-                                    <textarea name="fabric_care" id="fabric_care" class="field-textarea"
-                                        style="min-height:100px">{{ old('fabric_care', $product->fabric_care) }}</textarea>
-                                </div>
-
-                                <div class="content-tab-panel" data-panel="shipping_delivery">
-                                    <textarea name="shipping_delivery" id="shipping_delivery" class="field-textarea"
-                                        style="min-height:100px">{{ old('shipping_delivery', $product->shipping_delivery) }}</textarea>
-                                </div>
-
-                                <div class="content-tab-panel" data-panel="exchange_policy">
-                                    <textarea name="exchange_policy" id="exchange_policy" class="field-textarea"
-                                        style="min-height:100px">{{ old('exchange_policy', $product->exchange_policy) }}</textarea>
-                                </div>
-
-                                <div class="content-tab-panel" data-panel="customization_assistance">
-                                    <textarea name="customization_assistance" id="customization_assistance"
-                                        class="field-textarea"
-                                        style="min-height:100px">{{ old('customization_assistance', $product->customization_assistance) }}</textarea>
+                                <div class="content-tab-panel" data-panel="how_to_use">
+                                    <textarea name="how_to_use" id="how_to_use"
+                                        class="field-textarea">{{ old('how_to_use', $product->how_to_use) }}</textarea>
+                                    <div class="field-hint">Shown in "Care &amp; Setup Guidelines" on the product page.</div>
                                 </div>
 
                                 <div class="content-tab-panel" data-panel="delivery_returns">
-                                    <textarea name="delivery_returns" id="delivery_returns" class="field-textarea"
-                                        style="min-height:100px">{{ old('delivery_returns', $product->delivery_returns) }}</textarea>
-                                    <div class="field-hint">Legacy field, kept for products that already have this
-                                        filled in — new content should go under Shipping &amp; Delivery / Exchange
-                                        Policy above.</div>
+                                    <textarea name="delivery_returns" id="delivery_returns"
+                                        class="field-textarea">{{ old('delivery_returns', $product->delivery_returns) }}</textarea>
+                                    <div class="field-hint">Return / replacement / warranty text shown under Shipping &amp; Returns.</div>
                                 </div>
 
                             </div>
@@ -1237,36 +1058,35 @@
 
                                 <div class="field-hint" style="margin-bottom:14px;">MRP and Discount are optional. Leave
                                     blank if not applicable — Final Price will simply equal MRP (or 0 if MRP is also
-                                    blank).</div>
+                                    blank). If none of the selected variant attributes are marked Price Dependent, this
+                                    product-level price is what customers pay regardless of variant chosen.</div>
 
-                                <div class="price-grid">
+                                <div class="pricing-grid">
                                     <div class="field-group" style="margin:0">
                                         <label class="field-label">MRP</label>
                                         <input type="number" step="0.01" name="mrp" id="mrp" class="field-input"
-                                            value="{{ old('mrp', $product->mrp) }}">
+                                            value="{{ old('mrp', $product->mrp) }}" placeholder="0.00">
                                     </div>
                                     <div class="field-group" style="margin:0">
                                         <label class="field-label">Discount Type</label>
                                         <select name="discount_type" id="discount_type" class="field-select">
-                                            <option value="amount" {{ old('discount_type', $product->discount_type) == 'amount' ? 'selected' : '' }}>Amount (₹)
-                                            </option>
-                                            <option value="percentage" {{ old('discount_type', $product->discount_type) == 'percentage' ? 'selected' : '' }}>Percentage
-                                                (%)</option>
+                                            <option value="amount" {{ old('discount_type', $product->discount_type) == 'amount' ? 'selected' : '' }}>Amount (₹)</option>
+                                            <option value="percentage" {{ old('discount_type', $product->discount_type) == 'percentage' ? 'selected' : '' }}>Percentage (%)</option>
                                         </select>
                                     </div>
                                     <div class="field-group" style="margin:0">
                                         <label class="field-label">Discount</label>
                                         <input type="number" step="0.01" name="discount" id="discount"
-                                            class="field-input" value="{{ old('discount', $product->discount) }}">
+                                            class="field-input" value="{{ old('discount', $product->discount) }}"
+                                            placeholder="0">
                                     </div>
                                 </div>
 
                                 <div class="final-price-box">
-                                    <span class="fp-label">Final Price</span>
-                                    <span class="fp-value">₹<span
-                                            id="price-display">{{ old('price', $product->price) }}</span></span>
+                                    <span class="label">Final Price</span>
+                                    <span class="value" id="price-display">₹0.00</span>
                                     <input type="hidden" name="price" id="price"
-                                        value="{{ old('price', $product->price) }}">
+                                        value="{{ old('price', $product->price ?? 0) }}">
                                 </div>
 
                             </div>
@@ -1280,13 +1100,13 @@
                             <div class="section-card-body">
 
                                 @if($product->images->count())
-                                    <div class="field-group">
+                                    <div class="field-group" style="margin:0 0 20px">
                                         <label class="field-label">Current Images</label>
-                                        <div class="media-grid" id="existingMedia">
+                                        <div class="media-grid" id="existingMedia" style="margin-top:4px">
                                             @foreach($product->images as $img)
                                                 <div class="thumb-box" id="img_{{ $img->id }}">
                                                     <img src="{{ asset('storage/' . $img->image) }}" alt="">
-                                                    <button type="button" class="thumb-remove"
+                                                    <button type="button" class="remove-btn"
                                                         onclick="removeExistingImage({{ $img->id }})">×</button>
                                                     <div class="thumb-default">
                                                         <input type="radio" name="default_type" value="old_{{ $img->id }}" {{ $img->is_default ? 'checked' : '' }}>
@@ -1298,27 +1118,25 @@
                                     </div>
                                 @endif
 
-                                <div class="field-group" style="margin-bottom:20px">
-                                    <label class="field-label">Upload New Images <span
-                                            style="font-weight:400;text-transform:none;font-size:11px">(max 6
-                                            total)</span></label>
-                                    <div class="upload-area">
+                                <div class="field-group" style="margin:0 0 20px">
+                                    <label class="field-label">Upload New Images</label>
+                                    <div class="file-upload-area">
                                         <input type="file" id="images" name="images[]" multiple accept="image/*">
                                         <div class="upload-icon"><i class="fa fa-cloud-upload"></i></div>
-                                        <div class="upload-label">Click or drag to upload</div>
-                                        <div class="upload-sub">PNG, JPG, WEBP &middot; max 6 images</div>
+                                        <p>Click or drag images here</p>
+                                        <small>PNG, JPG, WEBP — max 6 images, 2 MB each</small>
                                     </div>
-                                    <div id="previewContainer" class="media-grid"></div>
+                                    <div id="previewContainer"></div>
                                 </div>
 
                                 @if($product->videos->count())
-                                    <div class="field-group">
+                                    <div class="field-group" style="margin:0 0 20px">
                                         <label class="field-label">Current Videos</label>
-                                        <div class="media-grid" id="existingVideoMedia">
+                                        <div class="media-grid" id="existingVideoMedia" style="margin-top:4px">
                                             @foreach($product->videos as $vid)
                                                 <div class="thumb-box" id="video_{{ $vid->id }}">
                                                     <video src="{{ asset('storage/' . $vid->video) }}" muted></video>
-                                                    <button type="button" class="thumb-remove"
+                                                    <button type="button" class="remove-btn"
                                                         onclick="removeExistingVideo({{ $vid->id }})">×</button>
                                                 </div>
                                             @endforeach
@@ -1327,18 +1145,144 @@
                                 @endif
 
                                 <div class="field-group" style="margin:0">
-                                    <label class="field-label">Upload New Video <span
-                                            style="font-weight:400;text-transform:none;font-size:11px">(max 3
-                                            total)</span></label>
-                                    <div class="upload-area">
+                                    <label class="field-label">Upload New Video</label>
+                                    <div class="file-upload-area">
                                         <input type="file" id="videos" name="videos[]" multiple accept="video/*">
                                         <div class="upload-icon"><i class="fa fa-video-camera"></i></div>
-                                        <div class="upload-label">Click or drag to upload</div>
-                                        <div class="upload-sub">MP4, WEBM &middot; max 3 videos, 20 MB each</div>
+                                        <p>Click or drag video here</p>
+                                        <small>MP4, WEBM — max 3 videos, 20 MB each</small>
                                     </div>
-                                    <div id="videoPreviewContainer" class="media-grid"></div>
+                                    <div id="videoPreviewContainer"></div>
                                 </div>
 
+                            </div>
+                        </div>
+
+                        <!-- What's In The Box -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>What's In The Box</h5>
+                                <button type="button" class="btn-secondary-dash" id="add-included-row"
+                                    style="padding:5px 12px;font-size:11.5px;">
+                                    <i class="fa fa-plus"></i> Add Item
+                                </button>
+                            </div>
+                            <div class="section-card-body" style="padding:0;overflow-x:auto">
+                                <table class="variants-table" id="included-table"
+                                    style="{{ $product->includedItems->count() ? '' : 'display:none' }}">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="included-table-body">
+                                        @foreach($product->includedItems as $i => $item)
+                                            <tr id="included-row-{{ $i }}">
+                                                <td><input type="text" name="included_items[{{ $i }}][title]"
+                                                        class="field-input" value="{{ $item->title }}"
+                                                        placeholder="e.g. 1 × Game board"></td>
+                                                <td style="width:50px"><button type="button" class="remove-btn"
+                                                        style="position:static"
+                                                        onclick="removeIncludedRow({{ $i }})">×</button></td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                <div class="field-hint" id="included-empty-hint"
+                                    style="padding:16px 20px;{{ $product->includedItems->count() ? 'display:none' : '' }}">
+                                    No items yet. List what comes in the box (e.g. 1 × Game board, 4 × Tokens).
+                                    If left empty, the product page shows just the product itself.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Developmental Benefits -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>Developmental Benefits</h5>
+                                <button type="button" class="btn-secondary-dash" id="add-benefit-row"
+                                    style="padding:5px 12px;font-size:11.5px;">
+                                    <i class="fa fa-plus"></i> Add Benefit
+                                </button>
+                            </div>
+                            <div class="section-card-body" style="padding:0;overflow-x:auto">
+                                <table class="variants-table" id="benefit-table"
+                                    style="{{ $product->benefits->count() ? '' : 'display:none' }}">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Icon (FontAwesome)</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="benefit-table-body">
+                                        @foreach($product->benefits as $i => $benefit)
+                                            <tr>
+                                                <td><input type="text" name="benefits[{{ $i }}][title]" class="field-input"
+                                                        value="{{ $benefit->title }}" placeholder="e.g. Motor Skills"></td>
+                                                <td><input type="text" name="benefits[{{ $i }}][icon]" class="field-input"
+                                                        value="{{ $benefit->icon }}"
+                                                        placeholder="fa-solid fa-hand-holding-heart"></td>
+                                                <td style="width:50px"><button type="button"
+                                                        class="remove-btn row-remove" style="position:static">×</button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                <div class="field-hint" id="benefit-empty-hint"
+                                    style="padding:16px 20px;{{ $product->benefits->count() ? 'display:none' : '' }}">
+                                    No benefits yet (e.g. Motor Skills, Team Play). If left empty, this section is
+                                    hidden on the product page.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Overview Highlights -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>Overview Highlights</h5>
+                                <button type="button" class="btn-secondary-dash" id="add-highlight-row"
+                                    style="padding:5px 12px;font-size:11.5px;">
+                                    <i class="fa fa-plus"></i> Add Highlight
+                                </button>
+                            </div>
+                            <div class="section-card-body" style="padding:0;overflow-x:auto">
+                                <table class="variants-table" id="highlight-table"
+                                    style="{{ $product->highlights->count() ? '' : 'display:none' }}">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Description</th>
+                                            <th>Icon (FontAwesome)</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="highlight-table-body">
+                                        @foreach($product->highlights as $i => $highlight)
+                                            <tr>
+                                                <td><input type="text" name="highlights[{{ $i }}][title]"
+                                                        class="field-input" value="{{ $highlight->title }}"
+                                                        placeholder="e.g. Built For Endless Play"></td>
+                                                <td><input type="text" name="highlights[{{ $i }}][description]"
+                                                        class="field-input" value="{{ $highlight->description }}"
+                                                        placeholder="Short line"></td>
+                                                <td><input type="text" name="highlights[{{ $i }}][icon]"
+                                                        class="field-input" value="{{ $highlight->icon }}"
+                                                        placeholder="fa-solid fa-seedling"></td>
+                                                <td style="width:50px"><button type="button"
+                                                        class="remove-btn row-remove" style="position:static">×</button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                <div class="field-hint" id="highlight-empty-hint"
+                                    style="padding:16px 20px;{{ $product->highlights->count() ? 'display:none' : '' }}">
+                                    No highlights yet. These show as cards under the product description. If left
+                                    empty, they are hidden.
+                                </div>
                             </div>
                         </div>
 
@@ -1352,7 +1296,7 @@
                                 </button>
                             </div>
                             <div class="section-card-body" style="padding:0;overflow-x:auto">
-                                <table class="addon-table" id="addon-table"
+                                <table class="variants-table" id="addon-table"
                                     style="{{ $product->addons->count() ? '' : 'display:none' }}">
                                     <thead>
                                         <tr>
@@ -1369,7 +1313,7 @@
                                                 <td><input type="number" step="0.01" name="addons[{{ $i }}][price]"
                                                         class="field-input" value="{{ $addon->price }}" placeholder="0.00">
                                                 </td>
-                                                <td><button type="button" class="thumb-remove" style="position:static"
+                                                <td><button type="button" class="remove-btn" style="position:static"
                                                         onclick="removeAddonRow({{ $i }})">×</button></td>
                                             </tr>
                                         @endforeach
@@ -1383,21 +1327,22 @@
                             </div>
                         </div>
 
-                        <!-- ── Attributes & Variants (full width below grid) ── -->
+                        <!-- Attributes (dynamic) -->
                         <div id="attribute-container"></div>
 
-                        <div id="variant-btn-wrapper" style="display:none; margin: 16px 0;">
-                            <button type="button" id="generate-variants" class="btn-accent-outline">
+                        <!-- Generate Variants button -->
+                        <div class="mb-3" id="variant-btn-wrapper" style="display:none;">
+                            <button type="button" id="generate-variants" class="btn-outline-accent">
                                 <i class="fa fa-cogs"></i> Generate / Refresh Variants
                             </button>
                             <span class="field-hint" style="margin-left:8px;">Existing variant data (SKU, price, stock,
-                                image)
-                                is kept for combinations that are still selected.</span>
+                                image) is kept for combinations that are still selected.</span>
                         </div>
 
+                        <!-- Variants (dynamic) -->
                         <div id="variant-container"></div>
 
-                    </div><!-- /left column -->
+                    </div>
 
                     <!-- ══════════ RIGHT COLUMN ══════════ -->
                     <div>
@@ -1407,49 +1352,59 @@
                             <div class="section-card-header">
                                 <h5>Status</h5>
                             </div>
-                            <div class="section-card-body" style="padding:14px 20px">
+                            <div class="section-card-body" style="padding:16px 20px">
                                 <div class="toggle-row" style="padding:0;border:none">
                                     <div>
                                         <div class="toggle-label">Visibility</div>
-                                        <div class="toggle-sub">Shown on storefront</div>
+                                        <div class="toggle-sub">Visible to customers</div>
                                     </div>
                                     <select name="status" class="field-select-sm">
-                                        <option value="1" {{ old('status', $product->status) == 1 ? 'selected' : '' }}>
-                                            Active</option>
-                                        <option value="0" {{ old('status', $product->status) == 0 ? 'selected' : '' }}>
-                                            Inactive</option>
+                                        <option value="1" {{ (string) old('status', (int) $product->status) === '1' ? 'selected' : '' }}>Active</option>
+                                        <option value="0" {{ (string) old('status', (int) $product->status) === '0' ? 'selected' : '' }}>Inactive</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Inventory -->
+                        <!-- Inventory & Delivery -->
                         <div class="section-card">
                             <div class="section-card-header">
-                                <h5>Inventory</h5>
+                                <h5>Inventory &amp; Delivery</h5>
                             </div>
                             <div class="section-card-body">
 
-                                <div class="inv-grid" style="margin-bottom:14px">
-                                    <div class="field-group" style="margin:0">
+                                <div class="inv-grid">
+                                    <div class="field-group">
                                         <label class="field-label">SKU</label>
                                         <input type="text" name="sku" class="field-input"
-                                            value="{{ old('sku', $product->sku) }}">
+                                            value="{{ old('sku', $product->sku) }}" placeholder="SKU-001">
                                     </div>
-                                    <div class="field-group" style="margin:0">
+                                    <div class="field-group">
                                         <label class="field-label">Product Code</label>
                                         <input type="text" name="product_code" class="field-input"
                                             value="{{ old('product_code', $product->product_code) }}">
                                     </div>
-                                    <div class="field-group" style="margin:0">
+                                    <div class="field-group">
+                                        <label class="field-label">HSN Code</label>
+                                        <input type="text" name="hsn_code" class="field-input"
+                                            value="{{ old('hsn_code', $product->hsn_code) }}" placeholder="e.g. 950300"
+                                            maxlength="20">
+                                    </div>
+                                    <div class="field-group">
                                         <label class="field-label">Stock</label>
                                         <input type="number" name="stock" class="field-input"
-                                            value="{{ old('stock', $product->stock) }}">
+                                            value="{{ old('stock', $product->stock) }}" placeholder="0">
                                     </div>
-                                    <div class="field-group" style="margin:0">
+                                    <div class="field-group">
                                         <label class="field-label">Min Qty</label>
                                         <input type="number" name="min_qty" class="field-input"
-                                            value="{{ old('min_qty', $product->min_qty) }}">
+                                            value="{{ old('min_qty', $product->min_qty) }}" placeholder="1">
+                                    </div>
+                                    <div class="field-group">
+                                        <label class="field-label">Delivery Charge (₹)</label>
+                                        <input type="number" step="0.01" name="delivery_charge" class="field-input"
+                                            value="{{ old('delivery_charge', $product->delivery_charge) }}"
+                                            placeholder="0">
                                     </div>
                                 </div>
 
@@ -1457,50 +1412,70 @@
                                     <label class="field-label">Delivery Time</label>
                                     <input type="text" name="delivery_time" class="field-input"
                                         value="{{ old('delivery_time', $product->delivery_time) }}"
-                                        placeholder="e.g. 3–5 business days">
-                                </div>
-
-                                <div>
-                                    <label class="check-pill">
-                                        <input type="checkbox" name="quality" {{ old('quality', $product->quality) ? 'checked' : '' }}>
-                                        <span>Quality Assurance</span>
-                                    </label>
-                                    <label class="check-pill">
-                                        <input type="checkbox" name="pan_india" {{ old('pan_india', $product->pan_india) ? 'checked' : '' }}>
-                                        <span>PAN India Delivery</span>
-                                    </label>
+                                        placeholder="e.g. 2 to 7 days">
                                 </div>
 
                             </div>
                         </div>
 
-                        <!-- Occasions -->
+                        <!-- Age Group -->
                         <div class="section-card">
                             <div class="section-card-header">
-                                <h5>Occasions</h5>
+                                <h5>Age Group</h5>
                             </div>
                             <div class="section-card-body">
-                                @foreach($occasions as $o)
-                                    <label class="check-pill">
-                                        <input type="checkbox" name="occasions[]" value="{{ $o->id }}" {{ in_array($o->id, old('occasions', $selectedOccasions)) ? 'checked' : '' }}>
-                                        <span>{{ $o->title }}</span>
-                                    </label>
-                                @endforeach
+                                <div class="inv-grid">
+                                    <div class="field-group" style="margin:0">
+                                        <label class="field-label">From (years)</label>
+                                        <input type="number" min="0" max="99" name="age_min" class="field-input"
+                                            value="{{ old('age_min', $product->age_min) }}" placeholder="3">
+                                    </div>
+                                    <div class="field-group" style="margin:0">
+                                        <label class="field-label">To (years)</label>
+                                        <input type="number" min="0" max="99" name="age_max" class="field-input"
+                                            value="{{ old('age_max', $product->age_max) }}" placeholder="No limit">
+                                    </div>
+                                </div>
+                                <div class="field-hint">Leave "To" empty for "3+" style ages. Used for the shop age filter.</div>
                             </div>
                         </div>
 
-                        <!-- Collections -->
+                        <!-- Display -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>Display</h5>
+                            </div>
+                            <div class="section-card-body">
+                                <div class="field-group" style="margin:8px 0 0">
+                                    <label class="field-label">Sort Order</label>
+                                    <input type="number" min="0" name="sort_order" class="field-input"
+                                        value="{{ old('sort_order', $product->sort_order ?? 0) }}">
+                                </div>
+
+                                <div class="field-group" style="margin:14px 0 0">
+                                    <input type="hidden" name="is_non_toxic" value="0">
+                                    <label class="check-toggle" style="margin:0">
+                                        <input type="checkbox" name="is_non_toxic" value="1" {{ old('is_non_toxic', $product->is_non_toxic) ? 'checked' : '' }}>
+                                        <span>Show "100% Non-Toxic" badge</span>
+                                    </label>
+                                    <div class="field-hint">Only tick if this product is actually certified non-toxic.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Collections (also drive the product badge) -->
                         <div class="section-card">
                             <div class="section-card-header">
                                 <h5>Collections</h5>
                             </div>
                             <div class="section-card-body">
                                 @foreach($collections as $collection)
-                                    <label class="check-pill">
+                                    <label class="check-toggle">
                                         <input type="checkbox" name="collections[]" value="{{ $collection->id }}" {{ in_array($collection->id, old('collections', $product->collections->pluck('id')->toArray())) ? 'checked' : '' }}>
                                         <span>{{ $collection->name }}</span>
                                     </label>
                                 @endforeach
+                                <div class="field-hint">Collections with a badge show it on this product (e.g. Best Seller).</div>
                             </div>
                         </div>
 
@@ -1510,48 +1485,21 @@
                                 <h5>SEO</h5>
                             </div>
                             <div class="section-card-body">
-
                                 <div class="field-group">
                                     <label class="field-label">Meta Title</label>
                                     <input type="text" name="meta_title" class="field-input"
                                         value="{{ old('meta_title', $product->meta_title) }}">
                                 </div>
-
                                 <div class="field-group">
                                     <label class="field-label">Meta Description</label>
                                     <textarea name="meta_description"
                                         class="field-textarea">{{ old('meta_description', $product->meta_description) }}</textarea>
                                 </div>
-
                             </div>
                         </div>
 
-                        <!-- Search Suggestions -->
-                        <div class="section-card">
-                            <div class="section-card-header">
-                                <h5>Search Suggestions</h5>
-                            </div>
-                            <div class="section-card-body">
-                                <div class="field-group" style="margin:0">
-                                    <label class="field-label">Enter Suggestions</label>
-                                    <div class="tag-input-wrap" id="suggestionsWrap">
-                                        <div class="tag-list" id="suggestionsTagList"></div>
-                                        <input type="text" id="suggestionsInput" class="tag-input-field"
-                                            placeholder="Type a keyword and press space…" autocomplete="off">
-                                        <div class="tag-suggestions-dropdown" id="suggestionsDropdown"></div>
-                                    </div>
-                                    <div id="suggestionsHidden"></div>
-                                    <div class="field-hint">Press spacebar after typing a keyword to add it as a tag.
-                                        These power the header search suggestions.</div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div><!-- /right column -->
-
-                </div><!-- /edit-layout -->
-
-
+                    </div>
+                </div>
 
                 <!-- Action bar -->
                 <div class="action-bar">
@@ -1562,7 +1510,6 @@
                 </div>
 
             </form>
-
         </div>
     </div>
 </div>
@@ -1575,27 +1522,19 @@
     |--------------------------------------------------------------------------
     | State handed down from the controller
     |--------------------------------------------------------------------------
-    | selectedAttributeValues  → flat array of attribute_value_id already on
-    |                            this product (used to pre-check boxes)
-    | existingVariantsByType   → { price: [...], image: [...], stock: [...], sku: [...] }
-    |                            each entry: { id, sku, mrp, discount_type,
-    |                            discount, price, stock, image, variant_name,
-    |                            attribute_value_ids: [...] }
-    |                            Matches ProductController@edit's
-    |                            $existingVariantsByType — NOT a flat
-    |                            "existingVariants" (that key doesn't exist).
+    | selectedAttributeValues → flat array of attribute_value_id already on this product
+    | existingVariantsByType  → { price: [...], image: [...], stock: [...], sku: [...] }
+    |                           each: { id, sku, mrp, discount_type, discount, price,
+    |                           stock, images, is_available, attribute_value_ids: [...] }
     */
     let selectedAttributeValues = @json($selectedAttributeValues);
     let existingVariantsByType = @json($existingVariantsByType);
-    let storageBaseUrl = "{{ asset('storage') }}"; // ✅ matches main image asset() pattern
-    let initialSuggestions = @json($existingKeywords ?? []);
+    let storageBaseUrl = "{{ asset('storage') }}";
 
+    /* ── CKEditor ───────────────────────────────────────────────── */
     CKEDITOR.config.versionCheck = false;
     CKEDITOR.replace('description');
-    CKEDITOR.replace('fabric_care');
-    CKEDITOR.replace('shipping_delivery');
-    CKEDITOR.replace('exchange_policy');
-    CKEDITOR.replace('customization_assistance');
+    CKEDITOR.replace('how_to_use');
     CKEDITOR.replace('delivery_returns');
 
     /* ── Content tabs ────────────────────────────────────────────── */
@@ -1620,113 +1559,68 @@
     |--------------------------------------------------------------------------
     | variantDataByType — the persistence layer
     |--------------------------------------------------------------------------
-    | Keyed by type, then by a stable "combo key" (sorted attribute_value_ids
-    | joined with commas). Seeded from existingVariantsByType on load. Before
-    | every re-render (regenerate click) we re-capture whatever is currently
-    | sitting in the DOM back into this map, so nothing typed by the admin —
-    | or previously saved — is lost just because the set of checked attribute
-    | values changed. Combinations that are no longer checked simply stop
-    | being rendered (and will be deleted server-side on save, same as
-    | before); combinations that are still checked keep their data.
+    | Keyed by type, then by a stable "combo key" (sorted attribute_value_ids).
+    | Seeded from existingVariantsByType on load. Before every re-render we
+    | capture whatever is in the DOM back into this map, so nothing typed or
+    | previously saved is lost when the checked attribute values change.
     */
     let variantDataByType = { price: {}, image: {}, stock: {}, sku: {} };
-
-    ['price', 'image', 'stock', 'sku'].forEach(function (type) {
-        (existingVariantsByType[type] || []).forEach(function (variant) {
-            let key = comboKey(variant.attribute_value_ids);
-            variantDataByType[type][key] = variant;
-        });
-    });
-
-    let variantImageFiles = {};
-
-    $(document).on('change', '.variant-image-input', function (e) {
-        const prefix = $(this).data('prefix');
-        if (!variantImageFiles[prefix]) variantImageFiles[prefix] = [];
-
-        const files = Array.from(e.target.files);
-        if ((variantImageFiles[prefix].length + files.length) > 6) {
-            alert('Maximum 6 images allowed per variant');
-            return;
-        }
-
-        files.forEach(file => variantImageFiles[prefix].push(file));
-        renderVariantImagePreview(prefix);
-    });
-
-    function renderVariantImagePreview(prefix) {
-        const $container = $('.variant-image-preview[data-prefix="' + prefix + '"]');
-        $container.html('');
-
-        (variantImageFiles[prefix] || []).forEach(function (file, index) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                $container.append(`
-                <div class="thumb-box" style="width:50px;height:50px;">
-                    <img src="${e.target.result}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
-                    <button type="button" class="thumb-remove" style="width:16px;height:16px;font-size:9px;" onclick="removeVariantImage('${prefix}', ${index})">×</button>
-                </div>
-            `);
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    function removeVariantImage(prefix, index) {
-        variantImageFiles[prefix].splice(index, 1);
-        renderVariantImagePreview(prefix);
-    }
-
-    function removeExistingVariantImage(id) {
-        if (confirm('Remove this variant image?')) {
-            $('#variant-img-' + id).remove();
-            $('<input>').attr({ type: 'hidden', name: 'delete_variant_images[]', value: id }).appendTo('form');
-        }
-    }
 
     function comboKey(ids) {
         return ids.map(String).slice().sort(function (a, b) { return Number(a) - Number(b); }).join(',');
     }
 
+    ['price', 'image', 'stock', 'sku'].forEach(function (type) {
+        (existingVariantsByType[type] || []).forEach(function (variant) {
+            variantDataByType[type][comboKey(variant.attribute_value_ids)] = variant;
+        });
+    });
+
     $(document).ready(function () {
         let categoryId = $('#category_id').val();
         if (categoryId) {
-            loadAttributes(categoryId, true); // true = initial load, auto-render existing variants after
+            loadAttributes(categoryId, true); // true = initial load, render existing variants after
         }
-        calcPrice(); // ✅ keep hidden #price + display in sync on load, in case product had no MRP/discount saved
+        calcPrice();
+        toggleIncludedTable();
         toggleAddonTable();
     });
 
-    // Slug auto-gen
+    /* ── Slug auto-generate ─────────────────────────────────────── */
     $(document).on('keyup', '#product_name', function () {
-        $('#slug').val($(this).val().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
+        let slug = $(this).val().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        $('#slug').val(slug);
     });
 
-    // Price calc — also updates the visible display span
+    /* ── Pricing calculator ─────────────────────────────────────── */
     function calcPrice() {
         let m = +$('#mrp').val() || 0;
         let d = +$('#discount').val() || 0;
         let t = $('#discount_type').val();
-        let p = t == 'percentage' ? m - (m * d / 100) : m - d;
+        let p = t === 'percentage' ? m - (m * d / 100) : m - d;
         if (p < 0) p = 0;
         $('#price').val(p.toFixed(2));
-        $('#price-display').text(p.toFixed(2));
+        $('#price-display').text('₹' + p.toFixed(2));
     }
-    $('#mrp,#discount,#discount_type').on('keyup change', calcPrice);
+    $('#mrp, #discount, #discount_type').on('keyup change', calcPrice);
 
-    // Submit spinner
+    /* ── Submit spinner ─────────────────────────────────────────── */
     $(document).on('submit', '.save-form', function () {
         let btn = $(this).find('.save-btn');
         btn.prop('disabled', true);
         btn.html('<i class="fa fa-spinner fa-spin"></i> Updating...');
     });
 
-    // ── Image handling ────────────────────────────────────────────
+    /* ── Image handling ─────────────────────────────────────────── */
     let selectedFiles = [];
 
     $('#images').on('change', function (e) {
         let files = Array.from(e.target.files);
-        if ((selectedFiles.length + files.length) > 6) { alert('Max 6 images allowed'); return; }
+        let existing = $('#existingMedia .thumb-box').length;
+        if ((existing + selectedFiles.length + files.length) > 6) {
+            alert('Maximum 6 images allowed');
+            return;
+        }
         files.forEach(file => selectedFiles.push(file));
         renderPreview();
     });
@@ -1738,27 +1632,68 @@
             reader.onload = function (e) {
                 $('#previewContainer').append(`
                 <div class="thumb-box">
-                    <img src="${e.target.result}">
-                    <button type="button" class="thumb-remove" onclick="removeImage(${index})">×</button>
+                    <img src="${e.target.result}" alt="Preview">
+                    <button type="button" class="remove-btn" onclick="removeImage(${index})">×</button>
                     <div class="thumb-default">
-                        <input type="radio" name="default_type" value="new_${index}" ${index === 0 ? 'checked' : ''}> Default
+                        <input type="radio" name="default_type" value="new_${index}"> Default
                     </div>
-                </div>
-            `);
+                </div>`);
             };
             reader.readAsDataURL(file);
         });
     }
 
-    function removeImage(index) { selectedFiles.splice(index, 1); renderPreview(); }
+    function removeImage(index) {
+        selectedFiles.splice(index, 1);
+        renderPreview();
+    }
 
     function removeExistingImage(id) {
         if (confirm('Remove this image?')) {
             $('#img_' + id).remove();
-            $('<input>').attr({ type: 'hidden', name: 'delete_images[]', value: id }).appendTo('form');
+            $('<input>').attr({ type: 'hidden', name: 'delete_images[]', value: id }).appendTo('#productForm');
         }
     }
 
+    /* ── Video handling ─────────────────────────────────────────── */
+    let selectedVideos = [];
+
+    $('#videos').on('change', function (e) {
+        let files = Array.from(e.target.files);
+        let existing = $('#existingVideoMedia .thumb-box').length;
+        if ((existing + selectedVideos.length + files.length) > 3) {
+            alert('Maximum 3 videos allowed');
+            return;
+        }
+        files.forEach(file => selectedVideos.push(file));
+        renderVideoPreview();
+    });
+
+    function renderVideoPreview() {
+        $('#videoPreviewContainer').html('');
+        selectedVideos.forEach((file, index) => {
+            let url = URL.createObjectURL(file);
+            $('#videoPreviewContainer').append(`
+            <div class="thumb-box">
+                <video src="${url}" muted></video>
+                <button type="button" class="remove-btn" onclick="removeVideo(${index})">×</button>
+            </div>`);
+        });
+    }
+
+    function removeVideo(index) {
+        selectedVideos.splice(index, 1);
+        renderVideoPreview();
+    }
+
+    function removeExistingVideo(id) {
+        if (confirm('Remove this video?')) {
+            $('#video_' + id).remove();
+            $('<input>').attr({ type: 'hidden', name: 'delete_videos[]', value: id }).appendTo('#productForm');
+        }
+    }
+
+    /* ── Push selected files into the real inputs on submit ─────── */
     $('form').on('submit', function () {
         let dataTransfer = new DataTransfer();
         selectedFiles.forEach(file => dataTransfer.items.add(file));
@@ -1777,41 +1712,86 @@
         });
     });
 
-    // ── Video handling ─────────────────────────────────────────────
-    let selectedVideos = [];
+    /* ── Variant image uploads (multiple, per variant row) ──────────
+     * Keyed by the row's own prefix (e.g. "variants_image[2]").
+     * Posted as {prefix}[images][].
+     */
+    let variantImageFiles = {};
 
-    $('#videos').on('change', function (e) {
-        let files = Array.from(e.target.files);
-        if ((selectedVideos.length + files.length) > 3) { alert('Max 3 videos allowed'); return; }
-        files.forEach(file => selectedVideos.push(file));
-        renderVideoPreview();
+    $(document).on('change', '.variant-image-input', function (e) {
+        const prefix = $(this).data('prefix');
+        if (!variantImageFiles[prefix]) variantImageFiles[prefix] = [];
+
+        const files = Array.from(e.target.files);
+        const existing = $(this).closest('td').find('.existing-variant-img').length;
+        if ((existing + variantImageFiles[prefix].length + files.length) > 6) {
+            alert('Maximum 6 images allowed per variant');
+            return;
+        }
+
+        files.forEach(file => variantImageFiles[prefix].push(file));
+        renderVariantImagePreview(prefix);
     });
 
-    function renderVideoPreview() {
-        $('#videoPreviewContainer').html('');
-        selectedVideos.forEach((file, index) => {
-            let url = URL.createObjectURL(file);
-            $('#videoPreviewContainer').append(`
-            <div class="thumb-box">
-                <video src="${url}" muted></video>
-                <button type="button" class="thumb-remove" onclick="removeVideo(${index})">×</button>
-            </div>
-        `);
+    function renderVariantImagePreview(prefix) {
+        const $container = $('.variant-image-preview[data-prefix="' + prefix + '"]');
+        $container.html('');
+
+        (variantImageFiles[prefix] || []).forEach(function (file, index) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $container.append(`
+                <div class="thumb-box">
+                    <img src="${e.target.result}" style="width:50px;height:50px;">
+                    <button type="button" class="remove-btn" onclick="removeVariantImage('${prefix}', ${index})">×</button>
+                </div>`);
+            };
+            reader.readAsDataURL(file);
         });
     }
 
-    function removeVideo(index) { selectedVideos.splice(index, 1); renderVideoPreview(); }
+    function removeVariantImage(prefix, index) {
+        variantImageFiles[prefix].splice(index, 1);
+        renderVariantImagePreview(prefix);
+    }
 
-    function removeExistingVideo(id) {
-        if (confirm('Remove this video?')) {
-            $('#video_' + id).remove();
-            $('<input>').attr({ type: 'hidden', name: 'delete_videos[]', value: id }).appendTo('form');
+    function removeExistingVariantImage(id) {
+        if (confirm('Remove this variant image?')) {
+            $('#variant-img-' + id).remove();
+            $('<input>').attr({ type: 'hidden', name: 'delete_variant_images[]', value: id }).appendTo('#productForm');
         }
     }
 
-    // ── Addon Options (dynamic rows, pre-filled from existing) ─────
-    // Field index must not collide with the rows already rendered server-side
-    // for the product's existing addons, so we start counting after them.
+    /* ── What's In The Box (dynamic rows) ──────────────────────────
+     * Posted as included_items[index][title] — row order = sort order.
+     * Index starts after the server-rendered rows so names never collide. */
+    let includedIndex = {{ $product->includedItems->count() }};
+
+    $(document).on('click', '#add-included-row', function () {
+        let row = `
+        <tr id="included-row-${includedIndex}">
+            <td><input type="text" name="included_items[${includedIndex}][title]" class="field-input" placeholder="e.g. 1 × Game board"></td>
+            <td style="width:50px"><button type="button" class="remove-btn" style="position:static" onclick="removeIncludedRow(${includedIndex})">×</button></td>
+        </tr>`;
+        $('#included-table-body').append(row);
+        includedIndex++;
+        toggleIncludedTable();
+    });
+
+    function removeIncludedRow(index) {
+        $('#included-row-' + index).remove();
+        toggleIncludedTable();
+    }
+
+    function toggleIncludedTable() {
+        let hasRows = $('#included-table-body tr').length > 0;
+        $('#included-table').toggle(hasRows);
+        $('#included-empty-hint').toggle(!hasRows);
+    }
+
+    /* ── Addon Options (dynamic rows) ──────────────────────────────
+     * Posted as addons[index][detail] / addons[index][price].
+     * Index starts after the server-rendered rows so names never collide. */
     let addonIndex = {{ $product->addons->count() }};
 
     $(document).on('click', '#add-addon-row', function () {
@@ -1819,7 +1799,7 @@
         <tr id="addon-row-${addonIndex}">
             <td><input type="text" name="addons[${addonIndex}][detail]" class="field-input" placeholder="e.g. Gift Wrapping"></td>
             <td><input type="number" step="0.01" name="addons[${addonIndex}][price]" class="field-input" placeholder="0.00"></td>
-            <td><button type="button" class="thumb-remove" style="position:static" onclick="removeAddonRow(${addonIndex})">×</button></td>
+            <td><button type="button" class="remove-btn" style="position:static" onclick="removeAddonRow(${addonIndex})">×</button></td>
         </tr>`;
         $('#addon-table-body').append(row);
         addonIndex++;
@@ -1837,26 +1817,80 @@
         $('#addon-empty-hint').toggle(!hasRows);
     }
 
-    // ── Category → sub + attributes ──────────────────────────────
+    /* ── Benefits & Highlights (dynamic rows) ──────────────────────
+     * Posted as benefits[i][title|icon] and highlights[i][title|description|icon].
+     * Order = sort order. The controller recreates them on save.
+     * Index starts after the server-rendered rows so names never collide. */
+    const rowLists = {
+        benefit: {
+            btn: '#add-benefit-row', body: '#benefit-table-body',
+            table: '#benefit-table', hint: '#benefit-empty-hint',
+            i: {{ $product->benefits->count() }},
+            tpl: i => `
+            <tr>
+                <td><input type="text" name="benefits[${i}][title]" class="field-input" placeholder="e.g. Motor Skills"></td>
+                <td><input type="text" name="benefits[${i}][icon]" class="field-input" placeholder="fa-solid fa-hand-holding-heart"></td>
+                <td style="width:50px"><button type="button" class="remove-btn row-remove" style="position:static">×</button></td>
+            </tr>`
+        },
+        highlight: {
+            btn: '#add-highlight-row', body: '#highlight-table-body',
+            table: '#highlight-table', hint: '#highlight-empty-hint',
+            i: {{ $product->highlights->count() }},
+            tpl: i => `
+            <tr>
+                <td><input type="text" name="highlights[${i}][title]" class="field-input" placeholder="e.g. Built For Endless Play"></td>
+                <td><input type="text" name="highlights[${i}][description]" class="field-input" placeholder="Short line"></td>
+                <td><input type="text" name="highlights[${i}][icon]" class="field-input" placeholder="fa-solid fa-seedling"></td>
+                <td style="width:50px"><button type="button" class="remove-btn row-remove" style="position:static">×</button></td>
+            </tr>`
+        }
+    };
+
+    function toggleRowList(cfg) {
+        let hasRows = $(cfg.body + ' tr').length > 0;
+        $(cfg.table).toggle(hasRows);
+        $(cfg.hint).toggle(!hasRows);
+    }
+
+    Object.values(rowLists).forEach(function (cfg) {
+        $(document).on('click', cfg.btn, function () {
+            $(cfg.body).append(cfg.tpl(cfg.i++));
+            toggleRowList(cfg);
+        });
+        toggleRowList(cfg);
+    });
+
+    $(document).on('click', '.row-remove', function () {
+        $(this).closest('tr').remove();
+        Object.values(rowLists).forEach(toggleRowList);
+    });
+
+    /* ── Category → subcategories & attributes ──────────────────── */
     $('#category_id').on('change', function () {
         let categoryId = $(this).val();
         $('#variant-container').html('');
         $('#variant-btn-wrapper').hide();
         $('#subcategory_id').html('<option value="">Loading...</option>');
 
-        // Switching category means the attribute set is different, so the
-        // saved combination map for the OLD category no longer applies.
+        // Different category = different attribute set; old combos no longer apply.
         variantDataByType = { price: {}, image: {}, stock: {}, sku: {} };
 
-        if (!categoryId) { $('#subcategory-wrapper').hide(); $('#attribute-container').html(''); return; }
+        if (!categoryId) {
+            $('#subcategory-wrapper').hide();
+            $('#attribute-container').html('');
+            return;
+        }
 
-        loadAttributes(categoryId, false); // false = not initial load, don't auto-render old variants
+        loadAttributes(categoryId, false);
 
         window.subCategoryUrl = "{{ url('admin/products/subcategories') }}";
         $.get(window.subCategoryUrl + '/' + categoryId, function (response) {
             if (response.length > 0) {
                 let html = '<option value="">Select Sub Category</option>';
-                $.each(response, function (i, item) { html += `<option value="${item.id}">${item.name}</option>`; });
+                $.each(response, function (i, item) {
+                    html += `<option value="${item.id}">${item.name}</option>`;
+                });
                 $('#subcategory_id').html(html);
                 $('#subcategory-wrapper').show();
             } else {
@@ -1865,15 +1899,12 @@
         });
     });
 
+    /* ── Load attributes ────────────────────────────────────────── */
     /*
-    |--------------------------------------------------------------------------
-    | Load attributes — accordion UI, all category attributes shown
-    |--------------------------------------------------------------------------
-    | is_selectable is a FRONTEND-ONLY (customer-facing) flag and is not
-    | filtered out here — the admin needs to see every attribute regardless.
-    | Each checkbox carries the dependency flags needed by the type-aware
-    | variant generator below.
-    */
+     * Every category attribute is rendered — is_selectable is FRONTEND-ONLY.
+     * Each checkbox carries the dependency flags as data-* attributes, read by
+     * the variant generator below to build one table PER dependency type.
+     */
     function loadAttributes(categoryId, isInitialLoad) {
         $('#attribute-container').html('');
         window.attributeUrl = "{{ url('admin/products/category-attributes') }}";
@@ -1881,7 +1912,7 @@
         $.get(window.attributeUrl + '/' + categoryId, function (response) {
             if (response.length > 0) {
                 let html = `
-                <div class="section-card">
+                <div class="section-card" style="margin-bottom:16px">
                     <div class="section-card-header">
                         <h5>Attributes</h5>
                         <div style="display:flex;gap:6px;">
@@ -1889,16 +1920,14 @@
                             <button type="button" class="btn-secondary-dash" id="attr-collapse-all" style="padding:5px 12px;font-size:11.5px;">Collapse All</button>
                         </div>
                     </div>
-                    <div class="section-card-body">
-            `;
+                    <div class="section-card-body">`;
 
                 response.forEach(function (item, i) {
                     let isVariant = item.used_for_variant ? 1 : 0;
                     let valueCount = (item.attribute.has_values && item.attribute.values) ? item.attribute.values.length : 0;
 
-                    // Auto-open an attribute that already has a selected value, so the
-                    // admin immediately sees what's driving the existing variants.
-                    let hasSelection = item.attribute.has_values && item.attribute.values.some(v => selectedAttributeValues.includes(v.id));
+                    // Auto-open an attribute that already has a selected value.
+                    let hasSelection = valueCount > 0 && item.attribute.values.some(v => selectedAttributeValues.includes(v.id));
 
                     html += `
                     <div class="attr-accordion${hasSelection ? ' open' : ''}" data-attr-index="${i}">
@@ -1914,11 +1943,10 @@
                         <div class="attr-accordion-body">`;
 
                     if (valueCount > 0) {
-                        html += `<div class="attr-check-wrap">`;
                         item.attribute.values.forEach(function (value) {
                             let checked = selectedAttributeValues.includes(value.id) ? 'checked' : '';
                             html += `
-                            <label class="attr-check-item">
+                            <label class="check-toggle">
                                 <input type="checkbox"
                                     class="attribute-value"
                                     data-attribute-id="${item.attribute.id}"
@@ -1931,10 +1959,9 @@
                                     data-sku-dependent="${item.sku_dependent ? 1 : 0}"
                                     name="attribute_values[${item.attribute.id}][]"
                                     value="${value.id}" ${checked}>
-                                ${value.value}
+                                <span>${value.value}</span>
                             </label>`;
                         });
-                        html += `</div>`;
                     } else {
                         html += `<div class="field-hint">No values configured for this attribute.</div>`;
                     }
@@ -1944,21 +1971,22 @@
 
                 html += `</div></div>`;
                 $('#attribute-container').html(html);
-                $('#variant-btn-wrapper').show();
 
-                // Expand accordions that were flagged open, and set their max-height.
+                let hasVariantAttribute = response.some(item => item.used_for_variant);
+                $('#variant-btn-wrapper').toggle(hasVariantAttribute);
+
+                // Set max-height for accordions flagged open.
                 $('.attr-accordion.open').each(function () {
                     let $body = $(this).find('.attr-accordion-body');
                     $body.css('max-height', $body[0].scrollHeight + 'px');
                 });
 
                 // Initialize the "N selected" badges.
-                $('.attr-accordion').each(function () { refreshAttrSelectedCount($(this)); });
+                $('.attr-accordion').each(function () {
+                    refreshAttrSelectedCount($(this));
+                });
 
-                // On the very first page load, rebuild the saved variant tables from
-                // whatever is already checked (i.e. the product's existing attribute
-                // values), so existing variants show up immediately without needing
-                // to click Generate.
+                // First page load: rebuild saved variant tables from what's already checked.
                 if (isInitialLoad) {
                     renderAllVariantTypes();
                 }
@@ -2007,17 +2035,21 @@
         refreshAttrSelectedCount($(this).closest('.attr-accordion'));
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Type-aware variant generation (matches controller's 4 independent arrays)
-    |--------------------------------------------------------------------------
-    | The controller reads FOUR separate arrays: variants_price, variants_image,
-    | variants_stock, variants_sku — each an independent combination set built
-    | ONLY from attribute values whose category-attribute has that specific
-    | *_dependent flag turned on. So we build up to 4 separate tables here.
-    */
+    /* ── Generate / refresh variants (type-aware) ───────────────────
+     * Controller reads FOUR independent arrays: variants_price, variants_image,
+     * variants_stock, variants_sku — each built ONLY from attribute values whose
+     * category-attribute has that *_dependent flag on.
+     */
     $(document).on('click', '#generate-variants', function () {
-        renderAllVariantTypes();
+        let anyGenerated = false;
+
+        ['price', 'image', 'stock', 'sku'].forEach(function (type) {
+            if (renderVariantsForType(type)) anyGenerated = true;
+        });
+
+        if (!anyGenerated) {
+            alert('Please select at least one value from an attribute marked Price / Image / Stock / SKU Dependent.');
+        }
     });
 
     function renderAllVariantTypes() {
@@ -2027,10 +2059,9 @@
     }
 
     /**
-     * Rebuilds the table for a single type from the currently-checked,
-     * type-dependent attribute values — while preserving any data already
-     * captured (existing DB rows, or values typed in during this session)
-     * for combinations that are still selected.
+     * Rebuilds the table for ONE type from the currently-checked, type-dependent
+     * attribute values, preserving data already captured for combinations that
+     * are still selected. Returns true if a table was rendered.
      */
     function renderVariantsForType(type) {
         captureVariantType(type);
@@ -2050,19 +2081,16 @@
 
         if (groupArr.length === 0) {
             if ($existingCard.length) $existingCard.remove();
-            return;
+            return false;
         }
 
-        let combinations = cartesian(groupArr);
         let rows = '';
-
-        combinations.forEach(function (combo, index) {
+        cartesian(groupArr).forEach(function (combo, index) {
             if (!Array.isArray(combo)) combo = [combo];
             let ids = combo.map(c => c.id);
             let names = combo.map(c => c.name).join(' / ');
             let key = comboKey(ids);
-            let data = variantDataByType[type][key] || {};
-            rows += buildVariantRow(type, index, key, names, ids, data);
+            rows += buildVariantRow(type, index, key, names, ids, variantDataByType[type][key] || {});
         });
 
         let wrap = variantTableWrap(type, headColsForType(type), rows);
@@ -2072,29 +2100,28 @@
         } else {
             $('#variant-container').append(wrap);
         }
+        return true;
     }
 
     function variantTableWrap(type, headHtml, rows) {
         let titleMap = { price: 'Price Variants', image: 'Image Variants', stock: 'Stock Variants', sku: 'SKU Variants' };
 
-        return `<div class="section-card" style="margin-bottom:16px">
+        return `
+    <div class="section-card" style="margin-bottom:16px">
         <div class="section-card-header"><h5>${titleMap[type]}</h5></div>
         <div class="section-card-body" style="padding:0;overflow-x:auto">
-            <table class="table table-bordered" style="margin:0" id="variant-table-${type}">
+            <table class="variants-table" id="variant-table-${type}">
                 <thead><tr>${headHtml}</tr></thead>
                 <tbody>${rows}</tbody>
             </table>
         </div>
-        <div class="variant-note">Tick "Not offered" for a combination that doesn't exist (e.g. Red isn't available in Small) — it stays saved but hidden from customers. Leave it unchecked with Stock = 0 for a combination that's temporarily sold out.</div>
+        <div class="variant-note">Tick "Not offered" for a combination that doesn't actually exist (e.g. Red isn't available in Small) — it'll be saved but hidden from customers. Leave it unchecked with Stock = 0 if the combination exists but is temporarily out of stock.</div>
     </div>`;
     }
 
-
     /**
-     * Reads whatever is currently rendered for a type back into
-     * variantDataByType, keyed by each row's data-key. Skips file inputs
-     * (browsers won't let us read a real value from them, and we don't want
-     * to overwrite an in-progress file selection with a blank).
+     * Reads whatever is currently rendered for a type back into variantDataByType,
+     * keyed by each row's data-key. File inputs are skipped.
      */
     function captureVariantType(type) {
         $(`.variant-row[data-type="${type}"]`).each(function () {
@@ -2108,13 +2135,11 @@
                 if ($(this).attr('type') === 'file') return;
                 let field = $(this).data('field');
 
-                // ✅ checkboxes need their checked state, not .val()
                 if ($(this).attr('type') === 'checkbox') {
-                    if (field === 'excluded') {
-                        data.is_available = !$(this).is(':checked');
-                    }
+                    if (field === 'excluded') data.is_available = !$(this).is(':checked');
                     return;
                 }
+                if (field === 'values') return;
 
                 data[field] = $(this).val();
             });
@@ -2125,7 +2150,11 @@
 
     function cartesian(arr) {
         if (arr.length === 1) return arr[0].map(item => [item]);
-        return arr.reduce((a, b) => a.flatMap(d => b.map(e => [].concat(d, e))));
+        return arr.reduce(function (a, b) {
+            return a.flatMap(function (d) {
+                return b.map(function (e) { return [].concat(d, e); });
+            });
+        });
     }
 
     function headColsForType(type) {
@@ -2134,7 +2163,7 @@
         if (type === 'price') head += '<th>MRP</th><th>Discount Type</th><th>Discount</th><th>Final Price</th>';
         if (type === 'stock') head += '<th>Stock</th>';
         if (type === 'image') head += '<th>Image</th>';
-        head += '<th>Available</th>'; // ✅ replaces the remove-button column
+        head += '<th>Available</th>';
         return head;
     }
 
@@ -2143,82 +2172,81 @@
         let prefix = `variants_${type}[${index}]`;
         let isExcluded = data.is_available === false;
 
+        let hiddenValues = '';
+        comboIds.forEach(function (id) {
+            hiddenValues += `<input type="hidden" data-field="values" name="${prefix}[values][]" value="${id}">`;
+        });
+
         let row = `<tr class="variant-row${isExcluded ? ' variant-row-excluded' : ''}" data-type="${type}" data-key="${key}">
-    <td>
-        <span class="variant-name-cell">${names}</span>
-        <input type="hidden" data-field="id" name="${prefix}[id]" value="${data.id || ''}">
-    </td>`;
+        <td>
+            <span class="variant-name-cell">${names}</span>
+            <input type="hidden" data-field="id" name="${prefix}[id]" value="${data.id || ''}">
+            ${hiddenValues}
+        </td>`;
 
         if (type === 'sku') {
-            row += `<td><input type="text" data-field="sku" name="${prefix}[sku]" class="form-control" value="${data.sku || ''}"></td>`;
+            row += `<td><input type="text" data-field="sku" name="${prefix}[sku]" class="field-input" value="${data.sku || ''}"></td>`;
         }
 
         if (type === 'price') {
             row += `
-        <td><input type="number" step="0.01" data-field="mrp" name="${prefix}[mrp]" class="form-control" value="${data.mrp || ''}"></td>
-        <td>
-            <select data-field="discount_type" name="${prefix}[discount_type]" class="form-control">
-                <option value="amount"     ${(data.discount_type || 'amount') === 'amount' ? 'selected' : ''}>Amount</option>
-                <option value="percentage" ${(data.discount_type || '') === 'percentage' ? 'selected' : ''}>%</option>
-            </select>
-        </td>
-        <td><input type="number" step="0.01" data-field="discount" name="${prefix}[discount]" class="form-control" value="${data.discount || ''}"></td>
-        <td><input type="number" step="0.01" data-field="price" name="${prefix}[price]" class="form-control" value="${data.price || ''}" readonly></td>`;
+            <td><input type="number" step="0.01" data-field="mrp" name="${prefix}[mrp]" class="field-input" value="${data.mrp || ''}"></td>
+            <td>
+                <select data-field="discount_type" name="${prefix}[discount_type]" class="field-select">
+                    <option value="amount" ${(data.discount_type || 'amount') === 'amount' ? 'selected' : ''}>Amount</option>
+                    <option value="percentage" ${(data.discount_type || '') === 'percentage' ? 'selected' : ''}>%</option>
+                </select>
+            </td>
+            <td><input type="number" step="0.01" data-field="discount" name="${prefix}[discount]" class="field-input" value="${data.discount || ''}"></td>
+            <td><input type="number" step="0.01" data-field="price" name="${prefix}[price]" class="field-input" value="${data.price || ''}" readonly></td>`;
         }
 
         if (type === 'stock') {
-            row += `<td><input type="number" data-field="stock" name="${prefix}[stock]" class="form-control" value="${data.stock || ''}"></td>`;
+            row += `<td><input type="number" data-field="stock" name="${prefix}[stock]" class="field-input" value="${data.stock || ''}"></td>`;
         }
 
         if (type === 'image') {
             let existingImagesHtml = '';
             (data.images || []).forEach(function (img) {
                 existingImagesHtml += `
-                <div class="thumb-box" id="variant-img-${img.id}" style="width:50px;height:50px;">
-                    <img src="${storageBaseUrl}/${img.image}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
-                    <button type="button" class="thumb-remove" style="width:16px;height:16px;font-size:9px;" onclick="removeExistingVariantImage(${img.id})">×</button>
+                <div class="thumb-box existing-variant-img" id="variant-img-${img.id}">
+                    <img src="${storageBaseUrl}/${img.image}" style="width:50px;height:50px;">
+                    <button type="button" class="remove-btn" onclick="removeExistingVariantImage(${img.id})">×</button>
                 </div>`;
             });
 
             row += `<td style="min-width:220px">
-            <div class="media-grid" style="margin-bottom:6px;">${existingImagesHtml}</div>
-            <div class="upload-area variant-image-upload" style="padding:10px;">
-                <input type="file" class="variant-image-input" data-prefix="${prefix}" multiple accept="image/*">
-                <div class="upload-icon" style="font-size:14px;margin-bottom:2px;"><i class="fa fa-cloud-upload"></i></div>
-                <div class="upload-sub">Click or drag images</div>
-            </div>
-            <div class="variant-image-preview media-grid" data-prefix="${prefix}" style="margin-top:6px;"></div>
-        </td>`;
+                <div class="media-grid" style="margin:0 0 8px;gap:6px;">${existingImagesHtml}</div>
+                <div class="file-upload-area variant-image-upload" style="padding:14px 10px;">
+                    <input type="file" class="variant-image-input" data-prefix="${prefix}" multiple accept="image/*">
+                    <div class="upload-icon" style="font-size:16px;margin-bottom:4px;"><i class="fa fa-cloud-upload"></i></div>
+                    <p style="font-size:11.5px;margin:0;">Click or drag images</p>
+                </div>
+                <div class="variant-image-preview" data-prefix="${prefix}" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
+            </td>`;
         }
 
-        comboIds.forEach(function (id) {
-            row += `<input type="hidden" data-field="values" name="${prefix}[values][]" value="${id}">`;
-        });
-
-        // ✅ "Not offered" checkbox — pre-checked if this variant was previously
-        // saved with is_available = false, so the exclusion survives reload
-        // (this fixes the original bug: nothing here depends on in-memory state)
+        // "Not offered" — pre-checked if previously saved with is_available = false
         row += `<td style="text-align:center">
-        <label style="display:flex;align-items:center;gap:5px;font-size:11.5px;white-space:nowrap;justify-content:center;">
-            <input type="checkbox" data-field="excluded" name="${prefix}[excluded]"
-                ${isExcluded ? 'checked' : ''} onchange="toggleVariantRowStyle(this)">
-            Not offered
-        </label>
-    </td>`;
+            <label style="display:flex;align-items:center;gap:5px;font-size:11.5px;white-space:nowrap;justify-content:center;">
+                <input type="checkbox" data-field="excluded" name="${prefix}[excluded]"
+                    ${isExcluded ? 'checked' : ''} onchange="toggleVariantRowStyle(this)">
+                Not offered
+            </label>
+        </td>`;
 
         row += `</tr>`;
         return row;
     }
 
-    // ✅ visually grey out a row when marked "Not offered"
+    // visually grey out a row when marked "Not offered"
     function toggleVariantRowStyle(checkbox) {
         $(checkbox).closest('tr').toggleClass('variant-row-excluded', checkbox.checked);
     }
 
-
-    // Variant price calc — matches on the suffix so it works regardless of
-    // which variants_{type}[index] prefix the field belongs to.
-    $(document).on('keyup change',
+    /* ── Variant price calculator ───────────────────────────────── */
+    $(document).on(
+        'keyup change',
         'input[name$="[mrp]"], input[name$="[discount]"], select[name$="[discount_type]"]',
         function () {
             let row = $(this).closest('tr');
@@ -2230,101 +2258,6 @@
             row.find('input[name$="[price]"]').val(finalPrice.toFixed(2));
         }
     );
-
-    /* ── Search Suggestions (tag input, spacebar-to-add, with autocomplete) ── */
-    (function () {
-        const input = document.getElementById('suggestionsInput');
-        const tagList = document.getElementById('suggestionsTagList');
-        const hiddenWrap = document.getElementById('suggestionsHidden');
-        const dropdown = document.getElementById('suggestionsDropdown');
-        const wrap = document.getElementById('suggestionsWrap');
-
-        let tags = Array.isArray(initialSuggestions) ? initialSuggestions.slice() : [];
-        let fetchTimer = null;
-
-        function renderTags() {
-            tagList.innerHTML = '';
-            hiddenWrap.innerHTML = '';
-            tags.forEach(function (tag, i) {
-                tagList.insertAdjacentHTML('beforeend',
-                    `<span class="tag-chip">${tag}<button type="button" class="tag-remove" data-index="${i}">×</button></span>`);
-                hiddenWrap.insertAdjacentHTML('beforeend',
-                    `<input type="hidden" name="suggestions[]" value="${tag.replace(/"/g, '&quot;')}">`);
-            });
-        }
-
-        function addTag(value) {
-            value = value.trim();
-            if (!value) return;
-            if (tags.some(t => t.toLowerCase() === value.toLowerCase())) {
-                input.value = '';
-                dropdown.style.display = 'none';
-                return;
-            }
-            tags.push(value);
-            renderTags();
-            input.value = '';
-            dropdown.style.display = 'none';
-        }
-
-        input.addEventListener('keydown', function (e) {
-            if (e.key === ' ' || e.code === 'Space') {
-                e.preventDefault();
-                addTag(input.value);
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                addTag(input.value);
-            } else if (e.key === 'Backspace' && input.value === '' && tags.length) {
-                tags.pop();
-                renderTags();
-            }
-        });
-
-        tagList.addEventListener('click', function (e) {
-            if (e.target.classList.contains('tag-remove')) {
-                let idx = +e.target.dataset.index;
-                tags.splice(idx, 1);
-                renderTags();
-            }
-        });
-
-        input.addEventListener('input', function () {
-            clearTimeout(fetchTimer);
-            let q = input.value.trim();
-
-            if (!q) {
-                dropdown.style.display = 'none';
-                return;
-            }
-
-            fetchTimer = setTimeout(function () {
-                $.get("{{ route('admin.products.suggestion-keywords') }}", { q: q }, function (res) {
-                    let matches = res.filter(k => !tags.some(t => t.toLowerCase() === k.toLowerCase()));
-
-                    if (matches.length) {
-                        dropdown.innerHTML = matches.map(k => `<div class="tag-suggestion-item">${k}</div>`).join('');
-                        dropdown.style.display = 'block';
-                    } else {
-                        dropdown.style.display = 'none';
-                    }
-                });
-            }, 200);
-        });
-
-        dropdown.addEventListener('click', function (e) {
-            if (e.target.classList.contains('tag-suggestion-item')) {
-                addTag(e.target.textContent);
-            }
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!wrap.contains(e.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-
-        renderTags();
-    })();
 </script>
 
 @include('admin.footer')

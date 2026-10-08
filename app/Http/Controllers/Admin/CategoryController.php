@@ -21,7 +21,9 @@ class CategoryController extends Controller
     // ✅ List Page
     public function index(Request $request)
     {
-        $query = Category::with('parent', 'children');
+        // unique_products_count is used by admin/categories/index.blade.php
+        $query = Category::with('parent', 'children')
+            ->withCount('products as unique_products_count');
 
         // Parent categories dropdown
         $parentCategories = Category::whereNull('parent_id')
@@ -60,7 +62,7 @@ class CategoryController extends Controller
         ];
 
         if (in_array($sortBy, $allowedColumns)) {
-            $query->orderBy($sortBy, $sortOrder);
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
         }
 
         $categories = $query
@@ -85,7 +87,6 @@ class CategoryController extends Controller
      * ✅ Compress & store an uploaded image as WebP.
      * Resizes down to max width (keeps aspect ratio, never upscales)
      * and re-encodes as WebP at given quality to shrink file size.
-     * Same pattern used for La Pavone product image optimization.
      */
     private function compressAndStore(
         UploadedFile $file,
@@ -116,13 +117,16 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'icon'        => 'nullable|string|max:100',
+            'pastel_bg'   => 'nullable|string|max:50',
         ]);
 
         $image = null;
 
         if ($request->hasFile('image')) {
-            // Displayed as a small card (~121x171 on frontend) -> keep small, ~3x retina buffer
+            // Displayed as a small card -> keep small, ~3x retina buffer
             $image = $this->compressAndStore(
                 $request->file('image'),
                 'categories',
@@ -131,43 +135,34 @@ class CategoryController extends Controller
             );
         }
 
-        $sizeChartImage = null;
-
-        if ($request->hasFile('size_chart_image')) {
-            // Displayed larger/zoomed (~707x943 on frontend) -> keep bigger, higher quality
-            $sizeChartImage = $this->compressAndStore(
-                $request->file('size_chart_image'),
-                'categories/size-charts',
-                1000,
-                85
-            );
-        }
-
         Category::create([
-            'name' => $request->name,
-            'sub_title' => $request->sub_title,
+            'name'        => $request->name,
+            'sub_title'   => $request->sub_title,
+            'description' => $request->description,
 
             // ✅ slug safe
             'slug' => $request->slug
                 ? Str::slug($request->slug)
                 : Str::slug($request->name),
 
-            'meta_title' => $request->meta_title,
+            'meta_title'       => $request->meta_title,
             'meta_description' => $request->meta_description,
-            'image' => $image,
-            'size_chart_image' => $sizeChartImage,
+            'image'            => $image,
+            'icon'             => $request->icon,
+            'pastel_bg'        => $request->pastel_bg,
 
-            // ✅ FIXED
-            'parent_id' => $request->parent_id ?: null,
+            // ✅ parent / sub-category (kept in sync)
+            'parent_id'       => $request->parent_id ?: null,
+            'is_sub_category' => $request->parent_id ? 1 : 0,
 
             // FLAGS
-            'is_popular' => $request->is_popular ?? 0,
-            'is_featured' => $request->is_featured ?? 0,
+            'is_popular'     => $request->is_popular ?? 0,
+            'is_featured'    => $request->is_featured ?? 0,
             'show_in_navbar' => $request->show_in_navbar ?? 0,
 
             'added_by' => 'admin',
 
-            'status' => $request->status ?? 1,
+            'status'     => $request->status ?? 1,
             'sort_order' => $request->sort_order ?? 0,
         ]);
 
@@ -199,7 +194,10 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'icon'        => 'nullable|string|max:100',
+            'pastel_bg'   => 'nullable|string|max:50',
         ]);
 
         $image = $category->image;
@@ -218,47 +216,31 @@ class CategoryController extends Controller
             );
         }
 
-        $sizeChartImage = $category->size_chart_image;
-
-        if ($request->hasFile('size_chart_image')) {
-
-            if (
-                $category->size_chart_image &&
-                Storage::disk('public')->exists($category->size_chart_image)
-            ) {
-                Storage::disk('public')->delete($category->size_chart_image);
-            }
-
-            $sizeChartImage = $this->compressAndStore(
-                $request->file('size_chart_image'),
-                'categories/size-charts',
-                1000,
-                85
-            );
-        }
-
         $category->update([
-            'name' => $request->name,
-            'sub_title' => $request->sub_title,
+            'name'        => $request->name,
+            'sub_title'   => $request->sub_title,
+            'description' => $request->description,
 
             // ✅ slug safe
             'slug' => $request->slug
                 ? Str::slug($request->slug)
                 : $category->slug,
 
-            'meta_title' => $request->meta_title,
+            'meta_title'       => $request->meta_title,
             'meta_description' => $request->meta_description,
-            'image' => $image,
-            'size_chart_image' => $sizeChartImage,
+            'image'            => $image,
+            'icon'             => $request->icon,
+            'pastel_bg'        => $request->pastel_bg,
 
-            // ✅ FIXED
-            'parent_id' => $request->parent_id ?: null,
+            // ✅ parent / sub-category (kept in sync)
+            'parent_id'       => $request->parent_id ?: null,
+            'is_sub_category' => $request->parent_id ? 1 : 0,
 
-            'is_popular' => $request->is_popular ?? 0,
-            'is_featured' => $request->is_featured ?? 0,
+            'is_popular'     => $request->is_popular ?? 0,
+            'is_featured'    => $request->is_featured ?? 0,
             'show_in_navbar' => $request->show_in_navbar ?? 0,
 
-            'status' => $request->status ?? 1,
+            'status'     => $request->status ?? 1,
             'sort_order' => $request->sort_order ?? 0,
         ]);
 
@@ -273,10 +255,6 @@ class CategoryController extends Controller
 
         if ($category->image && Storage::disk('public')->exists($category->image)) {
             Storage::disk('public')->delete($category->image);
-        }
-
-        if ($category->size_chart_image && Storage::disk('public')->exists($category->size_chart_image)) {
-            Storage::disk('public')->delete($category->size_chart_image);
         }
 
         $category->delete();

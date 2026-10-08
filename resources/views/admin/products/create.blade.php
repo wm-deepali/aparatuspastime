@@ -581,7 +581,7 @@
             margin-bottom: 0;
         }
 
-        /* ── Variants table (dynamic) — also reused for Addon Options ── */
+        /* ── Variants table (dynamic) — also reused for Addons, What's In The Box, Benefits, Highlights ── */
         .variants-table {
             width: 100%;
             border-collapse: collapse;
@@ -639,7 +639,7 @@
             background: #fafafa;
         }
 
-        /* ── Content tabs (Description / Fabric Care / Shipping & Delivery / Exchange Policy / Customization) ── */
+        /* ── Content tabs (Description / How To Use / Delivery & Returns) ── */
         .content-tabs {
             display: flex;
             flex-wrap: wrap;
@@ -801,99 +801,6 @@
         .variant-row-excluded select {
             background: #f1f2f4;
         }
-
-        /* ── Tag input (Search Suggestions) ─────────────────────────── */
-        .tag-input-wrap {
-            position: relative;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 8px 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            align-items: center;
-            background: var(--surface);
-            transition: border-color .15s, box-shadow .15s;
-        }
-
-        .tag-input-wrap:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(48, 61, 137, .12);
-        }
-
-        .tag-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .tag-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--accent-light);
-            color: var(--accent);
-            border: 1px solid #c7cdf5;
-            border-radius: 20px;
-            padding: 4px 6px 4px 12px;
-            font-size: 12.5px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .tag-remove {
-            background: transparent;
-            border: none;
-            color: var(--accent);
-            cursor: pointer;
-            font-size: 14px;
-            line-height: 1;
-            padding: 2px 4px;
-            border-radius: 50%;
-        }
-
-        .tag-remove:hover {
-            background: var(--accent);
-            color: #fff;
-        }
-
-        .tag-input-field {
-            flex: 1;
-            min-width: 140px;
-            border: none;
-            outline: none;
-            font-size: 13.5px;
-            font-family: var(--font);
-            padding: 4px 0;
-            background: transparent;
-        }
-
-        .tag-suggestions-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            margin-top: 4px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, .1);
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 50;
-            display: none;
-        }
-
-        .tag-suggestion-item {
-            padding: 8px 12px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        .tag-suggestion-item:hover {
-            background: var(--accent-light);
-            color: var(--accent);
-        }
     </style>
 
     <div class="app-content content container-fluid">
@@ -963,7 +870,7 @@
                                 <div class="field-group">
                                     <label class="field-label">Product Name <span class="req">*</span></label>
                                     <input type="text" name="name" id="product_name" class="field-input" required
-                                        value="{{ old('name') }}" placeholder="e.g. Hand-Knotted Wool Rug">
+                                        value="{{ old('name') }}" placeholder="e.g. Stunt Car">
                                 </div>
 
                                 <div class="field-group">
@@ -995,14 +902,10 @@
                             <div class="content-tabs">
                                 <button type="button" class="content-tab-btn active"
                                     data-tab="description">Description</button>
-                                <button type="button" class="content-tab-btn" data-tab="fabric_care">Fabric
-                                    Care</button>
-                                <button type="button" class="content-tab-btn" data-tab="shipping_delivery">Shipping
-                                    &amp; Delivery</button>
-                                <button type="button" class="content-tab-btn" data-tab="exchange_policy">Exchange
-                                    Policy</button>
-                                <button type="button" class="content-tab-btn"
-                                    data-tab="customization_assistance">Customization/Assistance</button>
+                                <button type="button" class="content-tab-btn" data-tab="how_to_use">How To
+                                    Use / Care</button>
+                                <button type="button" class="content-tab-btn" data-tab="delivery_returns">Delivery
+                                    &amp; Returns</button>
                             </div>
 
                             <div class="section-card-body">
@@ -1012,24 +915,16 @@
                                         class="field-textarea">{{ old('description') }}</textarea>
                                 </div>
 
-                                <div class="content-tab-panel" data-panel="fabric_care">
-                                    <textarea name="fabric_care" id="fabric_care"
-                                        class="field-textarea">{{ old('fabric_care') }}</textarea>
+                                <div class="content-tab-panel" data-panel="how_to_use">
+                                    <textarea name="how_to_use" id="how_to_use"
+                                        class="field-textarea">{{ old('how_to_use') }}</textarea>
+                                    <div class="field-hint">Shown in "Care &amp; Setup Guidelines" on the product page.</div>
                                 </div>
 
-                                <div class="content-tab-panel" data-panel="shipping_delivery">
-                                    <textarea name="shipping_delivery" id="shipping_delivery"
-                                        class="field-textarea">{{ old('shipping_delivery') }}</textarea>
-                                </div>
-
-                                <div class="content-tab-panel" data-panel="exchange_policy">
-                                    <textarea name="exchange_policy" id="exchange_policy"
-                                        class="field-textarea">{{ old('exchange_policy') }}</textarea>
-                                </div>
-
-                                <div class="content-tab-panel" data-panel="customization_assistance">
-                                    <textarea name="customization_assistance" id="customization_assistance"
-                                        class="field-textarea">{{ old('customization_assistance') }}</textarea>
+                                <div class="content-tab-panel" data-panel="delivery_returns">
+                                    <textarea name="delivery_returns" id="delivery_returns"
+                                        class="field-textarea">{{ old('delivery_returns') }}</textarea>
+                                    <div class="field-hint">Return / replacement / warranty text shown under Shipping &amp; Returns.</div>
                                 </div>
 
                             </div>
@@ -1108,6 +1003,87 @@
                             </div>
                         </div>
 
+                        <!-- What's In The Box -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>What's In The Box</h5>
+                                <button type="button" class="btn-secondary-dash" id="add-included-row"
+                                    style="padding:5px 12px;font-size:11.5px;">
+                                    <i class="fa fa-plus"></i> Add Item
+                                </button>
+                            </div>
+                            <div class="section-card-body" style="padding:0;overflow-x:auto">
+                                <table class="variants-table" id="included-table" style="display:none">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="included-table-body"></tbody>
+                                </table>
+                                <div class="field-hint" id="included-empty-hint" style="padding:16px 20px">
+                                    No items yet. List what comes in the box (e.g. 1 × Game board, 4 × Tokens).
+                                    If left empty, the product page shows just the product itself.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Developmental Benefits -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>Developmental Benefits</h5>
+                                <button type="button" class="btn-secondary-dash" id="add-benefit-row"
+                                    style="padding:5px 12px;font-size:11.5px;">
+                                    <i class="fa fa-plus"></i> Add Benefit
+                                </button>
+                            </div>
+                            <div class="section-card-body" style="padding:0;overflow-x:auto">
+                                <table class="variants-table" id="benefit-table" style="display:none">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Icon (FontAwesome)</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="benefit-table-body"></tbody>
+                                </table>
+                                <div class="field-hint" id="benefit-empty-hint" style="padding:16px 20px">
+                                    No benefits yet (e.g. Motor Skills, Team Play). If left empty, this section is
+                                    hidden on the product page.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Overview Highlights -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>Overview Highlights</h5>
+                                <button type="button" class="btn-secondary-dash" id="add-highlight-row"
+                                    style="padding:5px 12px;font-size:11.5px;">
+                                    <i class="fa fa-plus"></i> Add Highlight
+                                </button>
+                            </div>
+                            <div class="section-card-body" style="padding:0;overflow-x:auto">
+                                <table class="variants-table" id="highlight-table" style="display:none">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Description</th>
+                                            <th>Icon (FontAwesome)</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="highlight-table-body"></tbody>
+                                </table>
+                                <div class="field-hint" id="highlight-empty-hint" style="padding:16px 20px">
+                                    No highlights yet. These show as cards under the product description. If left
+                                    empty, they are hidden.
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Addon Options -->
                         <div class="section-card">
                             <div class="section-card-header">
@@ -1165,17 +1141,17 @@
                                         <div class="toggle-sub">Visible to customers</div>
                                     </div>
                                     <select name="status" class="field-select-sm">
-                                        <option value="1">Active</option>
-                                        <option value="0">Inactive</option>
+                                        <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
+                                        <option value="0" {{ old('status') === '0' ? 'selected' : '' }}>Inactive</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Inventory -->
+                        <!-- Inventory & Delivery -->
                         <div class="section-card">
                             <div class="section-card-header">
-                                <h5>Inventory</h5>
+                                <h5>Inventory &amp; Delivery</h5>
                             </div>
                             <div class="section-card-body">
 
@@ -1191,6 +1167,11 @@
                                             value="{{ old('product_code') }}">
                                     </div>
                                     <div class="field-group">
+                                        <label class="field-label">HSN Code</label>
+                                        <input type="text" name="hsn_code" class="field-input"
+                                            value="{{ old('hsn_code') }}" placeholder="e.g. 950300" maxlength="20">
+                                    </div>
+                                    <div class="field-group">
                                         <label class="field-label">Stock</label>
                                         <input type="number" name="stock" class="field-input" value="{{ old('stock') }}"
                                             placeholder="0">
@@ -1200,44 +1181,68 @@
                                         <input type="number" name="min_qty" class="field-input"
                                             value="{{ old('min_qty') }}" placeholder="1">
                                     </div>
+                                    <div class="field-group">
+                                        <label class="field-label">Delivery Charge (₹)</label>
+                                        <input type="number" step="0.01" name="delivery_charge" class="field-input"
+                                            value="{{ old('delivery_charge') }}" placeholder="0">
+                                    </div>
                                 </div>
 
                                 <div class="field-group">
                                     <label class="field-label">Delivery Time</label>
                                     <input type="text" name="delivery_time" class="field-input"
-                                        value="{{ old('delivery_time') }}" placeholder="e.g. 3–5 business days">
-                                </div>
-
-                                <div style="margin-top:4px">
-                                    <label class="check-toggle">
-                                        <input type="checkbox" name="quality" {{ old('quality') ? 'checked' : '' }}>
-                                        <span>Quality Assurance</span>
-                                    </label>
-                                    <label class="check-toggle">
-                                        <input type="checkbox" name="pan_india" {{ old('pan_india') ? 'checked' : '' }}>
-                                        <span>PAN India Delivery</span>
-                                    </label>
+                                        value="{{ old('delivery_time') }}" placeholder="e.g. 2 to 7 days">
                                 </div>
 
                             </div>
                         </div>
 
-                        <!-- Occasions -->
+                        <!-- Age Group -->
                         <div class="section-card">
                             <div class="section-card-header">
-                                <h5>Occasions</h5>
+                                <h5>Age Group</h5>
                             </div>
                             <div class="section-card-body">
-                                @foreach($occasions as $o)
-                                    <label class="check-toggle">
-                                        <input type="checkbox" name="occasions[]" value="{{ $o->id }}" {{ in_array($o->id, old('occasions', [])) ? 'checked' : '' }}>
-                                        <span>{{ $o->title }}</span>
-                                    </label>
-                                @endforeach
+                                <div class="inv-grid">
+                                    <div class="field-group" style="margin:0">
+                                        <label class="field-label">From (years)</label>
+                                        <input type="number" min="0" max="99" name="age_min" class="field-input"
+                                            value="{{ old('age_min') }}" placeholder="3">
+                                    </div>
+                                    <div class="field-group" style="margin:0">
+                                        <label class="field-label">To (years)</label>
+                                        <input type="number" min="0" max="99" name="age_max" class="field-input"
+                                            value="{{ old('age_max') }}" placeholder="No limit">
+                                    </div>
+                                </div>
+                                <div class="field-hint">Leave "To" empty for "3+" style ages. Used for the shop age filter.</div>
                             </div>
                         </div>
 
-                        <!-- Collections -->
+                        <!-- Display -->
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>Display</h5>
+                            </div>
+                            <div class="section-card-body">
+                                <div class="field-group" style="margin:8px 0 0">
+                                    <label class="field-label">Sort Order</label>
+                                    <input type="number" min="0" name="sort_order" class="field-input"
+                                        value="{{ old('sort_order', 0) }}">
+                                </div>
+
+                                <div class="field-group" style="margin:14px 0 0">
+                                    <input type="hidden" name="is_non_toxic" value="0">
+                                    <label class="check-toggle" style="margin:0">
+                                        <input type="checkbox" name="is_non_toxic" value="1" {{ old('is_non_toxic') ? 'checked' : '' }}>
+                                        <span>Show "100% Non-Toxic" badge</span>
+                                    </label>
+                                    <div class="field-hint">Only tick if this product is actually certified non-toxic.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Collections (also drive the product badge) -->
                         <div class="section-card">
                             <div class="section-card-header">
                                 <h5>Collections</h5>
@@ -1249,6 +1254,7 @@
                                         <span>{{ $collection->name }}</span>
                                     </label>
                                 @endforeach
+                                <div class="field-hint">Collections with a badge show it on this product (e.g. Best Seller).</div>
                             </div>
                         </div>
 
@@ -1267,27 +1273,6 @@
                                     <label class="field-label">Meta Description</label>
                                     <textarea name="meta_description"
                                         class="field-textarea">{{ old('meta_description') }}</textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Search Suggestions -->
-                        <div class="section-card">
-                            <div class="section-card-header">
-                                <h5>Search Suggestions</h5>
-                            </div>
-                            <div class="section-card-body">
-                                <div class="field-group" style="margin:0">
-                                    <label class="field-label">Enter Suggestions</label>
-                                    <div class="tag-input-wrap" id="suggestionsWrap">
-                                        <div class="tag-list" id="suggestionsTagList"></div>
-                                        <input type="text" id="suggestionsInput" class="tag-input-field"
-                                            placeholder="Type a keyword and press space…" autocomplete="off">
-                                        <div class="tag-suggestions-dropdown" id="suggestionsDropdown"></div>
-                                    </div>
-                                    <div id="suggestionsHidden"></div>
-                                    <div class="field-hint">Press spacebar after typing a keyword to add it as a tag.
-                                        These power the header search suggestions.</div>
                                 </div>
                             </div>
                         </div>
@@ -1313,18 +1298,14 @@
 
 <script>
     /* ── CKEditor ───────────────────────────────────────────────── */
-    /* Content section now has 5 independently-named fields, each its own
-     * editor, switched between via tabs (see .content-tab-* handler below).
-     * All 5 are initialized up front so their values are always present
-     * in the POST regardless of which tab was last open. */
+    /* Content section has 3 independently-named fields (description,
+     * how_to_use, delivery_returns), each its own editor, switched between
+     * via tabs. All are initialized up front so their values are always
+     * present in the POST regardless of which tab was last open. */
     CKEDITOR.config.versionCheck = false;
     CKEDITOR.replace('description');
-    CKEDITOR.replace('fabric_care');
-    CKEDITOR.replace('shipping_delivery');
-    CKEDITOR.replace('exchange_policy');
-    CKEDITOR.replace('customization_assistance');
-
-    let initialSuggestions = [];
+    CKEDITOR.replace('how_to_use');
+    CKEDITOR.replace('delivery_returns');
 
     /* ── Content tabs ────────────────────────────────────────────── */
     $(document).on('click', '.content-tab-btn', function () {
@@ -1361,7 +1342,7 @@
         $('#price-display').text('₹' + p.toFixed(2));
     }
     $('#mrp, #discount, #discount_type').on('keyup change', calcPrice);
-    calcPrice(); // ✅ run once on load — keeps hidden #price populated even if MRP/Discount are never touched
+    calcPrice(); // run once on load — keeps hidden #price populated even if MRP/Discount are never touched
 
     /* ── Submit spinner ─────────────────────────────────────────── */
     $(document).on('submit', '.save-form', function () {
@@ -1454,14 +1435,12 @@
             this.files = dt.files;
             this.name = prefix + '[images][]';
         });
-
     });
 
-
     /* ── Variant image uploads (multiple, per variant row) ──────────
- * Keyed by the row's own prefix string (e.g. "variants_image[2]")
- * since that's already unique per row. Posted as {prefix}[images][].
- */
+     * Keyed by the row's own prefix string (e.g. "variants_image[2]")
+     * since that's already unique per row. Posted as {prefix}[images][].
+     */
     let variantImageFiles = {};
 
     $(document).on('change', '.variant-image-input', function (e) {
@@ -1501,11 +1480,34 @@
         renderVariantImagePreview(prefix);
     }
 
+    /* ── What's In The Box (dynamic rows) ──────────────────────────
+     * Posted as included_items[index][title] — row order = sort order. */
+    let includedIndex = 0;
+
+    $(document).on('click', '#add-included-row', function () {
+        let row = `
+        <tr id="included-row-${includedIndex}">
+            <td><input type="text" name="included_items[${includedIndex}][title]" class="field-input" placeholder="e.g. 1 × Game board"></td>
+            <td style="width:50px"><button type="button" class="remove-btn" style="position:static" onclick="removeIncludedRow(${includedIndex})">×</button></td>
+        </tr>`;
+        $('#included-table-body').append(row);
+        includedIndex++;
+        toggleIncludedTable();
+    });
+
+    function removeIncludedRow(index) {
+        $('#included-row-' + index).remove();
+        toggleIncludedTable();
+    }
+
+    function toggleIncludedTable() {
+        let hasRows = $('#included-table-body tr').length > 0;
+        $('#included-table').toggle(hasRows);
+        $('#included-empty-hint').toggle(!hasRows);
+    }
 
     /* ── Addon Options (dynamic rows) ──────────────────────────────
-     * Posted as addons[index][detail] / addons[index][price] — an
-     * independent array the controller can loop over to create/sync
-     * a product_addons (or similar) table. */
+     * Posted as addons[index][detail] / addons[index][price]. */
     let addonIndex = 0;
 
     $(document).on('click', '#add-addon-row', function () {
@@ -1530,6 +1532,54 @@
         $('#addon-table').toggle(hasRows);
         $('#addon-empty-hint').toggle(!hasRows);
     }
+
+    /* ── Benefits & Highlights (dynamic rows) ──────────────────────
+     * Posted as benefits[i][title|icon] and highlights[i][title|description|icon].
+     * Order = sort order. The controller recreates them on save. */
+    const rowLists = {
+        benefit: {
+            btn: '#add-benefit-row', body: '#benefit-table-body',
+            table: '#benefit-table', hint: '#benefit-empty-hint',
+            i: 0,
+            tpl: i => `
+            <tr>
+                <td><input type="text" name="benefits[${i}][title]" class="field-input" placeholder="e.g. Motor Skills"></td>
+                <td><input type="text" name="benefits[${i}][icon]" class="field-input" placeholder="fa-solid fa-hand-holding-heart"></td>
+                <td style="width:50px"><button type="button" class="remove-btn row-remove" style="position:static">×</button></td>
+            </tr>`
+        },
+        highlight: {
+            btn: '#add-highlight-row', body: '#highlight-table-body',
+            table: '#highlight-table', hint: '#highlight-empty-hint',
+            i: 0,
+            tpl: i => `
+            <tr>
+                <td><input type="text" name="highlights[${i}][title]" class="field-input" placeholder="e.g. Built For Endless Play"></td>
+                <td><input type="text" name="highlights[${i}][description]" class="field-input" placeholder="Short line"></td>
+                <td><input type="text" name="highlights[${i}][icon]" class="field-input" placeholder="fa-solid fa-seedling"></td>
+                <td style="width:50px"><button type="button" class="remove-btn row-remove" style="position:static">×</button></td>
+            </tr>`
+        }
+    };
+
+    function toggleRowList(cfg) {
+        let hasRows = $(cfg.body + ' tr').length > 0;
+        $(cfg.table).toggle(hasRows);
+        $(cfg.hint).toggle(!hasRows);
+    }
+
+    Object.values(rowLists).forEach(function (cfg) {
+        $(document).on('click', cfg.btn, function () {
+            $(cfg.body).append(cfg.tpl(cfg.i++));
+            toggleRowList(cfg);
+        });
+        toggleRowList(cfg);
+    });
+
+    $(document).on('click', '.row-remove', function () {
+        $(this).closest('tr').remove();
+        Object.values(rowLists).forEach(toggleRowList);
+    });
 
     /* ── Category → subcategories & attributes ──────────────────── */
     $('#category_id').on('change', function () {
@@ -1564,20 +1614,15 @@
     /* ── Load attributes ────────────────────────────────────────── */
     /*
      * Every category attribute is rendered here — is_selectable is a
-     * FRONTEND-ONLY flag (customer-facing product page) and has no bearing
-     * on what the admin sees while creating a product, so it is NOT filtered
-     * out in this form.
+     * FRONTEND-ONLY flag and has no bearing on what the admin sees.
      *
      * Each attribute value checkbox carries its category-attribute's
      * dependency flags as data-* attributes:
-     *   data-variant           → used_for_variant (participates in variant generation at all)
+     *   data-variant           → used_for_variant
      *   data-price-dependent   → selecting this value changes variant price
      *   data-image-dependent   → selecting this value changes variant image
      *   data-stock-dependent   → selecting this value tracks its own stock
      *   data-sku-dependent     → selecting this value changes variant SKU
-     *
-     * These are read by the Generate Variants handler below to build one
-     * independent variant table PER dependency type.
      */
     function loadAttributes(categoryId) {
         $('#attribute-container').html('');
@@ -1689,7 +1734,7 @@
         }
     });
 
-    /* ── Keep "N selected" badge live + auto-expand accordions that already have a selection restored (e.g. old()) ── */
+    /* ── Keep "N selected" badge live ───────────────────────────── */
     function refreshAttrSelectedCount($accordion) {
         let count = $accordion.find('.attribute-value:checked').length;
         let $badge = $accordion.find('.attr-selected-count');
@@ -1700,23 +1745,12 @@
         refreshAttrSelectedCount($(this).closest('.attr-accordion'));
     });
 
-    /* recalculates max-height for an already-open accordion after its content changes size */
-    function reflowOpenAccordion($accordion) {
-        if ($accordion.hasClass('open')) {
-            $accordion.find('.attr-accordion-body').css('max-height', $accordion.find('.attr-accordion-body')[0].scrollHeight + 'px');
-        }
-    }
-
     /* ── Generate variants (type-aware, matches controller's 4 independent arrays) ── */
     /*
-     * The controller (ProductController@store / createVariantsForType) reads
-     * FOUR separate arrays from the request: variants_price, variants_image,
-     * variants_stock, variants_sku — each an independent set of combinations
-     * built ONLY from attribute values whose category-attribute has that
-     * specific *_dependent flag turned on.
-     *
-     * So instead of one combined table, we build up to 4 separate tables here,
-     * one per type, each posted under its matching array name.
+     * The controller reads FOUR separate arrays from the request:
+     * variants_price, variants_image, variants_stock, variants_sku — each an
+     * independent set of combinations built ONLY from attribute values whose
+     * category-attribute has that specific *_dependent flag turned on.
      */
     $(document).on('click', '#generate-variants', function () {
         const types = ['price', 'image', 'stock', 'sku'];
@@ -1763,18 +1797,7 @@
     /*
      * Renders ONE independent table for a single dependency type.
      * Field names use variants_{type}[index][...] to match the controller's
-     * createVariantsForType() / syncVariantsForType(), which read
-     * $request->variants_price / variants_image / variants_stock / variants_sku
-     * as four separate, independent arrays.
-     *
-     *   - Variant name column always shown
-     *   - price  → MRP / Discount Type / Discount / Final Price
-     *   - image  → file upload
-     *   - stock  → stock qty
-     *   - sku    → sku text
-     *
-     * Hidden inputs for the attribute value ids are always written so the
-     * combination itself is preserved and posted back to the server.
+     * createVariantsForType() / syncVariantsForType().
      */
     function renderVariantTable(type, combinations) {
         let titleMap = {
@@ -1789,7 +1812,7 @@
         if (type === 'price') headCols += '<th>MRP</th><th>Discount Type</th><th>Discount</th><th>Final Price</th>';
         if (type === 'stock') headCols += '<th>Stock</th>';
         if (type === 'image') headCols += '<th>Image</th>';
-        headCols += '<th>Available</th>'; // ✅ replaces the remove-button column
+        headCols += '<th>Available</th>';
 
         let rows = '';
 
@@ -1799,7 +1822,12 @@
             let prefix = `variants_${type}[${index}]`;
             let rowId = `variant-row-${type}-${index}`;
 
-            rows += `<tr id="${rowId}"><td><span class="variant-name-cell">${names.join(' / ')}</span></td>`;
+            let hiddenValues = '';
+            combo.forEach(function (item) {
+                hiddenValues += `<input type="hidden" name="${prefix}[values][]" value="${item.id}">`;
+            });
+
+            rows += `<tr id="${rowId}"><td><span class="variant-name-cell">${names.join(' / ')}</span>${hiddenValues}</td>`;
 
             if (type === 'sku') {
                 rows += `<td><input type="text" name="${prefix}[sku]" class="field-input"></td>`;
@@ -1833,11 +1861,8 @@
             </td>`;
             }
 
-            // ✅ "Not offered" checkbox instead of a delete button — the row
-            // (and its stock/price/etc data) is always submitted, but
-            // checking this tells the controller to save it as is_available=0,
-            // so it stays out of customer-facing stock matching without
-            // losing whatever the admin already typed into the row.
+            // "Not offered" checkbox instead of a delete button — the row is
+            // always submitted; checking this saves it as is_available = 0.
             rows += `<td style="text-align:center">
             <label style="display:flex;align-items:center;gap:5px;font-size:11.5px;white-space:nowrap;justify-content:center;">
                 <input type="checkbox" name="${prefix}[excluded]" onchange="toggleVariantRowStyle(this)">
@@ -1846,10 +1871,6 @@
         </td>`;
 
             rows += `</tr>`;
-
-            combo.forEach(function (item) {
-                rows += `<input type="hidden" name="${prefix}[values][]" value="${item.id}">`;
-            });
         });
 
         return `
@@ -1865,7 +1886,7 @@
     </div>`;
     }
 
-    // ✅ visually grey out a row when marked "Not offered"
+    // visually grey out a row when marked "Not offered"
     function toggleVariantRowStyle(checkbox) {
         $(checkbox).closest('tr').toggleClass('variant-row-excluded', checkbox.checked);
     }
@@ -1884,101 +1905,6 @@
             row.find('input[name$="[price]"]').val(finalPrice.toFixed(2));
         }
     );
-
-    /* ── Search Suggestions (tag input, spacebar-to-add, with autocomplete) ── */
-    (function () {
-        const input = document.getElementById('suggestionsInput');
-        const tagList = document.getElementById('suggestionsTagList');
-        const hiddenWrap = document.getElementById('suggestionsHidden');
-        const dropdown = document.getElementById('suggestionsDropdown');
-        const wrap = document.getElementById('suggestionsWrap');
-
-        let tags = Array.isArray(initialSuggestions) ? initialSuggestions.slice() : [];
-        let fetchTimer = null;
-
-        function renderTags() {
-            tagList.innerHTML = '';
-            hiddenWrap.innerHTML = '';
-            tags.forEach(function (tag, i) {
-                tagList.insertAdjacentHTML('beforeend',
-                    `<span class="tag-chip">${tag}<button type="button" class="tag-remove" data-index="${i}">×</button></span>`);
-                hiddenWrap.insertAdjacentHTML('beforeend',
-                    `<input type="hidden" name="suggestions[]" value="${tag.replace(/"/g, '&quot;')}">`);
-            });
-        }
-
-        function addTag(value) {
-            value = value.trim();
-            if (!value) return;
-            if (tags.some(t => t.toLowerCase() === value.toLowerCase())) {
-                input.value = '';
-                dropdown.style.display = 'none';
-                return;
-            }
-            tags.push(value);
-            renderTags();
-            input.value = '';
-            dropdown.style.display = 'none';
-        }
-
-        input.addEventListener('keydown', function (e) {
-            if (e.key === ' ' || e.code === 'Space') {
-                e.preventDefault();
-                addTag(input.value);
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                addTag(input.value);
-            } else if (e.key === 'Backspace' && input.value === '' && tags.length) {
-                tags.pop();
-                renderTags();
-            }
-        });
-
-        tagList.addEventListener('click', function (e) {
-            if (e.target.classList.contains('tag-remove')) {
-                let idx = +e.target.dataset.index;
-                tags.splice(idx, 1);
-                renderTags();
-            }
-        });
-
-        input.addEventListener('input', function () {
-            clearTimeout(fetchTimer);
-            let q = input.value.trim();
-
-            if (!q) {
-                dropdown.style.display = 'none';
-                return;
-            }
-
-            fetchTimer = setTimeout(function () {
-                $.get("{{ route('admin.products.suggestion-keywords') }}", { q: q }, function (res) {
-                    let matches = res.filter(k => !tags.some(t => t.toLowerCase() === k.toLowerCase()));
-
-                    if (matches.length) {
-                        dropdown.innerHTML = matches.map(k => `<div class="tag-suggestion-item">${k}</div>`).join('');
-                        dropdown.style.display = 'block';
-                    } else {
-                        dropdown.style.display = 'none';
-                    }
-                });
-            }, 200);
-        });
-
-        dropdown.addEventListener('click', function (e) {
-            if (e.target.classList.contains('tag-suggestion-item')) {
-                addTag(e.target.textContent);
-            }
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!wrap.contains(e.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
-
-        renderTags();
-    })();
 </script>
 
 @include('admin.footer')

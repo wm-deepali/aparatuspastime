@@ -16,9 +16,11 @@ return new class extends Migration {
 
             $table->foreignId('attribute_id')
                 ->constrained()
-                ->cascadeOnDelete();
+                ->cascadeOnDelete()->unique();
 
             $table->string('value');
+            
+            $table->string('slug')->nullable()->unique();
 
             $table->integer('sort_order')->default(0);
 

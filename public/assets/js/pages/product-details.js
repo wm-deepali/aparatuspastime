@@ -145,11 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // 7. Add to Cart & Buy Now
-  document.getElementById('pdp-add-to-cart-btn').onclick = () => {
-    const qty = parseInt(qtyInput.value) || 1;
-    State.addToCart(product.id, qty);
-    Components.showToast(`${product.name} (x${qty}) added to your play bag!`, 'orange', '../');
-  };
+  // document.getElementById('pdp-add-to-cart-btn').onclick = () => {
+  //   const qty = parseInt(qtyInput.value) || 1;
+  //   State.addToCart(product.id, qty);
+  //   Components.showToast(`${product.name} (x${qty}) added to your play bag!`, 'orange', '../');
+  // };
 
   document.getElementById('pdp-buy-now-btn').onclick = () => {
     const qty = parseInt(qtyInput.value) || 1;

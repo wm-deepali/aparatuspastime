@@ -3,20 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Brand;
-use App\Models\GiftingOccasion;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\CategoryAttribute;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\ProductImport;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-use ZipArchive;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use App\Models\ProductImage;
 use App\Models\ProductVideo;
 use App\Models\ProductAddon;
@@ -47,10 +43,6 @@ class ProductController extends Controller
      *
      * Returns ['full' => path, 'thumb' => path] — both already stored
      * on the public disk.
-     *
-     * The largest real-world display is the product detail gallery
-     * (main image column), so 1200px covers that with a retina buffer.
-     * The thumb (400px) covers grid cards / listing thumbnails.
      */
     private function compressAndStore(
         UploadedFile $file,
@@ -73,13 +65,11 @@ class ProductController extends Controller
 
         $encodedFull = $image->encodeUsingFormat(Format::WEBP, quality: $quality);
 
-        $fullFilename = $uuid . '.webp';
-        $fullPath = $folder . '/' . $fullFilename;
+        $fullPath = $folder . '/' . $uuid . '.webp';
 
         Storage::disk('public')->put($fullPath, (string) $encodedFull);
 
-        // ---- Thumb size (decode fresh so we don't compound scaling on
-        // the already-downscaled $image instance) ----
+        // ---- Thumb size (decode fresh so we don't compound scaling) ----
         $thumbImage = $manager->decode($file);
 
         if ($thumbImage->width() > $thumbWidth) {
@@ -88,8 +78,7 @@ class ProductController extends Controller
 
         $encodedThumb = $thumbImage->encodeUsingFormat(Format::WEBP, quality: $quality);
 
-        $thumbFilename = $uuid . '_thumb.webp';
-        $thumbPath = $folder . '/' . $thumbFilename;
+        $thumbPath = $folder . '/' . $uuid . '_thumb.webp';
 
         Storage::disk('public')->put($thumbPath, (string) $encodedThumb);
 
@@ -165,18 +154,14 @@ class ProductController extends Controller
             ->orderBy('name')
             ->get();
 
-        $occasions = GiftingOccasion::where('status', 1)->get();
-
         $collections = Collection::where('status', 1)
             ->orderBy('sort_order')
             ->get();
 
         return view('admin.products.create', compact(
             'categories',
-            'occasions',
             'collections'
         ));
-
     }
 
     public function subcategories(Category $category)
@@ -207,9 +192,16 @@ class ProductController extends Controller
         return response()->json($attributes);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Shared validation + payload (store & update use the same fields)
+    |--------------------------------------------------------------------------
+    */
 
-    public function store(Request $request)
+    private function validateProduct(Request $request): void
     {
+        $iconRule = ['nullable', 'string', 'max:100', 'regex:/^[a-z0-9\- ]+$/i'];
+
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
@@ -221,59 +213,138 @@ class ProductController extends Controller
             'min_qty' => 'nullable|integer|min:1',
             'sku' => 'nullable|string|max:255',
             'product_code' => 'nullable|string|max:255',
+            'hsn_code' => 'nullable|string|max:20',
+            'delivery_time' => 'nullable|string|max:255',
+            'delivery_charge' => 'nullable|numeric|min:0',
+            'age_min' => 'nullable|integer|min:0|max:99',
+            'age_max' => 'nullable|integer|min:0|max:99',
+            'sort_order' => 'nullable|integer|min:0',
+            'is_non_toxic' => 'nullable|boolean',
             'images.*' => 'nullable|image|max:2048',
 
-            // ✅ new: videos + addon options
+            // videos + addon options
             'videos.*' => 'nullable|mimes:mp4,webm,mov,avi|max:20480',
             'addons.*.detail' => 'nullable|string|max:255',
             'addons.*.price' => 'nullable|numeric|min:0',
 
-            // ✅ new: multiple images per image-type variant
+            // what's in the box / benefits / highlights
+            'included_items.*.title' => 'nullable|string|max:255',
+            'benefits.*.title' => 'nullable|string|max:255',
+            'benefits.*.icon' => $iconRule,
+            'highlights.*.title' => 'nullable|string|max:255',
+            'highlights.*.description' => 'nullable|string|max:1000',
+            'highlights.*.icon' => $iconRule,
+
+            // multiple images per image-type variant + per-image delete
             'variants_image.*.images.*' => 'nullable|image|max:2048',
+            'delete_variant_images.*' => 'nullable|integer',
         ]);
 
+        if (
+            $request->filled('age_min') && $request->filled('age_max')
+            && (int) $request->age_max < (int) $request->age_min
+        ) {
+            throw ValidationException::withMessages([
+                'age_max' => 'Age "To" cannot be less than "From".',
+            ]);
+        }
+    }
+
+    /**
+     * Columns shared by create & update. Slug is handled separately
+     * (store generates one, update only regenerates when it changed).
+     */
+    private function productData(Request $request): array
+    {
+        $num = fn ($v, $default = 0) => ($v !== null && $v !== '') ? $v : $default;
+
+        return [
+            'category_id' => $request->category_id,
+            'subcategory_id' => $request->subcategory_id ?: null,
+            'name' => $request->name,
+
+            'short_description' => $request->short_description,
+            'description' => $request->description,
+            'how_to_use' => $request->how_to_use,
+            'delivery_returns' => $request->delivery_returns,
+
+            // blank MRP/Discount/Price never get written as '' into decimal columns
+            'mrp' => $num($request->mrp),
+            'discount_type' => $request->discount_type ?: 'amount',
+            'discount' => $num($request->discount),
+            'price' => $num($request->price, $request->mrp ?: 0),
+
+            'sku' => $request->sku,
+            'product_code' => $request->product_code,
+            'hsn_code' => $request->hsn_code,
+
+            'stock' => $num($request->stock),
+            'min_qty' => $num($request->min_qty, 1),
+
+            'delivery_time' => $request->delivery_time,
+            'delivery_charge' => $num($request->delivery_charge),
+
+            // age_max NULL = no upper limit ("3+")
+            'age_min' => $request->filled('age_min') ? (int) $request->age_min : null,
+            'age_max' => $request->filled('age_max') ? (int) $request->age_max : null,
+
+            'is_non_toxic' => $request->boolean('is_non_toxic'),
+            'sort_order' => $num($request->sort_order),
+
+            'meta_title' => $request->meta_title,
+            'meta_description' => $request->meta_description,
+
+            'status' => (int) $request->input('status', 1),
+        ];
+    }
+
+    /**
+     * Replace a product's child rows (included items / benefits / highlights)
+     * with the submitted set. Blank-title rows are skipped; submitted order
+     * becomes sort_order.
+     */
+    private function syncRows(Product $product, string $relation, array $rows, array $fields): void
+    {
+        $product->$relation()->delete();
+
+        $sort = 0;
+
+        foreach ($rows as $row) {
+            if (blank($row['title'] ?? null)) {
+                continue;
+            }
+
+            $data = [];
+            foreach ($fields as $field) {
+                $data[$field] = trim((string) ($row[$field] ?? '')) ?: null;
+            }
+
+            $product->$relation()->create($data + ['sort_order' => $sort++]);
+        }
+    }
+
+    private function syncContentRows(Request $request, Product $product): void
+    {
+        $this->syncRows($product, 'includedItems', $request->input('included_items', []), ['title']);
+        $this->syncRows($product, 'benefits', $request->input('benefits', []), ['title', 'icon']);
+        $this->syncRows($product, 'highlights', $request->input('highlights', []), ['title', 'icon', 'description']);
+    }
+
+    public function store(Request $request)
+    {
+        $this->validateProduct($request);
 
         DB::beginTransaction();
 
         try {
 
-            $product = Product::create([
-                'category_id' => $request->category_id,
-                'subcategory_id' => $request->subcategory_id,
-                'name' => $request->name,
-                'slug' => $request->slug
-                    ? $this->generateUniqueSlug($request->slug)
-                    : $this->generateUniqueSlug($request->name),
-                'short_description' => $request->short_description,
-                'description' => $request->description,
-                'delivery_returns' => $request->delivery_returns,
-                'fabric_care' => $request->fabric_care,
-
-                // ✅ new Content-tab fields
-                'shipping_delivery' => $request->shipping_delivery,
-                'exchange_policy' => $request->exchange_policy,
-                'customization_assistance' => $request->customization_assistance,
-
-                // ✅ blank MRP/Discount/Price never get inserted as '' into decimal columns
-                'mrp' => $request->mrp !== null && $request->mrp !== '' ? $request->mrp : 0,
-                'discount_type' => $request->discount_type ?: 'amount',
-                'discount' => $request->discount !== null && $request->discount !== '' ? $request->discount : 0,
-                'price' => $request->price !== null && $request->price !== '' ? $request->price : ($request->mrp ?: 0),
-
-                'sku' => $request->sku,
-                'stock' => $request->stock !== null && $request->stock !== '' ? $request->stock : 0,
-                'min_qty' => $request->min_qty !== null && $request->min_qty !== '' ? $request->min_qty : 1,
-                'product_code' => $request->product_code,
-                'delivery_time' => $request->delivery_time,
-
-                'quality' => $request->has('quality'),
-                'pan_india' => $request->has('pan_india'),
-
-                'meta_title' => $request->meta_title,
-                'meta_description' => $request->meta_description,
-
-                'status' => $request->status,
-            ]);
+            $product = Product::create(
+                $this->productData($request) + [
+                    'slug' => $request->slug
+                        ? $this->generateUniqueSlug($request->slug)
+                        : $this->generateUniqueSlug($request->name),
+                ]
+            );
 
             /*
             |--------------------------------------------------------------------------
@@ -297,6 +368,8 @@ class ProductController extends Controller
                         'is_default' => $request->default_image == $index ? 1 : 0,
                     ]);
                 }
+
+                $this->ensureDefaultImage($product);
             }
 
             /*
@@ -327,31 +400,26 @@ class ProductController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            if ($request->filled('addons')) {
+            foreach ($request->input('addons', []) as $addon) {
 
-                foreach ($request->addons as $addon) {
-
-                    if (empty($addon['detail'])) {
-                        continue;
-                    }
-
-                    ProductAddon::create([
-                        'product_id' => $product->id,
-                        'detail' => $addon['detail'],
-                        'price' => $addon['price'] !== null && $addon['price'] !== '' ? $addon['price'] : 0,
-                    ]);
+                if (empty($addon['detail'])) {
+                    continue;
                 }
+
+                ProductAddon::create([
+                    'product_id' => $product->id,
+                    'detail' => $addon['detail'],
+                    'price' => ($addon['price'] ?? '') !== '' ? $addon['price'] : 0,
+                ]);
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | What's In The Box / Developmental Benefits / Overview Highlights
+            |--------------------------------------------------------------------------
+            */
 
-            if ($request->filled('suggestions')) {
-                foreach ($request->suggestions as $keyword) {
-                    $keyword = trim($keyword);
-                    if ($keyword !== '') {
-                        $product->keywords()->create(['keyword' => $keyword]);
-                    }
-                }
-            }
+            $this->syncContentRows($request, $product);
 
             /*
             |--------------------------------------------------------------------------
@@ -378,10 +446,6 @@ class ProductController extends Controller
             |--------------------------------------------------------------------------
             | Variants — one independent combination set per type
             |--------------------------------------------------------------------------
-            | The form submits up to 4 separate arrays: variants_price,
-            | variants_image, variants_stock, variants_sku. Each is a plain
-            | numeric array of combinations for that type only (built in the
-            | browser from whichever attributes carry that *_dependent flag).
             */
 
             foreach (self::VARIANT_TYPES as $type) {
@@ -390,43 +454,33 @@ class ProductController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Occasions
+            | Collections
             |--------------------------------------------------------------------------
             */
 
-            if ($request->filled('occasions')) {
-
-                $product->occasions()->sync(
-                    $request->occasions
-                );
-            }
-
             if ($request->filled('collections')) {
-
-                $product->collections()->sync(
-                    $request->collections
-                );
-
+                $product->collections()->sync($request->collections);
             }
 
             DB::commit();
 
             return redirect()
                 ->route('admin.products.index')
-                ->with(
-                    'success',
-                    'Product created successfully.'
-                );
+                ->with('success', 'Product created successfully.');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
 
             DB::rollBack();
 
-            dd(
-                $e->getMessage(),
-                $e->getFile(),
-                $e->getLine()
-            );
+            Log::error('Product store failed', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => $e->getMessage()]);
         }
     }
 
@@ -437,14 +491,16 @@ class ProductController extends Controller
             'images',
             'videos',
             'addons',
+            'includedItems',
+            'benefits',
+            'highlights',
+            'collections',
 
             'attributeValues.attribute',
             'attributeValues.value',
 
             'variants.values.attributeValue',
             'variants.images',
-
-            'occasions',
 
         ]);
 
@@ -453,31 +509,14 @@ class ProductController extends Controller
             ->orderBy('name')
             ->get();
 
-        $subcategories = Category::where(
-            'parent_id',
-            $product->category_id
-        )
+        $subcategories = Category::where('parent_id', $product->category_id)
             ->where('status', 1)
             ->orderBy('name')
-            ->get();
-
-        $occasions = GiftingOccasion::where('status', 1)->get();
-        $attributes = CategoryAttribute::with([
-            'attribute.values'
-        ])
-            ->where('category_id', $product->category_id)
-            ->where('status', 1)
-            ->orderBy('sort_order')
             ->get();
 
         $selectedAttributeValues = $product
             ->attributeValues
             ->pluck('attribute_value_id')
-            ->toArray();
-
-        $selectedOccasions = $product
-            ->occasions
-            ->pluck('id')
             ->toArray();
 
         // ✅ Existing variants grouped by type, so the edit form can
@@ -493,23 +532,15 @@ class ProductController extends Controller
                     return [
 
                         'id' => $variant->id,
-
                         'sku' => $variant->sku,
-
                         'mrp' => $variant->mrp,
-
                         'discount_type' => $variant->discount_type,
-
                         'discount' => $variant->discount,
-
                         'price' => $variant->price,
-
                         'stock' => $variant->stock,
-
                         'image' => $variant->image,
 
-                        // ✅ so the edit form can pre-check "Not offered" and grey out
-                        // the row on initial render, not just after a manual toggle
+                        // so the edit form can pre-check "Not offered" and grey out the row
                         'is_available' => (bool) $variant->is_available,
 
                         'images' => $variant->images->map(function ($img) {
@@ -541,95 +572,34 @@ class ProductController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $existingKeywords = $product->keywords->pluck('keyword')->toArray();
-
         return view(
             'admin.products.edit',
             compact(
                 'product',
                 'categories',
                 'subcategories',
-                'attributes',
                 'selectedAttributeValues',
-                'selectedOccasions',
-                'occasions',
                 'existingVariantsByType',
-                'collections',
-                'existingKeywords'
+                'collections'
             )
         );
     }
 
     public function update(Request $request, Product $product)
     {
+        $this->validateProduct($request);
 
-        $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'mrp' => 'nullable|numeric|min:0',
-            'discount' => 'nullable|numeric|min:0',
-            'discount_type' => 'nullable|in:amount,percentage',
-            'price' => 'nullable|numeric|min:0',
-            'stock' => 'nullable|integer|min:0',
-            'min_qty' => 'nullable|integer|min:1',
-            'sku' => 'nullable|string|max:255',
-            'product_code' => 'nullable|string|max:255',
-            'images.*' => 'nullable|image|max:2048',
-
-            // ✅ new: videos + addon options
-            'videos.*' => 'nullable|mimes:mp4,webm,mov,avi|max:20480',
-            'addons.*.detail' => 'nullable|string|max:255',
-            'addons.*.price' => 'nullable|numeric|min:0',
-
-            // ✅ new: multiple images per image-type variant + per-image delete
-            'variants_image.*.images.*' => 'nullable|image|max:2048',
-            'delete_variant_images.*' => 'nullable|integer',
-        ]);
         DB::beginTransaction();
 
         try {
 
-            $product->update([
+            $product->update(
+                $this->productData($request) + [
+                    'slug' => $this->resolveSlugOnUpdate($product, $request->slug, $request->name),
+                ]
+            );
 
-                'category_id' => $request->category_id,
-                'subcategory_id' => $request->subcategory_id,
-
-                'name' => $request->name,
-                'slug' => $this->resolveSlugOnUpdate($product, $request->slug, $request->name),
-
-                'short_description' => $request->short_description,
-                'description' => $request->description,
-                'delivery_returns' => $request->delivery_returns,
-                'fabric_care' => $request->fabric_care,
-
-                // ✅ new Content-tab fields
-                'shipping_delivery' => $request->shipping_delivery,
-                'exchange_policy' => $request->exchange_policy,
-                'customization_assistance' => $request->customization_assistance,
-
-                // ✅ blank MRP/Discount/Price never get written as '' into decimal columns
-                'mrp' => $request->mrp !== null && $request->mrp !== '' ? $request->mrp : 0,
-                'discount_type' => $request->discount_type ?: 'amount',
-                'discount' => $request->discount !== null && $request->discount !== '' ? $request->discount : 0,
-                'price' => $request->price !== null && $request->price !== '' ? $request->price : ($request->mrp ?: 0),
-
-                'sku' => $request->sku,
-                'stock' => $request->stock !== null && $request->stock !== '' ? $request->stock : 0,
-                'min_qty' => $request->min_qty !== null && $request->min_qty !== '' ? $request->min_qty : 1,
-                'product_code' => $request->product_code,
-                'delivery_time' => $request->delivery_time,
-
-                'quality' => $request->has('quality'),
-                'pan_india' => $request->has('pan_india'),
-
-                'meta_title' => $request->meta_title,
-                'meta_description' => $request->meta_description,
-
-                'status' => $request->status,
-            ]);
-
-
-            // ✅ ADD NEW IMAGES (OLD DELETE NAHI KAR RAHE - SAFE APPROACH)
+            // ✅ ADD NEW IMAGES (old ones are kept — safe approach)
             $defaultType = $request->default_type;
 
             // RESET ALL DEFAULTS
@@ -653,38 +623,33 @@ class ProductController extends Controller
                         'products'
                     );
 
-                    $isDefault = 0;
-
-                    if ($defaultType === "new_" . $index) {
-                        $isDefault = 1;
-                    }
-
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image' => $paths['full'],
                         'thumb' => $paths['thumb'],
-                        'is_default' => $isDefault
+                        'is_default' => $defaultType === 'new_' . $index ? 1 : 0,
                     ]);
                 }
             }
 
-            // DELETE SELECTED IMAGES
-            if ($request->delete_images) {
-                foreach ($request->delete_images as $imgId) {
+            // DELETE SELECTED IMAGES (scoped to this product)
+            foreach ($request->input('delete_images', []) as $imgId) {
 
-                    $img = ProductImage::find($imgId);
+                $img = $product->images()->find($imgId);
 
-                    if ($img) {
-                        if (Storage::disk('public')->exists($img->image)) {
-                            Storage::disk('public')->delete($img->image);
-                        }
-                        if ($img->thumb && Storage::disk('public')->exists($img->thumb)) {
-                            Storage::disk('public')->delete($img->thumb);
-                        }
-                        $img->delete();
+                if ($img) {
+                    if (Storage::disk('public')->exists($img->image)) {
+                        Storage::disk('public')->delete($img->image);
                     }
+                    if ($img->thumb && Storage::disk('public')->exists($img->thumb)) {
+                        Storage::disk('public')->delete($img->thumb);
+                    }
+                    $img->delete();
                 }
             }
+
+            // If the default was deleted / never chosen, fall back to the first image.
+            $this->ensureDefaultImage($product);
 
             /*
             |--------------------------------------------------------------------------
@@ -704,34 +669,32 @@ class ProductController extends Controller
                 }
             }
 
-            // DELETE SELECTED VIDEOS
-            if ($request->delete_videos) {
-                foreach ($request->delete_videos as $videoId) {
+            // DELETE SELECTED VIDEOS (scoped to this product)
+            foreach ($request->input('delete_videos', []) as $videoId) {
 
-                    $vid = ProductVideo::find($videoId);
+                $vid = $product->videos()->find($videoId);
 
-                    if ($vid) {
-                        if (Storage::disk('public')->exists($vid->video)) {
-                            Storage::disk('public')->delete($vid->video);
-                        }
-                        $vid->delete();
+                if ($vid) {
+                    if (Storage::disk('public')->exists($vid->video)) {
+                        Storage::disk('public')->delete($vid->video);
                     }
+                    $vid->delete();
                 }
             }
 
             /*
             |--------------------------------------------------------------------------
-            | Delete individually-removed variant images
+            | Delete individually-removed variant images (scoped to this product)
             |--------------------------------------------------------------------------
-            | Distinct from full variant deletion (handled in syncVariantsForType) —
-            | this is for when the admin removes ONE image from a variant that
-            | still keeps its other images / stays selected.
             */
 
             if ($request->filled('delete_variant_images')) {
+
+                $ownVariantIds = $product->variants()->pluck('id');
+
                 foreach ($request->delete_variant_images as $imgId) {
 
-                    $img = ProductVariantImage::find($imgId);
+                    $img = ProductVariantImage::whereIn('variant_id', $ownVariantIds)->find($imgId);
 
                     if ($img) {
                         if (Storage::disk('public')->exists($img->image)) {
@@ -747,40 +710,32 @@ class ProductController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Addon Options (SYNC — replace the full set each save, since rows
-            | have no stable identity of their own beyond detail/price)
+            | Addon Options (SYNC — replace the full set each save)
             |--------------------------------------------------------------------------
             */
 
             $product->addons()->delete();
 
-            if ($request->filled('addons')) {
+            foreach ($request->input('addons', []) as $addon) {
 
-                foreach ($request->addons as $addon) {
-
-                    if (empty($addon['detail'])) {
-                        continue;
-                    }
-
-                    ProductAddon::create([
-                        'product_id' => $product->id,
-                        'detail' => $addon['detail'],
-                        'price' => $addon['price'] !== null && $addon['price'] !== '' ? $addon['price'] : 0,
-                    ]);
+                if (empty($addon['detail'])) {
+                    continue;
                 }
+
+                ProductAddon::create([
+                    'product_id' => $product->id,
+                    'detail' => $addon['detail'],
+                    'price' => ($addon['price'] ?? '') !== '' ? $addon['price'] : 0,
+                ]);
             }
 
-            $product->keywords()->delete();
+            /*
+            |--------------------------------------------------------------------------
+            | What's In The Box / Developmental Benefits / Overview Highlights (SYNC)
+            |--------------------------------------------------------------------------
+            */
 
-            if ($request->filled('suggestions')) {
-                foreach ($request->suggestions as $keyword) {
-                    $keyword = trim($keyword);
-                    if ($keyword !== '') {
-                        $product->keywords()->create(['keyword' => $keyword]);
-                    }
-                }
-            }
-
+            $this->syncContentRows($request, $product);
 
             /*
             |--------------------------------------------------------------------------
@@ -792,12 +747,6 @@ class ProductController extends Controller
                 'product_id',
                 $product->id
             )->get();
-
-            $currentKeys = $currentAttributes
-                ->map(function ($row) {
-                    return $row->attribute_id . '-' . $row->attribute_value_id;
-                })
-                ->toArray();
 
             $newKeys = [];
 
@@ -820,7 +769,6 @@ class ProductController extends Controller
                 $key = $row->attribute_id . '-' . $row->attribute_value_id;
 
                 if (!in_array($key, $newKeys)) {
-
                     $row->delete();
                 }
             }
@@ -837,37 +785,32 @@ class ProductController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Occasions
+            | Collections
             |--------------------------------------------------------------------------
             */
 
-            $product->occasions()->sync(
-                $request->occasions ?? []
-            );
-
-            $product->collections()->sync(
-                $request->collections ?? []
-            );
+            $product->collections()->sync($request->collections ?? []);
 
             DB::commit();
 
             return redirect()
                 ->route('admin.products.index')
-                ->with(
-                    'success',
-                    'Product updated successfully.'
-                );
+                ->with('success', 'Product updated successfully.');
 
-        } catch (\Exception $e) {
-
+        } catch (\Throwable $e) {
 
             DB::rollBack();
 
-            dd(
-                $e->getMessage(),
-                $e->getFile(),
-                $e->getLine()
-            );
+            Log::error('Product update failed', [
+                'product_id' => $product->id,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => $e->getMessage()]);
         }
     }
 
@@ -875,15 +818,25 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        if ($product->image && Storage::disk('public')->exists($product->image)) {
-            Storage::disk('public')->delete($product->image);
-        }
-
         $product->delete();
 
         return response()->json([
             'message' => 'Product Deleted Successfully'
         ]);
+    }
+
+    /**
+     * Guarantees that a product with images always has exactly one default.
+     */
+    private function ensureDefaultImage(Product $product): void
+    {
+        $images = $product->images()->get();
+
+        if ($images->isEmpty() || $images->contains('is_default', 1)) {
+            return;
+        }
+
+        $images->first()->update(['is_default' => 1]);
     }
 
     /*
@@ -905,8 +858,7 @@ class ProductController extends Controller
     protected function fillVariantFieldsForType(ProductVariant $variant, string $type, array $data, Request $request, int $index): void
     {
         // ✅ applies to every type — checked "Not offered" in the form means
-        // is_available = false; unchecked (or absent) means true. This is what
-        // the storefront's stock-matching query filters on.
+        // is_available = false; unchecked (or absent) means true.
         $variant->is_available = !isset($data['excluded']);
 
         switch ($type) {
@@ -942,8 +894,7 @@ class ProductController extends Controller
 
     /**
      * Stores newly-uploaded images for an image-type variant. Existing
-     * ProductVariantImage rows are left untouched (same "add new, keep old"
-     * pattern used for product-level images/videos) unless the admin
+     * ProductVariantImage rows are left untouched unless the admin
      * explicitly marks one for deletion via delete_variant_images[].
      */
     protected function storeVariantImages(Request $request, ProductVariant $variant, int $index): void
@@ -977,8 +928,7 @@ class ProductController extends Controller
         }
 
         // Keep the legacy single `image` column in sync as "the default
-        // image for this variant" — some older frontend code may still
-        // read $variant->image directly.
+        // image for this variant".
         $default = $variant->images()->where('is_default', 1)->first()
             ?? $variant->images()->first();
 
@@ -1064,28 +1014,17 @@ class ProductController extends Controller
             }
 
             if (empty($data['id'])) {
-
                 $existingIds[] = $variant->id;
+            }
 
-                foreach ($data['values'] ?? [] as $valueId) {
-                    ProductVariantValue::create([
-                        'variant_id' => $variant->id,
-                        'attribute_value_id' => $valueId,
-                    ]);
-                }
+            // Re-sync value pivots (new rows, or regenerated combinations).
+            ProductVariantValue::where('variant_id', $variant->id)->delete();
 
-            } else {
-
-                // Re-sync value pivots for existing combinations in case
-                // the admin regenerated the table with different values.
-                ProductVariantValue::where('variant_id', $variant->id)->delete();
-
-                foreach ($data['values'] ?? [] as $valueId) {
-                    ProductVariantValue::create([
-                        'variant_id' => $variant->id,
-                        'attribute_value_id' => $valueId,
-                    ]);
-                }
+            foreach ($data['values'] ?? [] as $valueId) {
+                ProductVariantValue::create([
+                    'variant_id' => $variant->id,
+                    'attribute_value_id' => $valueId,
+                ]);
             }
         }
 
@@ -1121,7 +1060,6 @@ class ProductController extends Controller
             $variant->delete();
         }
     }
-
 
     private function generateUniqueSlug(string $name, ?int $ignoreId = null): string
     {

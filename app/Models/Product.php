@@ -19,16 +19,12 @@ class Product extends Model
 
         'sku',
         'product_code',
+        'hsn_code',
 
         'short_description',
         'description',
+        'how_to_use',
         'delivery_returns',
-        'fabric_care',
-
-        // ✅ new Content-tab fields
-        'shipping_delivery',
-        'exchange_policy',
-        'customization_assistance',
 
         'mrp',
         'discount_type',
@@ -39,9 +35,18 @@ class Product extends Model
         'min_qty',
 
         'delivery_time',
+        'delivery_charge',
 
-        'quality',
-        'pan_india',
+        // Age group (age_max NULL = no upper limit, e.g. "3+")
+        'age_min',
+        'age_max',
+
+        'sort_order',
+        'is_non_toxic',
+
+        // Rating cache (updated when a review is approved)
+        'rating_avg',
+        'reviews_count',
 
         'meta_title',
         'meta_description',
@@ -53,8 +58,14 @@ class Product extends Model
     protected $casts = [
 
         'status' => 'boolean',
-        'quality' => 'boolean',
-        'pan_india' => 'boolean',
+        'is_featured' => 'boolean',
+        'is_new_arrival' => 'boolean',
+
+        'age_min' => 'integer',
+        'age_max' => 'integer',
+        'rating_avg' => 'float',
+        'reviews_count' => 'integer',
+        'is_non_toxic' => 'boolean',
 
     ];
 
@@ -70,9 +81,9 @@ class Product extends Model
 
     /**
      * ✅ Used across all grid/listing views (homepage sections, product
-     * listing pages, luxury tabs, etc). Prefers the compressed THUMB
-     * (400px) since these are always shown small — falls back to the
-     * full image for older rows created before the thumb column existed.
+     * listing pages, etc). Prefers the compressed THUMB (400px) since
+     * these are always shown small — falls back to the full image for
+     * older rows created before the thumb column existed.
      */
     public function getDisplayImageAttribute()
     {
@@ -91,6 +102,24 @@ class Product extends Model
             : null;
     }
 
+    /**
+     * "3+" or "3–5" — built from age_min / age_max. Null if no age is set.
+     */
+    public function getAgeLabelAttribute(): ?string
+    {
+        if (is_null($this->age_min)) {
+            return null;
+        }
+
+        if (is_null($this->age_max)) {
+            return $this->age_min . '+';
+        }
+
+        return $this->age_max === $this->age_min
+            ? (string) $this->age_min
+            : $this->age_min . '–' . $this->age_max;
+    }
+
     public function attributeValues()
     {
         return $this->hasMany(ProductAttributeValue::class);
@@ -106,29 +135,37 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
-    // ✅ new: product videos (Media → Video)
+    // "What's in the box" checklist
+    public function includedItems()
+    {
+        return $this->hasMany(ProductIncludedItem::class)->orderBy('sort_order');
+    }
+
+    // "Developmental Benefits" chips
+    public function benefits()
+    {
+        return $this->hasMany(ProductBenefit::class)->orderBy('sort_order');
+    }
+
+    // Overview highlight cards
+    public function highlights()
+    {
+        return $this->hasMany(ProductHighlight::class)->orderBy('sort_order');
+    }
+
+    // ✅ product videos (Media → Video)
     public function videos()
     {
         return $this->hasMany(ProductVideo::class);
     }
 
-    // ✅ new: addon options (Addon Options section)
+    // ✅ addon options (Addon Options section)
     public function addons()
     {
         return $this->hasMany(ProductAddon::class);
     }
 
-    // OCCASIONS
-    public function occasions()
-    {
-        return $this->belongsToMany(
-            GiftingOccasion::class,
-            'occasion_product',
-            'product_id',
-            'occasion_id'
-        );
-    }
-
+    // Collections — also drive the product badge (badge_text / badge_color)
     public function collections()
     {
         return $this->belongsToMany(
@@ -165,11 +202,6 @@ class Product extends Model
     public function approvedReviews()
     {
         return $this->hasMany(ProductReview::class)->where('status', 'approved');
-    }
-
-    public function keywords()
-    {
-        return $this->hasMany(ProductKeyword::class);
     }
 
 }
