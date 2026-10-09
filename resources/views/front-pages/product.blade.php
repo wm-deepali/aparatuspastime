@@ -22,19 +22,19 @@
   // ── Badge comes from collections ───────────────────────────────
   $badge = $product->collections->first(fn($c) => filled($c->badge_text));
 
- $specs = $product->attributeValues
-    ->filter(fn ($pav) => $pav->attribute && $pav->value)
+  $specs = $product->attributeValues
+    ->filter(fn($pav) => $pav->attribute && $pav->value)
     ->groupBy('attribute_id')
-    ->map(fn ($group) => (object) [
-        'name'    => $group->first()->attribute->name,
-        'icon'    => $group->first()->attribute->icon ?? null,
-        'display' => $group->pluck('value.value')->filter()->unique()->implode(', '),
+    ->map(fn($group) => (object) [
+      'name' => $group->first()->attribute->name,
+      'icon' => $group->first()->attribute->icon ?? null,
+      'display' => $group->pluck('value.value')->filter()->unique()->implode(', '),
     ])
-    ->filter(fn ($s) => filled($s->display))
+    ->filter(fn($s) => filled($s->display))
     ->values();
 
 
- // ── What's in the box (falls back to the product itself) ───────
+  // ── What's in the box (falls back to the product itself) ───────
   $included = $product->includedItems;
 
   // ── Developmental benefits & overview highlights (admin-managed) ─
@@ -64,6 +64,10 @@
   $reviewUrl = Route::has('product.review') ? route('product.review') : '#';
 
   $shareText = urlencode('Check out ' . $product->name . ' on Aparatus Pastime! ' . url()->current());
+
+  // ── Wishlist state (guest session or logged-in customer) ───────
+  $isWishlisted = \App\Models\Wishlist::current()->where('product_id', $product->id)->exists();
+
 @endphp
 
 @section('title', ($product->meta_title ?: $product->name) . ' | Aparatus Pastime')
@@ -122,19 +126,20 @@
                   class="{{ $badge->badge_color ?: 'bg-brand-orange text-white' }} text-xs font-bold font-heading px-3.5 py-1 rounded-full shadow-md uppercase tracking-wider">{{ $badge->badge_text }}</span>
               @endif
               @if ($product->is_non_toxic)
-              <span
-                class="bg-white/95 backdrop-blur-md text-emerald-700 text-[11px] font-bold font-heading px-3 py-0.5 rounded-full shadow-xs border border-emerald-200 flex items-center gap-1.5">
-                <i class="fa-solid fa-shield-heart text-emerald-500"></i>
-                <span>100% Non-Toxic</span>
-              </span>
+                <span
+                  class="bg-white/95 backdrop-blur-md text-emerald-700 text-[11px] font-bold font-heading px-3 py-0.5 rounded-full shadow-xs border border-emerald-200 flex items-center gap-1.5">
+                  <i class="fa-solid fa-shield-heart text-emerald-500"></i>
+                  <span>100% Non-Toxic</span>
+                </span>
               @endif
             </div>
 
             <div class="absolute top-4 right-4 flex items-center gap-2 z-10">
-              <button type="button"
-                class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/95 backdrop-blur-xs shadow-md border border-slate-200/80 text-dark-navy hover:text-red-500 hover:scale-110 active:scale-95 flex items-center justify-center transition cursor-pointer"
-                title="Save to Wishlist">
-                <i class="fa-regular fa-heart text-base sm:text-lg"></i>
+              <button type="button" id="wishlist-btn" data-product-id="{{ $product->id }}"
+                aria-pressed="{{ $isWishlisted ? 'true' : 'false' }}"
+                class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/95 backdrop-blur-xs shadow-md border border-slate-200/80 {{ $isWishlisted ? 'text-red-500' : 'text-dark-navy' }} hover:text-red-500 hover:scale-110 active:scale-95 flex items-center justify-center transition cursor-pointer disabled:opacity-60"
+                title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Save to Wishlist' }}">
+                <i class="{{ $isWishlisted ? 'fa-solid' : 'fa-regular' }} fa-heart text-base sm:text-lg"></i>
               </button>
             </div>
 
@@ -282,7 +287,8 @@
                   <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-brand-border shadow-2xs">
                     <i
                       class="{{ $benefit->icon ?: 'fa-solid fa-star' }} {{ $benefitColors[$loop->index % count($benefitColors)] }} text-sm shrink-0"></i>
-                    <span class="text-[11px] sm:text-xs font-semibold text-dark-navy leading-tight">{{ $benefit->title }}</span>
+                    <span
+                      class="text-[11px] sm:text-xs font-semibold text-dark-navy leading-tight">{{ $benefit->title }}</span>
                   </div>
                 @endforeach
               </div>
@@ -443,16 +449,16 @@
             <i class="fa-solid fa-box-open text-xs"></i><span>What's In The Box</span>
           </a>
           @if (filled($product->how_to_use))
-          <a href="#sec-care"
-            class="px-4 py-2 rounded-xl bg-soft-yellow hover:bg-amber-500 hover:text-white text-amber-800 transition flex items-center gap-1.5">
-            <i class="fa-solid fa-shield-heart text-xs"></i><span>Safety & Care</span>
-          </a>
+            <a href="#sec-care"
+              class="px-4 py-2 rounded-xl bg-soft-yellow hover:bg-amber-500 hover:text-white text-amber-800 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-heart text-xs"></i><span>Safety & Care</span>
+            </a>
           @endif
           @if (filled($product->delivery_returns))
-          <a href="#sec-shipping"
-            class="px-4 py-2 rounded-xl bg-soft-orange hover:bg-brand-orange hover:text-white text-brand-orange transition flex items-center gap-1.5">
-            <i class="fa-solid fa-truck-fast text-xs"></i><span>Shipping & Returns</span>
-          </a>
+            <a href="#sec-shipping"
+              class="px-4 py-2 rounded-xl bg-soft-orange hover:bg-brand-orange hover:text-white text-brand-orange transition flex items-center gap-1.5">
+              <i class="fa-solid fa-truck-fast text-xs"></i><span>Shipping & Returns</span>
+            </a>
           @endif
           <a href="#sec-reviews"
             class="px-4 py-2 rounded-xl bg-brand-navy/10 hover:bg-brand-navy hover:text-white text-dark-navy transition flex items-center gap-1.5">
@@ -917,6 +923,62 @@
       if (sticky) {
         window.addEventListener('scroll', () => {
           sticky.classList.toggle('translate-y-full', window.scrollY <= 400);
+        });
+      }
+
+      // ── Wishlist toggle ──
+      const wishBtn = document.getElementById('wishlist-btn');
+      if (wishBtn) {
+        const toggleUrl = @json(route('wishlist.toggle'));
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+          || document.querySelector('#add-to-cart-form [name=_token]')?.value;
+
+        const toast = async (msg, type) => {
+          try {
+            const { Components } = await import('{{ asset("assets/js/components.js") }}');
+            Components.showToast(msg, type);
+          } catch (e) { /* toast is optional */ }
+        };
+
+        const paint = (on) => {
+          const icon = wishBtn.querySelector('i');
+          icon.classList.toggle('fa-solid', on);
+          icon.classList.toggle('fa-regular', !on);
+          wishBtn.classList.toggle('text-red-500', on);
+          wishBtn.classList.toggle('text-dark-navy', !on);
+          wishBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          wishBtn.title = on ? 'Remove from Wishlist' : 'Save to Wishlist';
+        };
+
+        wishBtn.addEventListener('click', async () => {
+          wishBtn.disabled = true;
+          try {
+            const res = await fetch(toggleUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf,
+                'X-Requested-With': 'XMLHttpRequest',
+              },
+              body: JSON.stringify({ product_id: wishBtn.dataset.productId }),
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok && data.status) {
+              paint(data.wishlisted);
+              document.querySelectorAll('[data-wishlist-count]').forEach(el => {
+                el.textContent = data.wishlist_count;
+                el.classList.toggle('hidden', !data.wishlist_count);
+              });
+              toast(data.message, data.wishlisted ? 'success' : 'info');
+            } else {
+              toast(data.message || 'Could not update wishlist.', 'error');
+            }
+          } catch (e) {
+            toast('Network error. Please try again.', 'error');
+          }
+          wishBtn.disabled = false;
         });
       }
     });

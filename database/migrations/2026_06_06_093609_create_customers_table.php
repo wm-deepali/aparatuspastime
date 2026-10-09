@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->string('email')->unique();
 
             $table->string('mobile', 10)->unique();
-            $table->string('alternate_mobile', 10);
+            $table->string('alternate_mobile', 10)->nullable();
 
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('mobile_verified_at')->nullable();

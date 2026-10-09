@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
@@ -19,7 +19,7 @@ class CustomerAuthController extends Controller
     public function registerForm(Request $request)
     {
         if (Auth::guard('customer')->check()) {
-            return redirect()->route('user.dashboard.index');
+            return redirect()->route('user.dashboard');
         }
 
         $this->rememberIntended($request);
@@ -30,7 +30,7 @@ class CustomerAuthController extends Controller
     public function loginForm(Request $request)
     {
         if (Auth::guard('customer')->check()) {
-            return redirect()->route('user.dashboard.index');
+            return redirect()->route('user.dashboard');
         }
 
         $this->rememberIntended($request);
@@ -105,7 +105,7 @@ class CustomerAuthController extends Controller
         // Sends the customer back to wherever they came from (e.g. the cart
         // page) instead of always landing on the dashboard after signup.
         return redirect()
-            ->intended(route('user.dashboard.index'))
+            ->intended(route('user.dashboard'))
             ->with('success', 'Registration completed successfully.')
             ->with('fire_signup_event', 'email_password');
     }
@@ -119,6 +119,8 @@ class CustomerAuthController extends Controller
 
         $remember = $request->boolean('remember');
         $meta = $this->captureLoginMeta($request);
+
+        $guestSessionId = session()->getId();
 
         if (Auth::guard('customer')->attempt($credentials, $remember)) {
 
@@ -153,7 +155,7 @@ class CustomerAuthController extends Controller
             }
 
             return redirect()
-                ->intended(route('user.dashboard.index'))
+                ->intended(route('user.dashboard'))
                 ->with('success', 'Login successful.')
                 ->with('fire_login_event', true);
         }
@@ -265,6 +267,7 @@ class CustomerAuthController extends Controller
         if ($customer) {
             // Close out the open session's duration, mirroring the admin logout flow
             $lastLogin = AuthLog::where('customer_id', $customer->id)
+                ->where('event', 'login')
                 ->success()
                 ->whereNull('logged_out_at')
                 ->latest('id')
@@ -273,10 +276,9 @@ class CustomerAuthController extends Controller
             if ($lastLogin) {
                 $lastLogin->update([
                     'logged_out_at' => now(),
-                    'duration_seconds' => now()->diffInSeconds($lastLogin->created_at),
+                    'duration_seconds' => $lastLogin->created_at->diffInSeconds(now()),
                 ]);
             }
-
             AuthLog::create([
                 'customer_id' => $customer->id,
                 'user_type' => 'customer',
@@ -336,7 +338,7 @@ class CustomerAuthController extends Controller
     private function postAuthRedirect(Request $request): string
     {
         return $this->safeTarget($request->input('redirect'), $request)
-            ?? redirect()->intended(route('user.dashboard.index'))->getTargetUrl();
+            ?? redirect()->intended(route('user.dashboard'))->getTargetUrl();
     }
 
     /**

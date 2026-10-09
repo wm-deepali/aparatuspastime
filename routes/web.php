@@ -67,10 +67,19 @@ use App\Http\Controllers\Admin\{
 };
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\FrontController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\CustomerAuthController;   
+use App\Http\Controllers\FrontController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\User\WishlistController;
+use App\Http\Controllers\User\UserProfileController;
+use App\Http\Controllers\User\UserAddressController;
+use App\Http\Controllers\User\CustomerAuthController;
+use App\Http\Controllers\User\CustomerPasswordController;
+use App\Http\Controllers\User\UserOrderController;
+use App\Http\Controllers\User\UserReviewController;
+use App\Http\Controllers\User\UserNotificationController;
+
 
 Route::middleware('maintenance.mode')->group(function () {
 
@@ -84,14 +93,10 @@ Route::middleware('maintenance.mode')->group(function () {
         Route::view('/about', 'front-pages.about')->name('about');
         Route::view('/blogs', 'front-pages.blog')->name('blogs');
         Route::view('/blog-detail/{slug}', 'front-pages.blog-detail')->name('blog.show');
-        Route::view('/cart', 'front-pages.cart')->name('cart');
-        Route::view('/checkout', 'front-pages.checkout')->name('checkout');
         Route::view('/cancellation-policy', 'front-pages.cancellation-policy')->name('cancellations');
         Route::view('/contact', 'front-pages.contact')->name('contact');
         Route::view('/cookie-policy', 'front-pages.cookie-policy')->name('cookie-policy');
         Route::view('/faq', 'front-pages.faq')->name('faq');
-        Route::view('/forgot-password', 'front-pages.forgot-password')->name('forgot-password');
-        Route::view('/reset-password', 'front-pages.reset-password')->name('reset-password');
         Route::view('/new-arrivals', 'front-pages.new-arrivals')->name('new-arrivals');
         Route::view('/order-success', 'front-pages.order-success')->name('order-success');
         Route::view('/track-order', 'front-pages.track-order')->name('track-order');
@@ -101,22 +106,10 @@ Route::middleware('maintenance.mode')->group(function () {
         Route::view('/returns', 'front-pages.returns')->name('returns');
         Route::view('/shipping-policy', 'front-pages.shipping-policy')->name('shipping-policy');
         Route::view('/terms', 'front-pages.terms')->name('terms');
-
-        // Account area
-        Route::prefix('account')->name('account.')->group(function () {
-            Route::view('/dashboard', 'front-pages.dashboard')->name('dashboard');
-            Route::view('/orders', 'front-pages.orders')->name('orders');
-            Route::view('/order-detail', 'front-pages.order-detail')->name('order-detail');
-            Route::view('/track-order', 'front-pages.track-order')->name('track-order');
-            Route::view('/wishlist', 'front-pages.wishlist')->name('wishlist');
-            Route::view('/reviews', 'front-pages.reviews')->name('reviews');
-            Route::view('/addresses', 'front-pages.addresses')->name('addresses');
-            Route::view('/profile', 'front-pages.profile')->name('profile');
-            Route::view('/password', 'front-pages.password')->name('password');
-            Route::view('/notifications', 'front-pages.notifications')->name('notifications');
-        });
     });
 
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::post('/wishlist/clear', [WishlistController::class, 'clear'])->name('wishlist.clear');
 
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::get('/cart', [CartController::class, 'cart'])->name('cart');
@@ -127,20 +120,69 @@ Route::middleware('maintenance.mode')->group(function () {
     Route::post('/cart/remove-coupon', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
     Route::get('/cart/mini', [CartController::class, 'mini'])->name('cart.mini');
 
+    Route::get('/forgot-password', [CustomerPasswordController::class, 'forgotForm'])->name('forgot-password');
+    Route::post('/forgot-password', [CustomerPasswordController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('forgot-password.send');
+    Route::get('/reset-password/{token}', [CustomerPasswordController::class, 'resetForm'])->name('reset-password');
+    Route::post('/reset-password', [CustomerPasswordController::class, 'reset'])->middleware('throttle:10,1')->name('reset-password.update');
 
     // ── Guest auth pages ──
     Route::prefix('user')->name('user.')->group(function () {
-    Route::get('/login', [CustomerAuthController::class, 'loginForm'])->name('login');
-    Route::post('/login', [CustomerAuthController::class, 'login'])->name('login.submit')->middleware('throttle:10,1');
+        Route::get('/login', [CustomerAuthController::class, 'loginForm'])->name('login');
+        Route::post('/login', [CustomerAuthController::class, 'login'])->name('login.submit')->middleware('throttle:10,1');
 
-    Route::get('/register', [CustomerAuthController::class, 'registerForm'])->name('register');
-    Route::post('/register', [CustomerAuthController::class, 'register'])->name('register.submit')->middleware('throttle:10,1');
+        Route::get('/register', [CustomerAuthController::class, 'registerForm'])->name('register');
+        Route::post('/register', [CustomerAuthController::class, 'register'])->name('register.submit')->middleware('throttle:10,1');
 
-    Route::get('/auth/google', [CustomerAuthController::class, 'redirectToGoogle'])->name('google');
-    Route::get('/auth/google/callback', [CustomerAuthController::class, 'handleGoogleCallback'])->name('google.callback');
+        Route::get('/auth/google', [CustomerAuthController::class, 'redirectToGoogle'])->name('google');
+        Route::get('/auth/google/callback', [CustomerAuthController::class, 'handleGoogleCallback'])->name('google.callback');
 
-    Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('logout');
-});
+        Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('logout');
+    });
+
+    // ── Logged-in customer only ──
+    Route::middleware('customer')->group(function () {
+
+        Route::get('/checkout', [CheckoutController::class, 'checkout'])->name('checkout');
+        Route::post('/checkout/address', [CheckoutController::class, 'storeAddress'])->name('checkout.address.store');
+        Route::post('/checkout/address/default', [CheckoutController::class, 'changeDefaultAddress'])->name('checkout.address.default');
+        Route::get('/checkout/cities/{state}', [CheckoutController::class, 'cities'])->name('checkout.cities');
+        Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
+        Route::post('/checkout/razorpay/success', [CheckoutController::class, 'razorpaySuccess'])->name('checkout.razorpay.success');
+        Route::get('/order-success/{order}', [CheckoutController::class, 'orderSuccess'])->name('order.success');
+
+        Route::prefix('user')->name('user.')->group(function () {
+
+            Route::get('/dashboard', [UserOrderController::class, 'dashboard'])->name('dashboard');
+            Route::get('/orders', [UserOrderController::class, 'index'])->name('orders');
+            Route::get('/order-detail', [UserOrderController::class, 'show'])->name('order-detail');
+            Route::get('/track-order', [UserOrderController::class, 'track'])->name('track-order');
+
+            Route::get('/reviews', [UserReviewController::class, 'index'])->name('reviews');
+            Route::get('/reviews/create', [UserReviewController::class, 'create'])->name('reviews.create');
+            Route::post('/reviews', [UserReviewController::class, 'store'])->name('reviews.store');
+            Route::delete('/reviews/{review}', [UserReviewController::class, 'destroy'])->name('reviews.destroy');
+
+            Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
+
+            Route::get('/addresses', [UserAddressController::class, 'index'])->name('addresses');
+            Route::post('/addresses', [UserAddressController::class, 'store'])->name('addresses.store');
+            Route::post('/addresses/{address}/default', [UserAddressController::class, 'setDefault'])->name('addresses.default');
+            Route::delete('/addresses/{address}', [UserAddressController::class, 'destroy'])->name('addresses.destroy');
+
+            Route::get('/profile', [UserProfileController::class, 'profile'])->name('profile');
+            Route::post('/profile', [UserProfileController::class, 'updateProfile'])->name('profile.update');
+            Route::get('/password', [UserProfileController::class, 'passwordForm'])->name('password');
+            Route::post('/password', [UserProfileController::class, 'updatePassword'])->name('password.update');
+
+            
+Route::get('/notifications', [UserNotificationController::class, 'index'])->name('notifications');
+Route::post('/notifications/read-all', [UserNotificationController::class, 'readAll'])->name('notifications.read-all');
+Route::post('/notifications/{notification}/read', [UserNotificationController::class, 'read'])->name('notifications.read');
+
+            Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('logout');
+        });
+    });
+
 
 });
 

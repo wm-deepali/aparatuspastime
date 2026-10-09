@@ -243,7 +243,7 @@
               Quick Self-Service Tools
             </h3>
             <div class="space-y-2 font-heading text-xs">
-              <a href="{{ route('account.track-order') }}" class="p-2.5 rounded-xl bg-soft-blue hover:bg-brand-blue hover:text-white text-brand-navy flex items-center justify-between transition group">
+              <a href="{{ route('user.track-order') }}" class="p-2.5 rounded-xl bg-soft-blue hover:bg-brand-blue hover:text-white text-brand-navy flex items-center justify-between transition group">
                 <span class="flex items-center gap-2 font-bold">
                   <i class="fa-solid fa-truck text-brand-blue group-hover:text-white"></i>
                   <span>Track Live Order</span>

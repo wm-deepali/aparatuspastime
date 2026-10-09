@@ -127,6 +127,12 @@
     [['age' => '3-5'], '#PreschoolPlay'],
     [['age' => '9-12'], '#STEMforKids'],
   ];
+
+  $customer = auth('customer')->user();
+  $isLoggedIn = (bool) $customer;
+  $customerName = $customer?->name ?? '';
+  $customerFirst = $customerName !== '' ? explode(' ', trim($customerName))[0] : '';
+  $customerInitial = $customerFirst !== '' ? strtoupper(mb_substr($customerFirst, 0, 1)) : 'U';
 @endphp
 
 <body class="has-bottom-nav bg-warm-cream text-body-text">
@@ -216,11 +222,11 @@
         <div class="flex items-center gap-1 sm:gap-2.5">
 
           <!-- Wishlist -->
-          <a href="{{ route('account.wishlist') }}"
+          <a href="{{ route('user.wishlist') }}"
             class="relative p-2 text-dark-navy hover:text-brand-orange rounded-xl transition" title="Wishlist">
             <i class="fa-regular fa-heart text-lg sm:text-xl"></i>
-            <span id="header-wishlist-count"
-              class="hidden absolute top-0.5 right-0.5 bg-brand-orange text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center font-heading">0</span>
+            <span id="header-wishlist-count" data-wishlist-count
+              class="{{ ($wishlistCount ?? 0) > 0 ? '' : 'hidden' }} absolute top-0.5 right-0.5 bg-brand-orange text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center font-heading">{{ $wishlistCount ?? 0 }}</span>
           </a>
 
           <!-- Cart Drawer Trigger -->
@@ -229,18 +235,24 @@
             title="Cart">
             <i class="fa-solid fa-bag-shopping text-lg sm:text-xl"></i>
             <span id="header-cart-count"
-  class="{{ ($cartCount ?? 0) > 0 ? '' : 'hidden' }} absolute top-0.5 right-0.5 bg-brand-orange text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center font-heading">{{ $cartCount ?? 0 }}</span>
+              class="{{ ($cartCount ?? 0) > 0 ? '' : 'hidden' }} absolute top-0.5 right-0.5 bg-brand-orange text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center font-heading">{{ $cartCount ?? 0 }}</span>
           </button>
 
           <!-- Account Dropdown -->
           <div class="relative group">
-            <a href="{{ route('account.dashboard') }}"
+            <a href="{{ $isLoggedIn ? route('user.dashboard') : route('user.login') }}"
               class="flex items-center gap-1.5 p-2 text-dark-navy hover:text-brand-orange rounded-xl transition">
               <div
-                class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-soft-blue text-brand-blue flex items-center justify-center text-sm">
-                <i class="fa-solid fa-user"></i>
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-soft-blue text-brand-blue flex items-center justify-center text-sm font-heading font-bold">
+                @if ($isLoggedIn)
+                  {{ $customerInitial }}
+                @else
+                  <i class="fa-solid fa-user"></i>
+                @endif
               </div>
-              <span id="header-account-name" class="hidden xl:inline text-xs font-bold font-heading">Account</span>
+              <span class="hidden xl:inline text-xs font-bold font-heading max-w-[90px] truncate">
+                {{ $isLoggedIn ? $customerFirst : 'Account' }}
+              </span>
               <i class="fa-solid fa-chevron-down text-[10px] hidden xl:inline text-brand-muted"></i>
             </a>
 
@@ -249,43 +261,50 @@
               class="absolute right-0 top-full mt-1 w-52 bg-white border border-brand-border rounded-2xl shadow-xl py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-200 font-heading">
               <div class="px-4 py-2 border-b border-brand-border">
                 <p class="text-xs text-brand-muted font-sans">Welcome to Playroom,</p>
-                <p id="header-user-fullname" class="text-sm font-bold text-dark-navy truncate">Guest Explorer</p>
+                <p class="text-sm font-bold text-dark-navy truncate">
+                  {{ $isLoggedIn ? $customerName : 'Guest Explorer' }}
+                </p>
               </div>
-              <a href="{{ route('account.dashboard') }}"
+
+              <a href="{{ route('user.dashboard') }}"
                 class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
                 <i class="fa-solid fa-gauge mr-2 text-brand-blue"></i>My Playroom
               </a>
-              <a href="{{ route('account.orders') }}"
+              <a href="{{ route('user.orders') }}"
                 class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
                 <i class="fa-solid fa-box mr-2 text-brand-blue"></i>My Orders
               </a>
-              <a href="{{ route('account.wishlist') }}"
+              <a href="{{ route('user.wishlist') }}"
                 class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
                 <i class="fa-solid fa-heart mr-2 text-brand-orange"></i>My Wishlist
               </a>
-              <a href="{{ route('account.addresses') }}"
+              <a href="{{ route('user.addresses') }}"
                 class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue hover:text-brand-blue transition">
                 <i class="fa-solid fa-location-dot mr-2 text-brand-blue"></i>Addresses
               </a>
+
               <div class="border-t border-brand-border mt-1 pt-1">
-                <!-- Logged-in state -->
-                <div data-auth="in" class="hidden">
-                  <a href="{{ route('login') }}" id="header-logout-btn"
-                    class="block px-4 py-2 text-xs text-red-500 hover:bg-red-50 transition">
-                    <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i>Sign Out
-                  </a>
-                </div>
-                <!-- Guest state -->
-                <div data-auth="out">
-                  <a href="{{ route('login') }}"
+                @if ($isLoggedIn)
+                  <form method="POST" action="{{ route('user.logout') }}">
+                    @csrf
+                    <button type="submit"
+                      class="w-full text-left px-4 py-2 text-xs text-red-500 hover:bg-red-50 transition cursor-pointer">
+                      <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i>Sign Out
+                    </button>
+                  </form>
+                @else
+                  <a href="{{ route('user.login') }}"
                     class="block px-4 py-2 text-xs text-brand-blue font-bold hover:bg-soft-blue transition">
                     <i class="fa-solid fa-lock mr-2"></i>Sign In / Join Club
                   </a>
-                </div>
+                  <a href="{{ route('user.register') }}"
+                    class="block px-4 py-2 text-xs text-dark-navy hover:bg-soft-blue transition">
+                    <i class="fa-solid fa-user-plus mr-2 text-brand-orange"></i>Create Account
+                  </a>
+                @endif
               </div>
             </div>
           </div>
-
         </div>
 
       </div>
@@ -750,19 +769,21 @@
         <div class="flex items-center gap-2.5 min-w-0">
           <div id="drawer-avatar"
             class="w-7 h-7 rounded-full bg-brand-blue text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs font-heading">
-            <i class="fa-solid fa-user"></i>
+            @if ($isLoggedIn) {{ $customerInitial }} @else <i class="fa-solid fa-user"></i> @endif
           </div>
           <div class="min-w-0">
-            <p id="drawer-greeting" class="text-[11px] font-bold font-heading text-dark-navy truncate">Welcome, Play
-              Explorer! 🎈</p>
-            <p id="drawer-subgreeting" class="text-[9px] text-brand-blue font-sans font-semibold truncate">Use code
-              PLAY15 for 15% OFF</p>
+            <p class="text-[11px] font-bold font-heading text-dark-navy truncate">
+              {{ $isLoggedIn ? 'Hi, ' . $customerName : 'Welcome, Play Explorer! 🎈' }}
+            </p>
+            <p class="text-[9px] text-brand-blue font-sans font-semibold truncate">
+              {{ $isLoggedIn ? 'VIP Playroom Member' : 'Use code PLAY15 for 15% OFF' }}
+            </p>
           </div>
         </div>
-        <a href="{{ route('login') }}" data-href-in="{{ route('account.dashboard') }}"
-          data-href-out="{{ route('login') }}" data-text-in="Dashboard" data-text-out="Sign In"
-          class="auth-link text-[10px] font-bold font-heading text-brand-blue hover:text-white hover:bg-brand-blue bg-white px-2.5 py-1 rounded-lg border border-blue-200/80 shrink-0 shadow-2xs transition">Sign
-          In</a>
+        <a href="{{ $isLoggedIn ? route('user.dashboard') : route('user.login') }}"
+          class="text-[10px] font-bold font-heading text-brand-blue hover:text-white hover:bg-brand-blue bg-white px-2.5 py-1 rounded-lg border border-blue-200/80 shrink-0 shadow-2xs transition">
+          {{ $isLoggedIn ? 'Dashboard' : 'Sign In' }}
+        </a>
       </div>
 
       <!-- Drawer Search Bar Quick Access -->
@@ -1099,12 +1120,10 @@
         </div>
 
         <!-- Primary Big CTA -->
-        <a href="{{ route('login') }}" data-href-in="{{ route('account.dashboard') }}"
-          data-href-out="{{ route('login') }}"
-          class="auth-link w-full btn-play-blue text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-md font-heading font-bold">
+        <a href="{{ $isLoggedIn ? route('user.dashboard') : route('user.login') }}"
+          class="w-full btn-play-blue text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition shadow-md font-heading font-bold">
           <i class="fa-regular fa-user"></i>
-          <span data-text-in="MY PLAYROOM DASHBOARD" data-text-out="SIGN IN / JOIN PLAY CLUB">SIGN IN / JOIN PLAY
-            CLUB</span>
+          <span>{{ $isLoggedIn ? 'MY PLAYROOM DASHBOARD' : 'SIGN IN / JOIN PLAY CLUB' }}</span>
           <i class="fa-solid fa-arrow-right text-[10px] ml-auto"></i>
         </a>
       </div>
@@ -1395,28 +1414,28 @@
               <i class="fa-solid fa-user-astronaut"></i><span>MY ACCOUNT</span>
             </h4>
             <ul class="space-y-2 text-white/80">
-              <li><a href="{{ route('account.dashboard') }}"
+              <li><a href="{{ route('user.dashboard') }}"
                   class="hover:text-purple-play transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Dashboard</a></li>
-              <li><a href="{{ route('account.orders') }}"
+              <li><a href="{{ route('user.orders') }}"
                   class="hover:text-purple-play transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>My Orders</a></li>
-              <li><a href="{{ route('account.wishlist') }}"
+              <li><a href="{{ route('user.wishlist') }}"
                   class="hover:text-purple-play transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>My Wishlist</a></li>
-              <li><a href="{{ route('account.addresses') }}"
+              <li><a href="{{ route('user.addresses') }}"
                   class="hover:text-purple-play transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Saved Addresses</a></li>
-              <li><a href="{{ route('account.reviews') }}"
+              <li><a href="{{ route('user.reviews') }}"
                   class="hover:text-purple-play transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Product Reviews</a></li>
-              <li><a href="{{ route('account.profile') }}"
+              <li><a href="{{ route('user.profile') }}"
                   class="hover:text-purple-play transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Profile Details</a></li>
-              <li><a href="{{ route('account.password') }}"
+              <li><a href="{{ route('user.password') }}"
                   class="hover:text-purple-play transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Change Password</a></li>
-              <li><a href="{{ route('account.notifications') }}"
+              <li><a href="{{ route('user.notifications') }}"
                   class="hover:text-purple-play transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Notifications</a></li>
             </ul>
@@ -1516,8 +1535,6 @@
     import { State } from '{{ asset("assets/js/state.js") }}';
     import { categories } from '{{ asset("assets/js/data/categories.js") }}';
 
-    setCount('header-cart-count', State.getCartCount());
-
     document.addEventListener('DOMContentLoaded', () => {
       const activePage = @json($activeNav);
       const base = @json(url('/') . '/');
@@ -1545,42 +1562,7 @@
         `).join('');
       }
 
-      // 3. Sync header state from State (cart / wishlist counts + logged-in user)
-      const setCount = (id, n) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.textContent = n;
-        el.classList.toggle('hidden', !(n > 0));
-      };
-      setCount('header-cart-count', State.getCartCount());
-      setCount('header-wishlist-count', State.getWishlistCount());
-
-      const user = State.getUser() || {};
-      const loggedIn = !!user.isLoggedIn;
-      const first = user.firstName || '';
-      const last = user.lastName || '';
-
-      document.querySelectorAll('[data-auth="in"]').forEach(el => el.classList.toggle('hidden', !loggedIn));
-      document.querySelectorAll('[data-auth="out"]').forEach(el => el.classList.toggle('hidden', loggedIn));
-
-      const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
-      setText('header-account-name', loggedIn ? first : 'Account');
-      setText('header-user-fullname', loggedIn ? `${first} ${last}`.trim() : 'Guest Explorer');
-      setText('drawer-greeting', loggedIn ? `Hi, ${first} ${last}`.trim() : 'Welcome, Play Explorer! 🎈');
-      setText('drawer-subgreeting', loggedIn ? 'VIP Playroom Member' : 'Use code PLAY15 for 15% OFF');
-
-      const avatar = document.getElementById('drawer-avatar');
-      if (avatar && loggedIn) avatar.textContent = first ? first[0].toUpperCase() : 'U';
-
-      document.querySelectorAll('.auth-link').forEach(a => {
-        a.setAttribute('href', loggedIn ? a.dataset.hrefIn : a.dataset.hrefOut);
-        if (a.dataset.textIn) a.textContent = loggedIn ? a.dataset.textIn : a.dataset.textOut;
-      });
-      document.querySelectorAll('.auth-link [data-text-in]').forEach(s => {
-        s.textContent = loggedIn ? s.dataset.textIn : s.dataset.textOut;
-      });
-
-      // 4. Global interactions (cart drawer, mobile drawer, search, quick view, wishlist)
+      // 4. Global interactions
       Components.initGlobalInteractions(base);
     });
   </script>
@@ -1923,6 +1905,78 @@
       });
     })();
   </script>
+
+    <script>
+    (function () {
+      const toggleUrl = @json(route('wishlist.toggle'));
+      const csrfToken = @json(csrf_token());
+      const componentsUrl = @json(asset('assets/js/components.js'));
+
+      const notify = async (msg, type) => {
+        try {
+          const { Components } = await import(componentsUrl);
+          Components.showToast(msg, type);
+        } catch (e) { /* toast is optional */ }
+      };
+
+      const paint = (btn, on) => {
+        const icon = btn.querySelector('i');
+        icon?.classList.toggle('fa-solid', on);
+        icon?.classList.toggle('fa-regular', !on);
+        btn.classList.toggle('text-red-500', on);
+        btn.classList.toggle('text-slate-600', !on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.title = on ? 'Remove from Wishlist' : 'Add to Wishlist';
+      };
+
+      document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-wishlist-toggle]');
+        if (!btn || btn.disabled) return;
+        e.preventDefault();
+        btn.disabled = true;
+
+        try {
+          const res = await fetch(toggleUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ product_id: btn.dataset.id }),
+          });
+          const data = await res.json().catch(() => ({}));
+
+          if (res.ok && data.status) {
+            // Sync every heart for this product on the page
+            document.querySelectorAll(`[data-wishlist-toggle][data-id="${btn.dataset.id}"]`)
+              .forEach((b) => paint(b, data.wishlisted));
+
+            // Header count
+            document.querySelectorAll('[data-wishlist-count]').forEach((el) => {
+              el.textContent = data.wishlist_count;
+              el.classList.toggle('hidden', !(data.wishlist_count > 0));
+            });
+
+            // On the wishlist page, un-hearting removes the card
+            if (!data.wishlisted && btn.closest('[data-wishlist-page]')) {
+              btn.closest('.product-card')?.remove();
+            }
+
+            notify(data.message, data.wishlisted ? 'success' : 'info');
+          } else {
+            notify(data.message || 'Could not update wishlist.', 'error');
+          }
+        } catch (err) {
+          notify('Network error. Please try again.', 'error');
+        }
+
+        btn.disabled = false;
+      });
+    })();
+  </script>
+  
   @include('front-pages.partials.mini-cart')
   <!-- PAGE SPECIFIC SCRIPTS -->
   @stack('scripts')
