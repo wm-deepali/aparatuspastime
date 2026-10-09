@@ -20,18 +20,10 @@ use App\Http\Controllers\Admin\{
     DashboardController,
     DynamicPageController,
     FaqController,
-    GalleryImageController,
     GiftingOccasionController,
-    HomeBrandSectionController,
-    HomeBrandSectionImageController,
-    HomeDealBannerController,
-    HomeFeatureCardController,
-    HomeHeroBannerController,
-    HomeHeroSlideController,
     HomePageController,
-    HomeSliderController,
-    HomeTextSliderController,
-    HomeWhyController,
+    HomeContentController,
+    HomeSectionController,
     LogoutController,
     OrderController,
     OtherEnquiryController,
@@ -89,10 +81,10 @@ Route::middleware('maintenance.mode')->group(function () {
         Route::get('/categories', 'categories')->name('categories');
         Route::get('/product/{slug?}', 'productDetail')->name('product');
         Route::get('/quick-view/{id}', 'quickView')->name('product.quick-view');
+        Route::get('/blogs', 'blogs')->name('blogs');
+        Route::get('/blog-detail/{slug}', 'blogShow')->name('blog.show');
 
         Route::view('/about', 'front-pages.about')->name('about');
-        Route::view('/blogs', 'front-pages.blog')->name('blogs');
-        Route::view('/blog-detail/{slug}', 'front-pages.blog-detail')->name('blog.show');
         Route::view('/cancellation-policy', 'front-pages.cancellation-policy')->name('cancellations');
         Route::view('/contact', 'front-pages.contact')->name('contact');
         Route::view('/cookie-policy', 'front-pages.cookie-policy')->name('cookie-policy');
@@ -174,10 +166,10 @@ Route::middleware('maintenance.mode')->group(function () {
             Route::get('/password', [UserProfileController::class, 'passwordForm'])->name('password');
             Route::post('/password', [UserProfileController::class, 'updatePassword'])->name('password.update');
 
-            
-Route::get('/notifications', [UserNotificationController::class, 'index'])->name('notifications');
-Route::post('/notifications/read-all', [UserNotificationController::class, 'readAll'])->name('notifications.read-all');
-Route::post('/notifications/{notification}/read', [UserNotificationController::class, 'read'])->name('notifications.read');
+
+            Route::get('/notifications', [UserNotificationController::class, 'index'])->name('notifications');
+            Route::post('/notifications/read-all', [UserNotificationController::class, 'readAll'])->name('notifications.read-all');
+            Route::post('/notifications/{notification}/read', [UserNotificationController::class, 'read'])->name('notifications.read');
 
             Route::post('/logout', [CustomerAuthController::class, 'logout'])->name('logout');
         });
@@ -272,76 +264,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/logout', [LogoutController::class, 'logout']);
 
 
-        // ✅ MAIN DASHBOARD
-        Route::get('/home-page', [HomePageController::class, 'index'])
-            ->name('home-page.index');
+        Route::get('home-page', [HomePageController::class, 'index'])->name('home-page.index');
 
-        Route::prefix('home/sliders')->name('home.sliders.')->group(function () {
+        // Section headings + promo banner
+        Route::get('home/sections', [HomeSectionController::class, 'index'])->name('home.sections.index');
+        Route::get('home/sections/{key}/edit', [HomeSectionController::class, 'edit'])->name('home.sections.edit');
+        Route::put('home/sections/{key}', [HomeSectionController::class, 'update'])->name('home.sections.update');
 
-            Route::get('/', [HomeSliderController::class, 'index'])->name('index');
-
-            Route::get('/create', [HomeSliderController::class, 'create'])->name('create');
-
-            Route::post('/store', [HomeSliderController::class, 'store'])->name('store');
-
-            Route::get('/edit/{id}', [HomeSliderController::class, 'edit'])->name('edit');
-
-            Route::put('/update/{id}', [HomeSliderController::class, 'update'])->name('update');
-
-            Route::delete('/delete/{id}', [HomeSliderController::class, 'destroy'])->name('destroy');
+        // Hero / trust strip / interests / features / testimonials
+        Route::prefix('home/content/{type}')->name('home.content.')->group(function () {
+            Route::get('/', [HomeContentController::class, 'index'])->name('index');
+            Route::get('create', [HomeContentController::class, 'create'])->name('create');
+            Route::post('/', [HomeContentController::class, 'store'])->name('store');
+            Route::get('{id}/edit', [HomeContentController::class, 'edit'])->name('edit');
+            Route::put('{id}', [HomeContentController::class, 'update'])->name('update');
+            Route::delete('{id}', [HomeContentController::class, 'destroy'])->name('destroy');
         });
-
-        Route::prefix('home/text-sliders')->name('home.text-sliders.')->group(function () {
-
-            Route::get('/', [HomeTextSliderController::class, 'index'])->name('index');
-
-            Route::get('/create', [HomeTextSliderController::class, 'create'])->name('create');
-
-            Route::post('/store', [HomeTextSliderController::class, 'store'])->name('store');
-
-            Route::get('/edit/{id}', [HomeTextSliderController::class, 'edit'])->name('edit');
-
-            Route::put('/update/{id}', [HomeTextSliderController::class, 'update'])->name('update');
-
-            Route::delete('/delete/{id}', [HomeTextSliderController::class, 'destroy'])->name('destroy');
-        });
-
-        Route::resource('gallery-images', GalleryImageController::class)->names('gallery-images');
-
-        Route::get('home/brand-section', [HomeBrandSectionController::class, 'edit'])->name('home.brand-section.edit');
-        Route::post('home/brand-section', [HomeBrandSectionController::class, 'update'])->name('home.brand-section.update');
-        Route::resource('home-brand-section-images', HomeBrandSectionImageController::class);
-
-        Route::resource('home-deal-banners', HomeDealBannerController::class)->names('home-deal-banners');
-        Route::delete('home-deal-banners/delete/{id}', [HomeDealBannerController::class, 'destroy'])->name('home-deal-banners.delete');
-
-        Route::resource('home-hero-slides', HomeHeroSlideController::class)->names('home-hero-slides');
-        Route::resource('home-hero-banners', HomeHeroBannerController::class)->names('home-hero-banners');
-
-
-
-
-        // ================= WHY SECTION =================
-        Route::get('/home-why', [HomeWhyController::class, 'index'])
-            ->name('home.why.index');
-
-        Route::post('/home-why/update', [HomeWhyController::class, 'updateSection'])
-            ->name('home.why.update');
-
-        Route::post('/home-why/card/store', [HomeWhyController::class, 'storeCard'])
-            ->name('home.why.card.store');
-
-        Route::get('/home-why/card/{id}', [HomeWhyController::class, 'editCard'])
-            ->name('home.why.card.edit');
-
-        Route::post('/home-why/card/{id}', [HomeWhyController::class, 'updateCard'])
-            ->name('home.why.card.update');
-
-        Route::delete('/home-why/card/{id}', [HomeWhyController::class, 'deleteCard'])
-            ->name('home.why.card.delete');
-
-        Route::resource('home-feature-cards', HomeFeatureCardController::class);
-
 
         Route::get('/seo', [SeoController::class, 'index'])->name('seo.index');
         Route::put('/seo/{id}', [SeoController::class, 'update'])->name('seo.update');

@@ -8,23 +8,18 @@ class HomePageController extends Controller
 {
     public function index()
     {
-        $sections = [
+        $widgets = collect(config('home_content.types'))->map(function ($cfg, $type) {
+            return [
+                'title'       => $cfg['title'],
+                'description' => $cfg['description'],
+                'icon'        => $cfg['icon'],
+                'tone'        => $cfg['tone'],
+                'count'       => $cfg['model']::count(),
+                'manage'      => route('admin.home.content.index', $type),
+                'create'      => route('admin.home.content.create', $type),
+            ];
+        })->values();
 
-
-            [
-                'title' => 'Home Sliders',
-                'route' => route('admin.home.sliders.index'),
-                'type' => 'multiple'
-            ],
-
-            [
-                'title' => 'Why Choose Us',
-                'route' => route('admin.home.why.index'),
-                'type' => 'multiple'
-            ],
-
-        ];
-
-        return view('admin.home.index', compact('sections'));
+        return view('admin.home.index', compact('widgets'));
     }
 }

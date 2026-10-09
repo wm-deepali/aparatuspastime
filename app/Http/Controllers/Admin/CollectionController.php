@@ -17,14 +17,17 @@ class CollectionController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
+        // The status filter existed in the view but was never applied
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
         $collections = $query
             ->orderBy('sort_order')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
-        return view(
-            'admin.collections.index',
-            compact('collections')
-        );
+        return view('admin.collections.index', compact('collections'));
     }
 
     public function create()
@@ -40,38 +43,31 @@ class CollectionController extends Controller
             'meta_description' => 'nullable',
         ]);
 
+        $slug = $request->slug
+            ? Str::slug($request->slug)
+            : Str::slug($request->name);
+
         Collection::create([
             'name' => $request->name,
-            'slug' => $request->slug
-                ? Str::slug($request->slug)
-                : Str::slug($request->name),
-
-            'code' => $request->slug
-                ? Str::slug($request->slug)
-                : Str::slug($request->name),
-
+            'slug' => $slug,
+            'code' => $slug,
             'status' => $request->status ?? 1,
             'sort_order' => $request->sort_order ?? 0,
             'meta_title' => $request->meta_title,
             'meta_description' => $request->meta_description,
+            // is_system is never set from a request, only by the seeder/migration
         ]);
 
         return redirect()
             ->route('admin.collections.index')
-            ->with(
-                'success',
-                'Collection created successfully.'
-            );
+            ->with('success', 'Collection created successfully.');
     }
 
     public function edit($id)
     {
         $collection = Collection::findOrFail($id);
 
-        return view(
-            'admin.collections.edit',
-            compact('collection')
-        );
+        return view('admin.collections.edit', compact('collection'));
     }
 
     public function update(Request $request, $id)
@@ -84,34 +80,40 @@ class CollectionController extends Controller
 
         $collection = Collection::findOrFail($id);
 
-        $collection->update([
+        $data = [
             'name' => $request->name,
-
-            'slug' => $request->slug
-                ? Str::slug($request->slug)
-                : Str::slug($request->name),
-
-            'code' => $request->slug
-                ? Str::slug($request->slug)
-                : Str::slug($request->name),
-
             'status' => $request->status ?? 1,
             'sort_order' => $request->sort_order ?? 0,
             'meta_title' => $request->meta_title,
             'meta_description' => $request->meta_description,
-        ]);
+        ];
+
+        // System collections keep their code/slug: the storefront looks them up by code
+        if (!$collection->is_system) {
+            $slug = $request->slug
+                ? Str::slug($request->slug)
+                : Str::slug($request->name);
+
+            $data['slug'] = $slug;
+            $data['code'] = $slug;
+        }
+
+        $collection->update($data);
 
         return redirect()
             ->route('admin.collections.index')
-            ->with(
-                'success',
-                'Collection updated successfully.'
-            );
+            ->with('success', 'Collection updated successfully.');
     }
 
     public function destroy($id)
     {
         $collection = Collection::findOrFail($id);
+
+        if ($collection->is_system) {
+            return response()->json([
+                'message' => 'This is a system collection and cannot be deleted.'
+            ], 403);
+        }
 
         $collection->delete();
 

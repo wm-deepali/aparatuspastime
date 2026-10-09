@@ -17,11 +17,6 @@ return new class extends Migration
             $table->string('meta_title')->nullable()->after('slug');
             $table->text('meta_description')->nullable()->after('meta_title');
         });
-
-        Schema::table('blogs', function (Blueprint $table) {
-            $table->string('meta_title')->nullable()->after('content');
-            $table->text('meta_description')->nullable()->after('meta_title');
-        });
     }
 
     public function down(): void
@@ -31,10 +26,6 @@ return new class extends Migration
         });
 
         Schema::table('attribute_values', function (Blueprint $table) {
-            $table->dropColumn(['meta_title', 'meta_description']);
-        });
-
-        Schema::table('blogs', function (Blueprint $table) {
             $table->dropColumn(['meta_title', 'meta_description']);
         });
     }

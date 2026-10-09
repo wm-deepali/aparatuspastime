@@ -59,8 +59,7 @@
                 <li><a href="{{ route('admin.attributes.index') }}">Attributes</a></li>
                 <li><a href="{{ route('admin.attribute-values.index') }}">Attribute Values</a></li>
                 <li><a href="{{ route('admin.category-attributes.index') }}">Attribute Mapping</a></li>
-                <li><a href="{{ route('admin.gifting-occasions.index') }}">Manage Special</a></li>
-                <li><a href="{{ route('admin.collections.index') }}">Manage Selections</a></li>
+                <li><a href="{{ route('admin.collections.index') }}">Manage Collections</a></li>
             </ul>
         </li>
 

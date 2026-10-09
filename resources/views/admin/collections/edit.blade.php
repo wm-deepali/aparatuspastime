@@ -442,6 +442,11 @@
                             @else
                                 <span class="pill pill-inactive">Inactive</span>
                             @endif
+                            @if ($collection->is_system)
+                                <span class="pill" style="background:var(--accent-light);color:var(--accent)">
+                                    <i class="fa fa-lock" style="font-size:10px"></i> System
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -472,9 +477,17 @@
                                     <div class="slug-wrap">
                                         <span class="slug-prefix">collection/</span>
                                         <input type="text" name="slug" id="slug" class="field-input"
-                                            value="{{ old('slug', $collection->slug) }}">
+                                            value="{{ old('slug', $collection->slug) }}" @if ($collection->is_system)
+                                            readonly style="background:var(--bg);cursor:not-allowed" @endif>
                                     </div>
-                                    <div class="field-hint">Auto-generated from name. You can edit manually.</div>
+                                    @if ($collection->is_system)
+                                        <div class="field-hint">
+                                            <i class="fa fa-lock"></i> System collection: slug is locked because the
+                                            storefront depends on it.
+                                        </div>
+                                    @else
+                                        <div class="field-hint">Auto-generated from name. You can edit manually.</div>
+                                    @endif
                                 </div>
 
                                 <div class="field-group">
@@ -553,7 +566,7 @@
 @include('admin.footer')
 
 <script>
-    let manualSlug = false;
+    let manualSlug = {{ $collection->is_system ? 'true' : 'false' }};
 
     $('#slug').on('keyup', function () {
         manualSlug = true;

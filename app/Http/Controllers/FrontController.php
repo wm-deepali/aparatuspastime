@@ -3,10 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Collection;
 use App\Models\InvoiceSetting;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Traits\LogsApiCalls;
+use App\Models\HomeSlider;
+use App\Models\HomeUsp;
+use App\Models\HomeInterest;
+use App\Models\HomeFeature;
+use App\Models\HomeTestimonial;
+use App\Models\HomeSection;
+use App\Models\Blog;
 
 class FrontController extends Controller
 {
@@ -37,9 +45,109 @@ class FrontController extends Controller
 
     private const SORTS = ['featured', 'newest', 'price-low', 'price-high', 'rating'];
 
+
     public function home(Request $request)
     {
-        return view('front-pages.home');
+        // ── Admin-managed home content ──
+        $sliders = HomeSlider::where('status', 1)->orderBy('sort_order')->get();
+        $usps = HomeUsp::where('status', 1)->orderBy('sort_order')->get();
+        $features = HomeFeature::where('status', 1)->orderBy('sort_order')->get();
+        $testimonials = HomeTestimonial::where('status', 1)->orderBy('sort_order')->get();
+        $sections = HomeSection::all()->keyBy('section_key');
+
+        // Interests: resolve link (category slug or custom link) here, so the view stays simple
+        $interests = HomeInterest::where('status', 1)->orderBy('sort_order')->get();
+        $interestSlugs = Category::whereIn('id', $interests->pluck('category_id')->filter()->unique())
+            ->pluck('slug', 'id');
+
+        $interests->each(function ($i) use ($interestSlugs) {
+            $i->link = $i->category_id && isset($interestSlugs[$i->category_id])
+                ? url('shop') . '?category=' . $interestSlugs[$i->category_id]
+                : $i->custom_link;
+        });
+
+        // ── Categories ──
+        $categories = Category::query()
+            ->whereNull('parent_id')
+            ->withCount('products')
+            ->orderBy('sort_order')
+            ->take(7)
+            ->get();
+
+        // ── Trending tabs ──
+        $codes = ['new_arrival', 'best_seller', 'trending'];
+        $collections = Collection::whereIn('code', $codes)->where('status', 1)->get()->keyBy('code');
+
+        $trendingTabs = [];
+        foreach ($codes as $code) {
+            $trendingTabs[$code] = isset($collections[$code])
+                ? $collections[$code]->products()
+                    ->visible()
+                    ->with(['images', 'category', 'collections'])
+                    ->orderBy('products.sort_order')
+                    ->latest('products.id')
+                    ->take(8)
+                    ->get()
+                : collect();
+        }
+
+        // ── Our Current Favourites (2 products) ──
+        $favourites = Collection::where('code', 'current_favourite')->where('status', 1)->first()
+                ?->products()
+            ->visible()
+            ->with(['images', 'category', 'collections'])
+            ->orderBy('products.sort_order')
+            ->latest('products.id')
+            ->take(2)
+            ->get() ?? collect();
+
+        // ── Two category spotlight sections (featured first, then sort order) ──
+        $spotlightCategories = Category::active()
+            ->parents()
+            ->whereHas('products', fn($q) => $q->visible())
+            ->with(['children' => fn($q) => $q->active()->ordered()])
+            ->orderByDesc('is_featured')
+            ->ordered()
+            ->take(2)
+            ->get();
+
+        $productsFor = fn(Category $cat) => $cat->products()
+            ->visible()
+            ->with(['images', 'category', 'collections'])
+            ->orderBy('sort_order')
+            ->latest('id')
+            ->take(4)
+            ->get();
+
+        $spotlightCategory = $spotlightCategories->get(0);
+        $spotlightProducts = $spotlightCategory ? $productsFor($spotlightCategory) : collect();
+
+        $secondCategory = $spotlightCategories->get(1);
+        $secondProducts = $secondCategory ? $productsFor($secondCategory) : collect();
+
+        $blogs = Blog::published()
+            ->where('show_home', 1)
+            ->latest('published_at')
+            ->latest('id')
+            ->take(3)
+            ->get();
+
+        return view('front-pages.home', compact(
+            'sliders',
+            'usps',
+            'interests',
+            'features',
+            'testimonials',
+            'sections',
+            'categories',
+            'trendingTabs',
+            'favourites',
+            'spotlightCategory',
+            'spotlightProducts',
+            'secondCategory',
+            'secondProducts',
+            'blogs'
+        ));
     }
 
     public function shop(Request $request)
@@ -295,6 +403,87 @@ class FrontController extends Controller
             'images' => $images,
             'badge' => $badge ? ['text' => $badge->badge_text, 'color' => $badge->badge_color] : null,
         ]);
+    }
+
+    public function blogs(Request $request)
+    {
+        $cat = $request->query('cat');
+        $tag = $request->query('tag');
+
+        $query = Blog::published()->latest('published_at')->latest('id');
+
+        if ($cat) {
+            $query->where('category_slug', $cat);
+        }
+        if ($tag) {
+            $query->whereJsonContains('tags', $tag);
+        }
+
+        // Featured banner only on the unfiltered page
+        $featured = (!$cat && !$tag)
+            ? Blog::published()->orderByDesc('is_featured')->latest('published_at')->latest('id')->first()
+            : null;
+
+        $blogs = $query->paginate(9)->withQueryString();
+
+        $topics = Blog::published()
+            ->whereNotNull('category')
+            ->select('category', 'category_slug')
+            ->distinct()
+            ->orderBy('category')
+            ->get();
+
+        return view('front-pages.blogs', compact('blogs', 'featured', 'topics', 'cat', 'tag'));
+    }
+
+    public function blogShow($slug)
+    {
+        $blog = Blog::published()->where('slug', $slug)->firstOrFail();
+
+        // Count one view per session
+        $viewed = session('viewed_blogs', []);
+        if (!in_array($blog->id, $viewed)) {
+            Blog::whereKey($blog->id)->increment('views_count');
+            $blog->views_count++;
+            session(['viewed_blogs' => array_merge($viewed, [$blog->id])]);
+        }
+
+        // Newer / older story (by id)
+        $prevBlog = Blog::published()->where('id', '>', $blog->id)->orderBy('id')->first();
+        $nextBlog = Blog::published()->where('id', '<', $blog->id)->orderByDesc('id')->first();
+
+        // Related: same category first
+        $related = Blog::published()
+            ->where('id', '!=', $blog->id)
+            ->orderByRaw('(category_slug = ?) desc', [$blog->category_slug])
+            ->latest('published_at')
+            ->take(3)
+            ->get();
+
+        $trending = Blog::published()->orderByDesc('views_count')->take(5)->get();
+
+        $topics = Blog::published()
+            ->whereNotNull('category')
+            ->select('category', 'category_slug')
+            ->distinct()
+            ->orderBy('category')
+            ->get();
+
+        // Products picked in admin for this article
+        $ids = $blog->recommended_product_ids ?? [];
+        $sideProducts = $ids
+            ? Product::visible()->with(['category', 'images'])->whereIn('id', $ids)->take(3)->get()
+            : collect();
+
+        return view('front-pages.blog-detail', compact(
+            'blog',
+            'prevBlog',
+            'nextBlog',
+            'related',
+            'trending',
+            'topics',
+            'sideProducts'
+        ));
     }
 
 }

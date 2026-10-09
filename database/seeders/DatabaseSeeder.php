@@ -20,5 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ProductSeeder::class);
         $this->call(ProductAttributeSeeder::class);
         $this->call(IndiaStatesCitiesSeeder::class);
+        $this->call(HomeContentSeeder::class);
+        $this->call(BlogSeeder::class);
     }
 }

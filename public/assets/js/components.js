@@ -306,28 +306,6 @@ export const Components = {
     `;
   },
 
-  // Render Category Card
-  renderCategoryCard(cat, prefix = '') {
-    const bgClass = cat.pastelBg || 'bg-soft-orange';
-    const cleanTagline = (cat.tagline || 'EXPLORE').replace('→', '').trim();
-    return `
-      <a href="${prefix}shop?category=${cat.slug}" class="category-card group ${bgClass} border border-brand-border/80 hover:border-brand-orange/40 p-2 sm:p-2.5 xl:p-3 rounded-2xl xl:rounded-3xl flex flex-col items-center justify-between text-center shadow-2xs hover:shadow-md transition-all duration-300">
-        <div class="w-full aspect-square bg-white rounded-xl sm:rounded-2xl overflow-hidden mb-2 relative flex items-center justify-center p-1 sm:p-1.5 shadow-2xs border border-white/70">
-          <img src="${cat.image}" alt="${cat.name}" class="w-full h-full object-cover rounded-lg sm:rounded-xl group-hover:scale-108 transition-transform duration-500 ease-out" loading="lazy">
-          <span class="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-brand-orange text-white flex items-center justify-center shadow-md text-[10px] sm:text-xs group-hover:scale-110 group-hover:bg-brand-navy border-2 border-white transition duration-200">
-            <i class="fa-solid fa-arrow-right"></i>
-          </span>
-        </div>
-        <div class="w-full flex flex-col items-center justify-center">
-          <h3 class="font-heading font-bold text-dark-navy text-xs sm:text-[13px] xl:text-sm group-hover:text-brand-orange transition leading-tight min-h-[2rem] sm:min-h-[2.25rem] flex items-center justify-center text-center px-0.5">${cat.name}</h3>
-          <span class="text-[8.5px] sm:text-[9.5px] xl:text-[10.5px] font-bold text-brand-blue font-heading mt-0.5 flex items-center justify-center gap-1 group-hover:text-brand-orange transition uppercase tracking-normal sm:tracking-wide leading-none text-center">
-            <span>${cleanTagline}</span>
-            <i class="fa-solid fa-arrow-right text-[7px] sm:text-[8px] group-hover:translate-x-0.5 transition-transform"></i>
-          </span>
-        </div>
-      </a>
-    `;
-  },
 
   // Render Blog Card
   renderBlogCard(blog, prefix = '') {
