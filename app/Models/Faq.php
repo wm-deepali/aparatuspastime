@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Faq extends Model
 {
-    protected $fillable = [
-        'question',
-        'answer',
-        'show_home',
-        'status'
-    ];
+    protected $guarded = [];
+
+    protected $casts = ['status' => 'boolean'];
+
+    public function category()
+    {
+        return $this->belongsTo(FaqCategory::class, 'faq_category_id');
+    }
 }

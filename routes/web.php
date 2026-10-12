@@ -54,8 +54,8 @@ use App\Http\Controllers\Admin\{
     SystemLogController,
     RedirectController,
     NdrController,
-    NdrReportController
-
+    NdrReportController,
+    AgeGroupController
 };
 
 use Illuminate\Support\Facades\Route;
@@ -83,21 +83,14 @@ Route::middleware('maintenance.mode')->group(function () {
         Route::get('/quick-view/{id}', 'quickView')->name('product.quick-view');
         Route::get('/blogs', 'blogs')->name('blogs');
         Route::get('/blog-detail/{slug}', 'blogShow')->name('blog.show');
+        Route::get('/faq', 'faq')->name('faq');
+        Route::get('/page/{slug}', 'dynamicPage')->name('page.show');
 
         Route::view('/about', 'front-pages.about')->name('about');
-        Route::view('/cancellation-policy', 'front-pages.cancellation-policy')->name('cancellations');
         Route::view('/contact', 'front-pages.contact')->name('contact');
-        Route::view('/cookie-policy', 'front-pages.cookie-policy')->name('cookie-policy');
-        Route::view('/faq', 'front-pages.faq')->name('faq');
         Route::view('/new-arrivals', 'front-pages.new-arrivals')->name('new-arrivals');
-        Route::view('/order-success', 'front-pages.order-success')->name('order-success');
-        Route::view('/track-order', 'front-pages.track-order')->name('track-order');
-        Route::view('/privacy-policy', 'front-pages.privacy-policy')->name('privacy-policy');
-        Route::view('/payment-policy', 'front-pages.payment-policy')->name('payment-policy');
         Route::view('/search', 'front-pages.search')->name('search');
-        Route::view('/returns', 'front-pages.returns')->name('returns');
-        Route::view('/shipping-policy', 'front-pages.shipping-policy')->name('shipping-policy');
-        Route::view('/terms', 'front-pages.terms')->name('terms');
+        
     });
 
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
@@ -180,11 +173,12 @@ Route::middleware('maintenance.mode')->group(function () {
 
 
 // Admin Routes list
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+});
+
 Route::get('/get-cities', [AdminSettingController::class, 'getCities'])->name('get-cities');
-
-
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'admin.timeout'])->group(function () {
@@ -226,9 +220,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('customizations', CustomizationController::class);
 
-        Route::resource('pages', DynamicPageController::class)->names('pages');
+        Route::resource('dynamic-pages', DynamicPageController::class)->except(['show']);
 
-        Route::resource('faqs', FaqController::class)->names('faqs');
+        Route::get('faqs', [FaqController::class, 'index'])->name('faqs.index');
+
+        Route::post('faq-categories', [FaqController::class, 'storeCategory'])->name('faq-categories.store');
+        Route::put('faq-categories/{id}', [FaqController::class, 'updateCategory'])->name('faq-categories.update');
+        Route::delete('faq-categories/{id}', [FaqController::class, 'destroyCategory'])->name('faq-categories.destroy');
+
+        Route::post('faq-items', [FaqController::class, 'storeFaq'])->name('faq-items.store');
+        Route::put('faq-items/{id}', [FaqController::class, 'updateFaq'])->name('faq-items.update');
+        Route::delete('faq-items/{id}', [FaqController::class, 'destroyFaq'])->name('faq-items.destroy');
+
 
         Route::resource('blogs', BlogController::class)->names('blogs');
 
@@ -280,6 +283,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('{id}', [HomeContentController::class, 'update'])->name('update');
             Route::delete('{id}', [HomeContentController::class, 'destroy'])->name('destroy');
         });
+
+        Route::resource('home/age-groups', AgeGroupController::class)->only(['index', 'store', 'update', 'destroy'])->names('home.age-groups');
 
         Route::get('/seo', [SeoController::class, 'index'])->name('seo.index');
         Route::put('/seo/{id}', [SeoController::class, 'update'])->name('seo.update');

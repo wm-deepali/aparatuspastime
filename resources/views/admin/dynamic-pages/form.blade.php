@@ -26,7 +26,7 @@
             --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        .page-edit {
+        .page-create {
             background: var(--bg);
             padding: 24px 28px;
             min-height: 100vh;
@@ -34,13 +34,13 @@
             color: var(--text-primary);
         }
 
-        .page-edit * {
+        .page-create * {
             box-sizing: border-box;
         }
 
         .page-header {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 12px;
@@ -73,46 +73,8 @@
             margin: 0 5px;
         }
 
-        /* Identity chip */
-        .page-identity {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 10px 16px;
-            box-shadow: var(--shadow-card);
-        }
-
-        .page-identity-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: var(--radius-sm);
-            background: var(--accent-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            color: var(--accent);
-            flex-shrink: 0;
-        }
-
-        .page-identity-name {
-            font-size: 13px;
-            font-weight: 650;
-            color: var(--text-primary);
-        }
-
-        .page-identity-id {
-            font-size: 12px;
-            color: var(--text-hint);
-            margin-top: 1px;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-        }
-
         /* Two-column layout */
-        .edit-layout {
+        .create-layout {
             display: grid;
             grid-template-columns: 1fr 280px;
             gap: 20px;
@@ -120,7 +82,7 @@
         }
 
         @media(max-width:960px) {
-            .edit-layout {
+            .create-layout {
                 grid-template-columns: 1fr;
             }
         }
@@ -175,6 +137,11 @@
             margin-bottom: 6px;
         }
 
+        .field-label .req {
+            color: var(--red);
+            margin-left: 2px;
+        }
+
         .field-hint {
             font-size: 11.5px;
             color: var(--text-hint);
@@ -214,6 +181,7 @@
             box-shadow: 0 0 0 3px rgba(48, 61, 137, .12);
         }
 
+        /* Two column grid inside card */
         .two-col {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -226,6 +194,7 @@
             }
         }
 
+        /* Status select small */
         .field-select-sm {
             height: 32px;
             border: 1px solid var(--border);
@@ -249,6 +218,7 @@
             box-shadow: 0 0 0 3px rgba(48, 61, 137, .12);
         }
 
+        /* Toggle row */
         .toggle-row {
             display: flex;
             align-items: center;
@@ -278,39 +248,7 @@
             margin-top: 1px;
         }
 
-        /* Record info */
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 9px 0;
-            border-bottom: 1px solid var(--bg);
-            font-size: 13px;
-        }
-
-        .info-row:first-child {
-            padding-top: 0;
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .info-label {
-            color: var(--text-hint);
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .03em;
-        }
-
-        .info-value {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        /* CKEditor */
+        /* CKEditor override */
         .cke {
             border-radius: var(--radius-sm) !important;
             border: 1px solid var(--border) !important;
@@ -381,163 +319,163 @@
         }
 
         @media(max-width:768px) {
-            .page-edit {
+            .page-create {
                 padding: 16px;
             }
         }
+                .field-error { color: var(--red); font-size: 11.5px; margin-top: 4px; }
+        .alert-errors { background:#fdecea; border:1px solid #f5c2c0; color:var(--red);
+            border-radius:var(--radius-sm); padding:10px 14px; font-size:13px; margin-bottom:16px; }
+            
     </style>
 
+    @php
+        $isEdit = $page->exists;
+        $effective = old('effective_date', $page->effective_date
+            ? \Carbon\Carbon::parse($page->effective_date)->format('Y-m-d') : '');
+    @endphp
+
     <div class="app-content content container-fluid">
-        <div class="page-edit">
+        <div class="page-create">
 
             <div class="page-header">
                 <div>
-                    <h1>Edit Dynamic Page</h1>
+                    <h1>{{ $isEdit ? 'Edit' : 'Add' }} Dynamic Page</h1>
                     <div class="crumb">
-                        <a href="{{ route('admin.dashboard') }}">Dashboard</a>
-                        <span>›</span>
-                        <a href="{{ route('admin.pages.index') }}">Dynamic Pages</a>
-                        <span>›</span>
-                        Edit Page
-                    </div>
-                </div>
-
-                <!-- Identity chip -->
-                <div class="page-identity">
-                    <div class="page-identity-icon"><i class="fa fa-file-text-o"></i></div>
-                    <div>
-                        <div class="page-identity-name">{{ $page->heading ?: $page->page_name }}</div>
-                        <div class="page-identity-id">/{{ $page->page_name }} &nbsp;·&nbsp; ID #{{ $page->id }}</div>
+                        <a href="{{ route('admin.dashboard') }}">Dashboard</a><span>›</span>
+                        <a href="{{ route('admin.dynamic-pages.index') }}">Dynamic Pages</a><span>›</span>
+                        {{ $isEdit ? 'Edit Page' : 'Add Page' }}
                     </div>
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('admin.pages.update', $page->id) }}">
-                @csrf
-                @method('PUT')
+            @if ($errors->any())
+                <div class="alert-errors">Please fix the errors below.</div>
+            @endif
 
-                <div class="edit-layout">
+            <form method="POST"
+                  action="{{ $isEdit ? route('admin.dynamic-pages.update', $page) : route('admin.dynamic-pages.store') }}">
+                @csrf
+                @if ($isEdit)
+                    @method('PUT')
+                @endif
+
+                <div class="create-layout">
 
                     <!-- LEFT -->
                     <div>
-
-                        <!-- Page Details -->
                         <div class="section-card">
-                            <div class="section-card-header">
-                                <h5>Page Details</h5>
-                            </div>
+                            <div class="section-card-header"><h5>Page Details</h5></div>
                             <div class="section-card-body">
 
                                 <div class="two-col" style="margin-bottom:16px">
                                     <div class="field-group" style="margin:0">
-                                        <label class="field-label">Page Name (Slug)</label>
-                                        <input type="text" name="page_name" class="field-input"
-                                            value="{{ $page->page_name }}">
-                                        <div class="field-hint">Used in the URL: /page/<strong>slug</strong></div>
+                                        <label class="field-label">Heading <span class="req">*</span></label>
+                                        <input type="text" name="heading" class="field-input"
+                                               value="{{ old('heading', $page->heading) }}" placeholder="e.g. About Us">
+                                        @error('heading')<div class="field-error">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="field-group" style="margin:0">
-                                        <label class="field-label">Heading</label>
-                                        <input type="text" name="heading" class="field-input"
-                                            value="{{ $page->heading }}">
+                                        <label class="field-label">URL Key (Slug)</label>
+                                        <input type="text" name="slug" class="field-input"
+                                               value="{{ old('slug', $page->slug) }}"
+                                               placeholder="auto-generated from heading"
+                                               {{ $isEdit && $page->is_system ? 'readonly' : '' }}>
+                                        <div class="field-hint">
+                                            @if ($isEdit && $page->is_system)
+                                                Built-in page — URL key cannot be changed.
+                                            @else
+                                                Leave blank to generate from the heading.
+                                            @endif
+                                        </div>
+                                        @error('slug')<div class="field-error">{{ $message }}</div>@enderror
+                                    </div>
+                                </div>
+
+                                <div class="two-col" style="margin-bottom:16px">
+                                    <div class="field-group" style="margin:0">
+                                        <label class="field-label">Badge Text</label>
+                                        <input type="text" name="badge_text" class="field-input"
+                                               value="{{ old('badge_text', $page->badge_text) }}" placeholder="e.g. Legal">
+                                        @error('badge_text')<div class="field-error">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="field-group" style="margin:0">
+                                        <label class="field-label">Date Label <span class="req">*</span></label>
+                                        <select name="date_label" class="field-select">
+                                            @foreach (\App\Models\DynamicPage::DATE_LABELS as $label)
+                                                <option value="{{ $label }}"
+                                                    {{ old('date_label', $page->date_label) === $label ? 'selected' : '' }}>
+                                                    {{ $label }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('date_label')<div class="field-error">{{ $message }}</div>@enderror
                                     </div>
                                 </div>
 
                                 <div class="field-group">
-                                    <label class="field-label">Page Content</label>
-                                    <textarea name="content" id="content" class="field-textarea editor"
-                                        style="min-height:200px">{{ $page->content }}</textarea>
+                                    <label class="field-label">Effective Date</label>
+                                    <input type="date" name="effective_date" class="field-input" value="{{ $effective }}">
+                                    @error('effective_date')<div class="field-error">{{ $message }}</div>@enderror
                                 </div>
 
+                                <div class="field-group">
+                                    <label class="field-label">Page Content <span class="req">*</span></label>
+                                    <textarea name="content" id="content" class="field-textarea editor"
+                                              style="min-height:200px">{{ old('content', $page->content) }}</textarea>
+                                    @error('content')<div class="field-error">{{ $message }}</div>@enderror
+                                </div>
                             </div>
                         </div>
 
-                        <!-- SEO -->
                         <div class="section-card">
-                            <div class="section-card-header">
-                                <h5>SEO</h5>
-                            </div>
+                            <div class="section-card-header"><h5>SEO</h5></div>
                             <div class="section-card-body">
                                 <div class="field-group">
                                     <label class="field-label">Meta Title</label>
                                     <input type="text" name="meta_title" class="field-input"
-                                        value="{{ $page->meta_title }}">
+                                           value="{{ old('meta_title', $page->meta_title) }}"
+                                           placeholder="Page title for search engines">
+                                    @error('meta_title')<div class="field-error">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="field-group">
                                     <label class="field-label">Meta Description</label>
-                                    <textarea name="meta_description"
-                                        class="field-textarea">{{ $page->meta_description }}</textarea>
+                                    <textarea name="meta_description" class="field-textarea"
+                                              placeholder="Brief description shown in search results (150–160 chars)">{{ old('meta_description', $page->meta_description) }}</textarea>
+                                    @error('meta_description')<div class="field-error">{{ $message }}</div>@enderror
                                 </div>
                             </div>
                         </div>
-
                     </div>
 
                     <!-- RIGHT -->
                     <div>
-
-                        <!-- Settings -->
                         <div class="section-card">
-                            <div class="section-card-header">
-                                <h5>Settings</h5>
-                            </div>
+                            <div class="section-card-header"><h5>Settings</h5></div>
                             <div class="section-card-body" style="padding:14px 20px">
                                 <div class="toggle-row" style="padding:0;border:none">
                                     <div>
                                         <div class="toggle-label">Status</div>
                                         <div class="toggle-sub">Visible to visitors</div>
                                     </div>
+                                    {{-- 1 = active, 0 = hidden: controller uses $request->boolean('status') --}}
                                     <select name="status" class="field-select-sm">
-                                        <option value="active" {{ $page->status === 'active' ? 'selected' : '' }}>Active
-                                        </option>
-                                        <option value="block" {{ $page->status === 'block' ? 'selected' : '' }}>Block
-                                        </option>
+                                        <option value="1" {{ old('status', $page->status ? '1' : '0') == '1' ? 'selected' : '' }}>Active</option>
+                                        <option value="0" {{ old('status', $page->status ? '1' : '0') == '0' ? 'selected' : '' }}>Hidden</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Record info -->
-                        <div class="section-card">
-                            <div class="section-card-header">
-                                <h5>Record Info</h5>
-                            </div>
-                            <div class="section-card-body" style="padding:14px 20px">
-                                <div class="info-row">
-                                    <span class="info-label">Page ID</span>
-                                    <span class="info-value"
-                                        style="font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:var(--accent)">#{{ $page->id }}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Slug</span>
-                                    <span class="info-value"
-                                        style="font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:var(--accent)">{{ $page->page_name }}</span>
-                                </div>
-                                @if($page->created_at)
-                                    <div class="info-row">
-                                        <span class="info-label">Created</span>
-                                        <span class="info-value">{{ $page->created_at->format('d M Y') }}</span>
-                                    </div>
-                                @endif
-                                @if($page->updated_at)
-                                    <div class="info-row">
-                                        <span class="info-label">Updated</span>
-                                        <span class="info-value">{{ $page->updated_at->format('d M Y') }}</span>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
                     </div>
 
                 </div>
 
                 <div class="action-bar">
-                    <a href="{{ route('admin.pages.index') }}" class="btn-secondary-dash">Cancel</a>
+                    <a href="{{ route('admin.dynamic-pages.index') }}" class="btn-secondary-dash">Cancel</a>
                     <button type="submit" class="btn-primary-dash">
-                        <i class="fa fa-save"></i> Update Page
+                        <i class="fa fa-save"></i> {{ $isEdit ? 'Update Page' : 'Save Page' }}
                     </button>
                 </div>
-
             </form>
 
         </div>

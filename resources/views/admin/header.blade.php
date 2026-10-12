@@ -114,7 +114,7 @@
     'admin.banners.*',
     'admin.faqs.*',
     'admin.blogs.*',
-    'admin.pages.*',
+    'admin.dynamic-pages.*',
     'admin.announcements.*',
     'admin.clients.*',
     'admin.testimonials.*',
@@ -123,10 +123,9 @@
             <a href="#"><i class="fa-solid fa-file-lines"></i> Content Management</a>
             <ul>
                 <li><a href="{{ route('admin.home-page.index') }}">Home Page Widgets</a></li>
-                <li><a href="#">Banners & Sliders</a></li>
                 <li><a href="{{ route('admin.faqs.index') }}">FAQ</a></li>
                 <li><a href="{{ route('admin.blogs.index') }}">Blog Management</a></li>
-                <li><a href="{{ route('admin.pages.index') }}">Dynamic Pages</a></li>
+                <li><a href="{{ route('admin.dynamic-pages.index') }}">Dynamic Pages</a></li>
                 <li><a href="{{ route('admin.announcements.index') }}">Announcement Bar</a></li>
                 <li><a href="{{ route('admin.teams.index') }}">Manage Teams</a></li>
                 <li><a href="{{ route('admin.testimonials.index') }}">Testimonial & Feedback</a></li>

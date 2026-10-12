@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AgeGroup;
 use App\Models\Category;
 use App\Models\Collection;
 use App\Models\InvoiceSetting;
@@ -15,19 +16,14 @@ use App\Models\HomeFeature;
 use App\Models\HomeTestimonial;
 use App\Models\HomeSection;
 use App\Models\Blog;
+use App\Models\FaqCategory;
+use App\Models\DynamicPage;
 
 class FrontController extends Controller
 {
     use LogsApiCalls;
 
-    // Age filter groups → overlap against products.age_min / age_max (max null = no upper limit)
-    private const AGE_GROUPS = [
-        '0-2' => ['label' => '0–2 Years (Little Discoverers)', 'min' => 0, 'max' => 2],
-        '3-5' => ['label' => '3–5 Years (Curious Explorers)', 'min' => 3, 'max' => 5],
-        '6-8' => ['label' => '6–8 Years (Active Adventurers)', 'min' => 6, 'max' => 8],
-        '9-12' => ['label' => '9–12 Years (Creative Thinkers)', 'min' => 9, 'max' => 12],
-        '12+' => ['label' => '12+ Years (Big Kids & Teens)', 'min' => 12, 'max' => null],
-    ];
+    // Age groups now come from the age_groups table (admin → Manage Home Page → Age Groups)
 
     private const PRICE_RANGES = [
         'all' => ['label' => 'All Prices', 'min' => null, 'max' => null],
@@ -54,6 +50,9 @@ class FrontController extends Controller
         $features = HomeFeature::where('status', 1)->orderBy('sort_order')->get();
         $testimonials = HomeTestimonial::where('status', 1)->orderBy('sort_order')->get();
         $sections = HomeSection::all()->keyBy('section_key');
+
+        // Shop by Age cards
+        $homeAgeGroups = AgeGroup::active()->ordered()->get();
 
         // Interests: resolve link (category slug or custom link) here, so the view stays simple
         $interests = HomeInterest::where('status', 1)->orderBy('sort_order')->get();
@@ -139,6 +138,7 @@ class FrontController extends Controller
             'features',
             'testimonials',
             'sections',
+            'homeAgeGroups',
             'categories',
             'trendingTabs',
             'favourites',
@@ -155,10 +155,16 @@ class FrontController extends Controller
         // "+" in a URL (?age=12+) arrives as a space, so put it back
         $clean = fn($v) => str_replace(' ', '+', trim((string) $v));
 
+        // Age groups from the admin-managed table, keyed by slug (0-2, 3-5, 12+ ...)
+        $ageModels = AgeGroup::active()->ordered()->get()->keyBy('slug');
+        $ageGroups = $ageModels
+            ->map(fn($g) => ['label' => $g->label . ' (' . $g->name . ')'])
+            ->all();
+
         $catSlugs = array_values(array_filter(array_map($clean, (array) $request->query('category', []))));
         $ages = array_values(array_intersect(
             array_map($clean, (array) $request->query('age', [])),
-            array_keys(self::AGE_GROUPS)
+            array_keys($ageGroups)
         ));
 
         $priceKey = $clean($request->query('price', 'all'));
@@ -200,20 +206,10 @@ class FrontController extends Controller
 
         // Age — overlap of [age_min, age_max] with the chosen group(s)
         if ($ages) {
-            $query->where(function ($q) use ($ages) {
+            $query->where(function ($q) use ($ages, $ageModels) {
                 foreach ($ages as $key) {
-                    $gMin = self::AGE_GROUPS[$key]['min'];
-                    $gMax = self::AGE_GROUPS[$key]['max'];
-
-                    $q->orWhere(function ($w) use ($gMin, $gMax) {
-                        $w->whereNotNull('age_min');
-                        if ($gMax !== null) {
-                            $w->where('age_min', '<=', $gMax);
-                        }
-                        $w->where(function ($x) use ($gMin) {
-                            $x->whereNull('age_max')->orWhere('age_max', '>=', $gMin);
-                        });
-                    });
+                    $group = $ageModels[$key];
+                    $q->orWhere(fn($w) => $group->applyToProducts($w));
                 }
             });
         }
@@ -259,7 +255,7 @@ class FrontController extends Controller
             'activeCategory' => $activeCategory,
             'catSlugs' => $catSlugs,
             'ages' => $ages,
-            'ageGroups' => self::AGE_GROUPS,
+            'ageGroups' => $ageGroups,
             'priceKey' => $priceKey,
             'priceRanges' => self::PRICE_RANGES,
             'rating' => $rating,
@@ -484,6 +480,29 @@ class FrontController extends Controller
             'topics',
             'sideProducts'
         ));
+    }
+
+    public function faq()
+    {
+        // Only active categories that have at least one active question
+        $categories = FaqCategory::active()
+            ->with(['faqs' => fn($q) => $q->where('status', 1)])
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->filter(fn($c) => $c->faqs->isNotEmpty())
+            ->values();
+
+        $contact = config('store');
+
+        return view('front-pages.faq', compact('categories', 'contact'));
+    }
+
+    public function dynamicPage(string $slug)
+    {
+        $page = DynamicPage::active()->where('slug', $slug)->firstOrFail();
+ 
+        return view('front-pages.policy', compact('page'));
     }
 
 }

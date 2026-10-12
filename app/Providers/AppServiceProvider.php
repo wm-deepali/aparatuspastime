@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\AgeGroup;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 
@@ -26,10 +27,11 @@ class AppServiceProvider extends ServiceProvider
                 ? app('wishlist.ids')
                 : tap(
                     \App\Models\Wishlist::current()->pluck('product_id')->all(),
-                    fn ($ids) => app()->instance('wishlist.ids', $ids)
+                    fn($ids) => app()->instance('wishlist.ids', $ids)
                 );
 
             $view->with('wishlistCount', count($wishIds));
+            $view->with('navAgeGroups', AgeGroup::active()->ordered()->get());
         });
 
         View::composer('*', function ($view) {

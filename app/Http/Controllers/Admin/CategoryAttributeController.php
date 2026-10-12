@@ -28,6 +28,7 @@ class CategoryAttributeController extends Controller
     public function create()
     {
         $categories = Category::where('status', 1)
+            ->whereNull('parent_id')
             ->orderBy('name')
             ->get();
 
@@ -126,6 +127,7 @@ class CategoryAttributeController extends Controller
     public function edit(CategoryAttribute $categoryAttribute)
     {
         $categories = Category::where('status', 1)
+             ->whereNull('parent_id')
             ->orderBy('name')
             ->get();
 

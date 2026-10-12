@@ -86,14 +86,18 @@
     ['gifts', 'bg-rose-100', 'rose-600', 'fa-gift', 'Curated Gift Hampers', 'Birthday & Return Gifts'],
   ];
 
-  // [age query, badge bg, badge label, color token, icon, icon color, title, subtitle]
-  $ages = [
-    ['0-2', 'bg-orange-500', '0–2', 'brand-orange', 'fa-baby', 'text-brand-orange', 'Infants & Toddlers', 'Sensory & Soft Toys'],
-    ['3-5', 'bg-amber-500', '3–5', 'amber-600', 'fa-puzzle-piece', 'text-amber-500', 'Curious Explorers', 'Puzzles, Clay & Learning'],
-    ['6-8', 'bg-brand-blue', '6–8', 'brand-blue', 'fa-rocket', 'text-brand-blue', 'Active Adventurers', 'STEM Kits & Sports'],
-    ['9-12', 'bg-emerald-600', '9–12', 'emerald-600', 'fa-microscope', 'text-emerald-600', 'Creative Thinkers', 'Robotics & Strategy'],
-    ['12+', 'bg-purple-600', '12+', 'purple-600', 'fa-crown', 'text-purple-600', 'Big Kids & Teens', 'Complex Kits & Games'],
+  $ageStyle = [
+    'orange' => ['bg-orange-500', 'brand-orange', 'text-brand-orange'],
+    'yellow' => ['bg-amber-500', 'amber-600', 'text-amber-500'],
+    'blue' => ['bg-brand-blue', 'brand-blue', 'text-brand-blue'],
+    'mint' => ['bg-emerald-600', 'emerald-600', 'text-emerald-600'],
+    'purple' => ['bg-purple-600', 'purple-600', 'text-purple-600'],
+    'rose' => ['bg-rose-500', 'rose-600', 'text-rose-500'],
   ];
+  $ages = ($navAgeGroups ?? collect())->map(function ($g) use ($ageStyle) {
+    $s = $ageStyle[$g->color] ?? $ageStyle['blue'];
+    return [$g->slug, $s[0], $g->short_label, $s[1], $g->icon ?: 'fa-child', $s[2], $g->name, $g->description];
+  })->all();
 
   // [category slug, icon bg, color token, icon, title, subtitle]
   $megaThemes = [
@@ -133,6 +137,7 @@
   $customerName = $customer?->name ?? '';
   $customerFirst = $customerName !== '' ? explode(' ', trim($customerName))[0] : '';
   $customerInitial = $customerFirst !== '' ? strtoupper(mb_substr($customerFirst, 0, 1)) : 'U';
+  $pageUrl = fn(string $slug) => route('page.show', ['slug' => $slug]);
 @endphp
 
 <body class="has-bottom-nav bg-warm-cream text-body-text">
@@ -917,7 +922,7 @@
             </div>
             <div class="flex items-center gap-1.5 shrink-0 ml-2">
               <span
-                class="bg-blue-100 text-brand-blue text-[9px] font-extrabold px-1.5 py-0.5 rounded-md font-heading">5</span>
+                class="bg-blue-100 text-brand-blue text-[9px] font-extrabold px-1.5 py-0.5 rounded-md font-heading">{{ count($ages) }}</span>
               <i
                 class="mobile-drawer-accordion-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
             </div>
@@ -1078,7 +1083,7 @@
 
           <!-- Quick Customer Links in Drawer -->
           <div class="pt-1 grid grid-cols-2 gap-1.5 text-[10px] font-heading font-semibold text-dark-navy">
-            <a href="{{ route('track-order') }}"
+            <a href="{{ route('user.track-order') }}"
               class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
               <i class="fa-solid fa-truck-fast text-[10px] text-purple-600"></i>
               <span>Track Order</span>
@@ -1352,21 +1357,11 @@
               <i class="fa-solid fa-child-reaching"></i><span>BY AGE</span>
             </h4>
             <ul class="space-y-2 text-white/80">
-              <li><a href="{{ route('shop', ['age' => '0-2']) }}"
-                  class="hover:text-sky-blue transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>0–2 Years</a></li>
-              <li><a href="{{ route('shop', ['age' => '3-5']) }}"
-                  class="hover:text-sky-blue transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>3–5 Years</a></li>
-              <li><a href="{{ route('shop', ['age' => '6-8']) }}"
-                  class="hover:text-sky-blue transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>6–8 Years</a></li>
-              <li><a href="{{ route('shop', ['age' => '9-12']) }}"
-                  class="hover:text-sky-blue transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>9–12 Years</a></li>
-              <li><a href="{{ route('shop', ['age' => '12+']) }}"
-                  class="hover:text-sky-blue transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>12+ Years</a></li>
+              @foreach ($navAgeGroups ?? [] as $g)
+                <li><a href="{{ route('shop', ['age' => $g->slug]) }}"
+                    class="hover:text-sky-blue transition flex items-center gap-1.5"><i
+                      class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>{{ $g->label }}</a></li>
+              @endforeach
               <li><a href="{{ route('new-arrivals') }}"
                   class="hover:text-sky-blue transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>New Arrivals</a></li>
@@ -1385,20 +1380,23 @@
               <i class="fa-solid fa-headset"></i><span>HELP & CARE</span>
             </h4>
             <ul class="space-y-2 text-white/80">
-              <li><a href="{{ route('track-order') }}" class="hover:text-mint transition flex items-center gap-1.5"><i
+              <li><a href="{{ route('user.track-order') }}"
+                  class="hover:text-mint transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Track Order</a></li>
               <li><a href="{{ route('faq') }}" class="hover:text-mint transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Help & FAQ</a></li>
               <li><a href="{{ route('contact') }}" class="hover:text-mint transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Contact Us</a></li>
-              <li><a href="{{ route('shipping-policy') }}"
+              <li><a href="{{ $pageUrl('shipping-policy') }}"
                   class="hover:text-mint transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Shipping Info</a></li>
-              <li><a href="{{ route('returns') }}" class="hover:text-mint transition flex items-center gap-1.5"><i
+              <li><a href="{{ $pageUrl('returns-policy') }}"
+                  class="hover:text-mint transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Easy Returns</a></li>
-              <li><a href="{{ route('cancellations') }}" class="hover:text-mint transition flex items-center gap-1.5"><i
+              <li><a href="{{ $pageUrl('cancellation-policy') }}"
+                  class="hover:text-mint transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Cancellation</a></li>
-              <li><a href="{{ route('payment-policy') }}"
+              <li><a href="{{ $pageUrl('payment-policy') }}"
                   class="hover:text-mint transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Payment Safety</a></li>
               <li><a href="https://wa.me/919876543210" target="_blank" rel="noopener"
@@ -1454,12 +1452,13 @@
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Playroom Blog</a></li>
               <li><a href="{{ route('about') }}" class="hover:text-soft-coral transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Safety Standards</a></li>
-              <li><a href="{{ route('terms') }}" class="hover:text-soft-coral transition flex items-center gap-1.5"><i
+              <li><a href="{{ $pageUrl('terms-and-conditions') }}"
+                  class="hover:text-soft-coral transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Terms of Service</a></li>
-              <li><a href="{{ route('privacy-policy') }}"
+              <li><a href="{{ $pageUrl('privacy-policy') }}"
                   class="hover:text-soft-coral transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Privacy Policy</a></li>
-              <li><a href="{{ route('cookie-policy') }}"
+              <li><a href="{{ $pageUrl('cookie-policy') }}"
                   class="hover:text-soft-coral transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Cookie Policy</a></li>
               <li><a href="{{ route('search') }}" class="hover:text-soft-coral transition flex items-center gap-1.5"><i
@@ -1906,7 +1905,7 @@
     })();
   </script>
 
-    <script>
+  <script>
     (function () {
       const toggleUrl = @json(route('wishlist.toggle'));
       const csrfToken = @json(csrf_token());
@@ -1976,7 +1975,7 @@
       });
     })();
   </script>
-  
+
   @include('front-pages.partials.mini-cart')
   <!-- PAGE SPECIFIC SCRIPTS -->
   @stack('scripts')

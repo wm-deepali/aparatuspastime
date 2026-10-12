@@ -30,7 +30,7 @@
           </ul>
 
           <h2 class="text-base font-bold font-heading text-brand-navy">4. Real-Time Tracking</h2>
-          <p>As soon as your shipment is dispatched, an Air Waybill (AWB) tracking link is sent via WhatsApp and Email. You can also monitor your package directly on our <a href="{{ route('track-order') }}" class="text-brand-orange font-bold font-heading hover:underline">Track Order page →</a></p>
+          <p>As soon as your shipment is dispatched, an Air Waybill (AWB) tracking link is sent via WhatsApp and Email. You can also monitor your package directly on our <a href="{{ route('user.track-order') }}" class="text-brand-orange font-bold font-heading hover:underline">Track Order page →</a></p>
         </div>
 
       </div>

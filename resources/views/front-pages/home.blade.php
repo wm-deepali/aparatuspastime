@@ -19,9 +19,12 @@
 
     // Resolve an image: URL / assets path / storage path
     $imgUrl = function ($p) {
-      if (blank($p)) return asset('assets/images/placeholder.png');
-      if (Str::startsWith($p, ['http://', 'https://'])) return $p;
-      if (Str::startsWith($p, ['assets/', 'images/'])) return asset($p);
+      if (blank($p))
+        return asset('assets/images/placeholder.png');
+      if (Str::startsWith($p, ['http://', 'https://']))
+        return $p;
+      if (Str::startsWith($p, ['assets/', 'images/']))
+        return asset($p);
       return asset('storage/' . $p);
     };
 
@@ -125,8 +128,10 @@
                 @endif
 
                 <{{ $headingTag }}
-                  class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-heading leading-tight tracking-tight text-white drop-shadow-md">
-                  {{ $slide->title_line1 }}@if ($slide->title_line2)<br><span class="{{ $hl }}">{{ $slide->title_line2 }}</span>@endif
+                  class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-heading leading-tight tracking-tight
+                  text-white drop-shadow-md">
+                  {{ $slide->title_line1 }}@if ($slide->title_line2)<br><span
+                  class="{{ $hl }}">{{ $slide->title_line2 }}</span>@endif
                 </{{ $headingTag }}>
 
                 @if ($slide->description)
@@ -448,83 +453,59 @@
   @endif
 
   <!-- 6. SHOP BY AGE -->
-  <section class="py-12 md:py-16 bg-white border-t border-brand-border">
-    <div class="max-w-7xl mx-auto px-4">
+  @if ($homeAgeGroups->isNotEmpty())
+    @php
+      // admin color => card classes (full class names so Tailwind can see them)
+      $ageColors = [
+        'orange' => ['card' => 'bg-soft-orange border-orange-200', 'icon' => 'text-brand-orange', 'name' => 'text-brand-orange'],
+        'yellow' => ['card' => 'bg-soft-yellow border-amber-200', 'icon' => 'text-amber-500', 'name' => 'text-amber-600'],
+        'blue' => ['card' => 'bg-soft-blue border-blue-200', 'icon' => 'text-brand-blue', 'name' => 'text-brand-blue'],
+        'mint' => ['card' => 'bg-soft-mint border-emerald-200', 'icon' => 'text-emerald-600', 'name' => 'text-emerald-600'],
+        'purple' => ['card' => 'bg-soft-purple border-purple-200', 'icon' => 'text-purple-600', 'name' => 'text-purple-600'],
+        'rose' => ['card' => 'bg-rose-50 border-rose-200', 'icon' => 'text-rose-500', 'name' => 'text-rose-600'],
+      ];
+    @endphp
 
-      <div class="text-center max-w-2xl mx-auto mb-10">
-        <span
-          class="text-xs font-bold uppercase tracking-wider text-brand-blue bg-soft-blue px-3.5 py-1 rounded-full font-heading">
-          AGE DISCOVERY
-        </span>
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold font-heading text-dark-navy mt-2">
-          FIND THE RIGHT FIT FOR THEIR AGE
-        </h2>
-        <p class="text-xs sm:text-sm text-body-text mt-1.5 font-sans">
-          Developmentally aligned play equipment curated for every growth milestone.
-        </p>
-      </div>
+    <section class="py-12 md:py-16 bg-white border-t border-brand-border">
+      <div class="max-w-7xl mx-auto px-4">
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <span
+            class="text-xs font-bold uppercase tracking-wider text-brand-blue bg-soft-blue px-3.5 py-1 rounded-full font-heading">
+            AGE DISCOVERY
+          </span>
+          <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold font-heading text-dark-navy mt-2">
+            FIND THE RIGHT FIT FOR THEIR AGE
+          </h2>
+          <p class="text-xs sm:text-sm text-body-text mt-1.5 font-sans">
+            Developmentally aligned play equipment curated for every growth milestone.
+          </p>
+        </div>
 
-        <a href="{{ route('shop') }}?age=0-2"
-          class="age-card bg-soft-orange border border-orange-200 p-4 sm:p-5 flex flex-col items-center text-center group">
-          <div
-            class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl text-brand-orange mb-3 group-hover:scale-110 transition">
-            <i class="fa-solid fa-baby"></i>
-          </div>
-          <span class="text-lg sm:text-xl font-bold font-heading text-dark-navy">0–2 Years</span>
-          <span class="text-xs font-bold text-brand-orange font-heading mt-0.5">Little Discoverers</span>
-          <p class="text-[11px] text-body-text font-sans mt-1">Sensory, textures & soft building</p>
-        </a>
+        <div
+          class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-{{ min(max($homeAgeGroups->count(), 1), 5) }} gap-4 sm:gap-5">
+          @foreach ($homeAgeGroups as $g)
+            @php $ac = $ageColors[$g->color] ?? $ageColors['blue']; @endphp
 
-        <a href="{{ route('shop') }}?age=3-5"
-          class="age-card bg-soft-yellow border border-amber-200 p-4 sm:p-5 flex flex-col items-center text-center group">
-          <div
-            class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl text-amber-500 mb-3 group-hover:scale-110 transition">
-            <i class="fa-solid fa-puzzle-piece"></i>
-          </div>
-          <span class="text-lg sm:text-xl font-bold font-heading text-dark-navy">3–5 Years</span>
-          <span class="text-xs font-bold text-amber-600 font-heading mt-0.5">Curious Explorers</span>
-          <p class="text-[11px] text-body-text font-sans mt-1">Blocks, creative art & basic puzzles</p>
-        </a>
-
-        <a href="{{ route('shop') }}?age=6-8"
-          class="age-card bg-soft-blue border border-blue-200 p-4 sm:p-5 flex flex-col items-center text-center group">
-          <div
-            class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl text-brand-blue mb-3 group-hover:scale-110 transition">
-            <i class="fa-solid fa-rocket"></i>
-          </div>
-          <span class="text-lg sm:text-xl font-bold font-heading text-dark-navy">6–8 Years</span>
-          <span class="text-xs font-bold text-brand-blue font-heading mt-0.5">Active Adventurers</span>
-          <p class="text-[11px] text-body-text font-sans mt-1">Starter sports, lawn games & sets</p>
-        </a>
-
-        <a href="{{ route('shop') }}?age=9-12"
-          class="age-card bg-soft-mint border border-emerald-200 p-4 sm:p-5 flex flex-col items-center text-center group">
-          <div
-            class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl text-emerald-600 mb-3 group-hover:scale-110 transition">
-            <i class="fa-solid fa-microscope"></i>
-          </div>
-          <span class="text-lg sm:text-xl font-bold font-heading text-dark-navy">9–12 Years</span>
-          <span class="text-xs font-bold text-emerald-600 font-heading mt-0.5">Creative Thinkers</span>
-          <p class="text-[11px] text-body-text font-sans mt-1">STEM robotics & team athletics</p>
-        </a>
-
-        <a href="{{ route('shop') }}?age=12+"
-          class="age-card bg-soft-purple border border-purple-200 p-4 sm:p-5 flex flex-col items-center text-center group col-span-2 sm:col-span-1">
-          <div
-            class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl text-purple-600 mb-3 group-hover:scale-110 transition">
-            <i class="fa-solid fa-crown"></i>
-          </div>
-          <span class="text-lg sm:text-xl font-bold font-heading text-dark-navy">12+ Years</span>
-          <span class="text-xs font-bold text-purple-600 font-heading mt-0.5">Big Kids & Teens</span>
-          <p class="text-[11px] text-body-text font-sans mt-1">Strategy boards, match gear & family</p>
-        </a>
+            {{-- route() encodes "+" so ?age=12+ reaches the shop correctly --}}
+            <a href="{{ route('shop', ['age' => $g->slug]) }}"
+              class="age-card {{ $ac['card'] }} border p-4 sm:p-5 flex flex-col items-center text-center group {{ $loop->last && $loop->count % 2 === 1 ? 'col-span-2 sm:col-span-1' : '' }}">
+              <div
+                class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xs flex items-center justify-center text-2xl sm:text-3xl {{ $ac['icon'] }} mb-3 group-hover:scale-110 transition">
+                <i class="fa-solid {{ $g->icon ?: 'fa-child' }}"></i>
+              </div>
+              <span class="text-lg sm:text-xl font-bold font-heading text-dark-navy">{{ $g->label }}</span>
+              <span class="text-xs font-bold {{ $ac['name'] }} font-heading mt-0.5">{{ $g->name }}</span>
+              @if ($g->description)
+                <p class="text-[11px] text-body-text font-sans mt-1">{{ $g->description }}</p>
+              @endif
+            </a>
+          @endforeach
+        </div>
 
       </div>
-
-    </div>
-  </section>
+    </section>
+  @endif
 
   <!-- 7. SHOP BY INTEREST -->
   @if ($secOn('interests') && $interests->isNotEmpty())
@@ -674,7 +655,8 @@
             @endif
             @if ($S->title)
               <h2 class="text-2xl sm:text-4xl md:text-5xl font-bold font-heading leading-tight">
-                {{ $S->title }}@if ($S->title_highlight)<br><span class="text-play-yellow">{{ $S->title_highlight }}</span>@endif
+                {{ $S->title }}@if ($S->title_highlight)<br><span
+                class="text-play-yellow">{{ $S->title_highlight }}</span>@endif
               </h2>
             @endif
             @if ($S->subtitle)
@@ -841,7 +823,8 @@
                       </div>
                       <div>
                         <h5 class="font-heading font-bold text-dark-navy text-xs sm:text-sm leading-tight">
-                          {{ $t->customer_name }}</h5>
+                          {{ $t->customer_name }}
+                        </h5>
                         @if ($t->customer_title)
                           <span class="text-[11px] text-brand-muted font-sans">{{ $t->customer_title }}</span>
                         @endif
@@ -867,7 +850,7 @@
     </section>
   @endif
 
-   <!-- 13. BLOG SECTION -->
+  <!-- 13. BLOG SECTION -->
   @if ($secOn('blogs') && $blogs->isNotEmpty())
     @php $S = $sec('blogs'); @endphp
     <section class="py-12 md:py-16 bg-warm-cream border-t border-brand-border">
