@@ -1,17 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 
+@php
+  // Active nav key (set per page via the active_nav section, e.g. shop, categories). Defaults to 'home'
+  $activeNav = trim($__env->yieldContent('active_nav', 'home'));
+  $navBase = 'px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5';
+  $navOn = 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold';
+  $navOff = 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs';
+
+
+  $ageStyle = [
+    'orange' => ['bg-orange-500', 'brand-orange', 'text-brand-orange'],
+    'yellow' => ['bg-amber-500', 'amber-600', 'text-amber-500'],
+    'blue' => ['bg-brand-blue', 'brand-blue', 'text-brand-blue'],
+    'mint' => ['bg-emerald-600', 'emerald-600', 'text-emerald-600'],
+    'purple' => ['bg-purple-600', 'purple-600', 'text-purple-600'],
+    'rose' => ['bg-rose-500', 'rose-600', 'text-rose-500'],
+  ];
+  $ages = ($navAgeGroups ?? collect())->map(function ($g) use ($ageStyle) {
+    $s = $ageStyle[$g->color] ?? $ageStyle['blue'];
+    return [$g->slug, $s[0], $g->short_label, $s[1], $g->icon ?: 'fa-child', $s[2], $g->name, $g->description];
+  })->all();
+
+  $customer = auth('customer')->user();
+  $isLoggedIn = (bool) $customer;
+  $customerName = $customer?->name ?? '';
+  $customerFirst = $customerName !== '' ? explode(' ', trim($customerName))[0] : '';
+  $customerInitial = $customerFirst !== '' ? strtoupper(mb_substr($customerFirst, 0, 1)) : 'U';
+  $pageUrl = fn(string $slug) => route('page.show', ['slug' => $slug]);
+  $colUrl = fn(string $slug) => route('collections.show', ['slug' => $slug]);
+
+  // header collection colour keys -> full Tailwind classes
+  $hdrColors = [
+    'emerald' => ['icon' => 'text-emerald-500', 'badge' => 'bg-emerald-100 text-emerald-700', 'tile' => 'bg-emerald-50/80 border-emerald-200/80 hover:bg-emerald-100/80 hover:text-emerald-700', 'solid' => 'bg-emerald-600', 'pill' => 'bg-emerald-200 text-emerald-800'],
+    'amber' => ['icon' => 'text-amber-500', 'badge' => 'bg-amber-100 text-amber-800', 'tile' => 'bg-amber-50/80 border-amber-200/80 hover:bg-amber-100/80 hover:text-amber-700', 'solid' => 'bg-amber-500', 'pill' => 'bg-amber-200 text-amber-900'],
+    'blue' => ['icon' => 'text-blue-500', 'badge' => 'bg-blue-100 text-blue-700', 'tile' => 'bg-blue-50/80 border-blue-200/80 hover:bg-blue-100/80 hover:text-brand-blue', 'solid' => 'bg-brand-blue', 'pill' => 'bg-blue-200 text-blue-800'],
+    'rose' => ['icon' => 'text-rose-500', 'badge' => 'bg-rose-100 text-rose-700', 'tile' => 'bg-rose-50/80 border-rose-200/80 hover:bg-rose-100/80 hover:text-rose-700', 'solid' => 'bg-rose-500', 'pill' => 'bg-rose-200 text-rose-800'],
+    'purple' => ['icon' => 'text-purple-500', 'badge' => 'bg-purple-100 text-purple-700', 'tile' => 'bg-purple-50/80 border-purple-200/80 hover:bg-purple-100/80 hover:text-purple-700', 'solid' => 'bg-purple-600', 'pill' => 'bg-purple-200 text-purple-800'],
+    'orange' => ['icon' => 'text-orange-500', 'badge' => 'bg-orange-100 text-orange-700', 'tile' => 'bg-orange-50/80 border-orange-200/80 hover:bg-orange-100/80 hover:text-brand-orange', 'solid' => 'bg-brand-orange', 'pill' => 'bg-orange-200 text-orange-800'],
+  ];
+
+  // ── Mega menu data (all from DB) ──
+  $megaCategories = \App\Models\Category::active()->parents()->ordered()->withCount('products')->take(7)->get();
+  $megaCollections = \App\Models\Collection::where('status', 1)->orderBy('id')->take(8)->get();
+  $megaPrices = collect(\App\Http\Controllers\FrontController::PRICE_RANGES)->except('all');
+
+  // Rotating tile colours for categories / price rows
+  $megaPalette = [
+    ['bg-orange-100', 'text-brand-orange'],
+    ['bg-purple-100', 'text-purple-600'],
+    ['bg-blue-100', 'text-brand-blue'],
+    ['bg-teal-100', 'text-teal-600'],
+    ['bg-emerald-100', 'text-emerald-600'],
+    ['bg-amber-100', 'text-amber-600'],
+    ['bg-rose-100', 'text-rose-600'],
+  ];
+
+
+  // ── Site settings (admin → General Settings) ──
+  $siteName = $general?->site_name ?: config('app.name');
+  $logoUrl = fn(?string $path) => $path ? asset('storage/' . $path) : null;
+  $headerLogo = $logoUrl($general?->header_logo) ?? asset('assets/logo.png');
+  $footerLogo = $logoUrl($general?->footer_logo) ?? $headerLogo;
+  $faviconUrl = $logoUrl($general?->favicon) ?? $headerLogo;
+
+  $sitePhone = $general?->phone;
+  $siteEmail = $general?->support_email ?: $general?->admin_email;
+  $siteAddress = $general?->address_short ?: $general?->business_address;
+  $waDigits = preg_replace('/\D+/', '', (string) ($general?->whatsapp ?: ''));
+  $waUrl = $waDigits ? 'https://wa.me/' . $waDigits : null;
+
+  // [setting column, icon, hover classes, title]
+  $socials = collect([
+    ['facebook', 'fa-brands fa-facebook-f', 'hover:bg-blue-600', 'Facebook'],
+    ['instagram', 'fa-brands fa-instagram', 'hover:bg-gradient-to-tr hover:from-amber-500 hover:via-pink-500 hover:to-purple-600', 'Instagram'],
+    ['youtube', 'fa-brands fa-youtube', 'hover:bg-red-600', 'YouTube'],
+    ['twitter', 'fa-brands fa-x-twitter', 'hover:bg-slate-700', 'X / Twitter'],
+    ['linkedin', 'fa-brands fa-linkedin-in', 'hover:bg-sky-700', 'LinkedIn'],
+    ['pinterest', 'fa-brands fa-pinterest-p', 'hover:bg-red-500', 'Pinterest'],
+  ])->map(fn($s) => [$general?->{$s[0]}, $s[1], $s[2], $s[3]])->filter(fn($s) => filled($s[0]));
+
+  $totalProducts = \App\Models\Product::visible()->count();
+
+  // Popular topics = categories + age groups (DB)
+  $footerTopics = $megaCategories->take(7)
+    ->map(fn($c) => [['category' => $c->slug], '#' . \Illuminate\Support\Str::studly($c->name)])
+    ->concat(($navAgeGroups ?? collect())->take(2)
+      ->map(fn($g) => [['age' => $g->slug], '#' . \Illuminate\Support\Str::studly($g->name)]))
+    ->all();
+
+  // ── SEO (admin → SEO / model meta fields) ──
+  $seo = getSeo();
+
+  $metaTitle = $seo?->meta_title
+    ?: (trim($__env->yieldContent('title'))
+      ?: $siteName . ($general?->tagline ? ' | ' . $general->tagline : ''));
+
+  $metaDesc = $seo?->meta_description
+    ?: (trim($__env->yieldContent('meta_description'))
+      ?: 'Discover premium curated kids toys, board games, sports goods, tactical puzzles, and educational STEM sets at Aparatus Pastime. Built for active play, curiosity, and family fun.');
+
+  $canonical = $seo?->canonical_url ?: url()->current();
+  $ogImage = $seo?->og_image ? asset('storage/' . $seo->og_image) : $headerLogo;
+
+@endphp
+
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
-  <title>@yield('title', 'Aparatus Pastime | Kids Toys, Games & Sports Goods - Play. Learn. Explore.')</title>
-  <meta name="description"
-    content="@yield('meta_description', 'Discover premium curated kids toys, board games, sports goods, tactical puzzles, and educational STEM sets at Aparatus Pastime. Built for active play, curiosity, and family fun.')">
+  <title>{{ $metaTitle }}</title>
+  <meta name="description" content="{{ $metaDesc }}">
+  <link rel="canonical" href="{{ $canonical }}">
 
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ $siteName }}">
+  <meta property="og:title" content="{{ $metaTitle }}">
+  <meta property="og:description" content="{{ $metaDesc }}">
+  <meta property="og:url" content="{{ $canonical }}">
+  <meta property="og:image" content="{{ $ogImage }}">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ $metaTitle }}">
+  <meta name="twitter:description" content="{{ $metaDesc }}">
+  <meta name="twitter:image" content="{{ $ogImage }}">
+
+  @if (!empty($seo?->schema_json))
+    <script type="application/ld+json">{!! $seo->schema_json !!}</script>
+  @endif
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="{{ asset('assets/logo.png') }}">
+  <link rel="icon" type="image/png" href="{{ $faviconUrl }}">
 
   <!-- Google Fonts: Outfit & Nunito -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -67,91 +189,6 @@
   @stack('styles')
 </head>
 
-@php
-  // Active nav key (set per page via the active_nav section, e.g. shop, categories). Defaults to 'home'
-  $activeNav = trim($__env->yieldContent('active_nav', 'home'));
-
-  $navBase = 'px-2.5 lg:px-3 xl:px-4 py-1.5 xl:py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5';
-  $navOn = 'text-brand-orange bg-orange-50 border border-orange-200/80 shadow-2xs font-extrabold';
-  $navOff = 'text-dark-navy hover:text-brand-orange hover:bg-orange-50/70 hover:shadow-2xs';
-
-  // [category slug, icon bg, color token, icon, title, subtitle]
-  $megaCategories = [
-    ['toys', 'bg-orange-100', 'brand-orange', 'fa-cubes', 'Kids Toys & Building', 'Blocks, Figures & Sets'],
-    ['games', 'bg-purple-100', 'purple-600', 'fa-dice-d20', 'Board Games & Puzzles', 'Family, Tactics & Logic'],
-    ['sports', 'bg-blue-100', 'brand-blue', 'fa-futbol', 'Sports Goods & Fitness', 'Cricket, Skates & Balls'],
-    ['outdoor', 'bg-teal-100', 'teal-600', 'fa-compass', 'Outdoor & Ride-Ons', 'Scooters, Tents & Fun'],
-    ['educational', 'bg-emerald-100', 'emerald-600', 'fa-atom', 'STEM & Robotics', 'Science & Solar Kits'],
-    ['activity', 'bg-amber-100', 'amber-600', 'fa-palette', 'Creative Arts & Crafts', 'Clay, DIY & Painting'],
-    ['gifts', 'bg-rose-100', 'rose-600', 'fa-gift', 'Curated Gift Hampers', 'Birthday & Return Gifts'],
-  ];
-
-  $ageStyle = [
-    'orange' => ['bg-orange-500', 'brand-orange', 'text-brand-orange'],
-    'yellow' => ['bg-amber-500', 'amber-600', 'text-amber-500'],
-    'blue' => ['bg-brand-blue', 'brand-blue', 'text-brand-blue'],
-    'mint' => ['bg-emerald-600', 'emerald-600', 'text-emerald-600'],
-    'purple' => ['bg-purple-600', 'purple-600', 'text-purple-600'],
-    'rose' => ['bg-rose-500', 'rose-600', 'text-rose-500'],
-  ];
-  $ages = ($navAgeGroups ?? collect())->map(function ($g) use ($ageStyle) {
-    $s = $ageStyle[$g->color] ?? $ageStyle['blue'];
-    return [$g->slug, $s[0], $g->short_label, $s[1], $g->icon ?: 'fa-child', $s[2], $g->name, $g->description];
-  })->all();
-
-  // [category slug, icon bg, color token, icon, title, subtitle]
-  $megaThemes = [
-    ['toys', 'bg-orange-100', 'brand-orange', 'fa-cubes', 'Build & Architecture', 'Engineering & 3D Sets'],
-    ['sports', 'bg-blue-100', 'brand-blue', 'fa-person-running', 'Move & Athletics', 'Sports, Skates & Action'],
-    ['games', 'bg-purple-100', 'purple-600', 'fa-brain', 'Think & Strategy', 'Chess, Logic & Mystery'],
-    ['activity', 'bg-amber-100', 'amber-600', 'fa-palette', 'Make & Imagine', 'Arts, Crafts & Pretend'],
-    ['educational', 'bg-emerald-100', 'emerald-600', 'fa-flask', 'Discover Science', 'Physics, Biology & Space'],
-    ['outdoor', 'bg-teal-100', 'teal-600', 'fa-trophy', 'Lawn Tournaments', 'Family Party & Fun'],
-  ];
-
-  // [shop query params, label]
-  $footerTopics = [
-    [['category' => 'educational'], '#STEMRobotics'],
-    [['category' => 'toys'], '#MagneticTiles'],
-    [['category' => 'sports'], '#KashmirWillowCricket'],
-    [['category' => 'games'], '#BoardGamesNight'],
-    [['category' => 'outdoor'], '#OutdoorAdventures'],
-    [['category' => 'activity'], '#ArtStudioEasel'],
-    [['category' => 'gifts'], '#BirthdayGiftSets'],
-    [['age' => '3-5'], '#PreschoolPlay'],
-    [['age' => '9-12'], '#STEMforKids'],
-  ];
-
-  $customer = auth('customer')->user();
-  $isLoggedIn = (bool) $customer;
-  $customerName = $customer?->name ?? '';
-  $customerFirst = $customerName !== '' ? explode(' ', trim($customerName))[0] : '';
-  $customerInitial = $customerFirst !== '' ? strtoupper(mb_substr($customerFirst, 0, 1)) : 'U';
-  $pageUrl = fn(string $slug) => route('page.show', ['slug' => $slug]);
-  $colUrl = fn(string $slug) => route('collections.show', ['slug' => $slug]);
-
-  // header collection colour keys -> full Tailwind classes
-  $hdrColors = [
-    'emerald' => ['icon' => 'text-emerald-500', 'badge' => 'bg-emerald-100 text-emerald-700', 'tile' => 'bg-emerald-50/80 border-emerald-200/80 hover:bg-emerald-100/80 hover:text-emerald-700', 'solid' => 'bg-emerald-600', 'pill' => 'bg-emerald-200 text-emerald-800'],
-    'amber' => ['icon' => 'text-amber-500', 'badge' => 'bg-amber-100 text-amber-800', 'tile' => 'bg-amber-50/80 border-amber-200/80 hover:bg-amber-100/80 hover:text-amber-700', 'solid' => 'bg-amber-500', 'pill' => 'bg-amber-200 text-amber-900'],
-    'blue' => ['icon' => 'text-blue-500', 'badge' => 'bg-blue-100 text-blue-700', 'tile' => 'bg-blue-50/80 border-blue-200/80 hover:bg-blue-100/80 hover:text-brand-blue', 'solid' => 'bg-brand-blue', 'pill' => 'bg-blue-200 text-blue-800'],
-    'rose' => ['icon' => 'text-rose-500', 'badge' => 'bg-rose-100 text-rose-700', 'tile' => 'bg-rose-50/80 border-rose-200/80 hover:bg-rose-100/80 hover:text-rose-700', 'solid' => 'bg-rose-500', 'pill' => 'bg-rose-200 text-rose-800'],
-    'purple' => ['icon' => 'text-purple-500', 'badge' => 'bg-purple-100 text-purple-700', 'tile' => 'bg-purple-50/80 border-purple-200/80 hover:bg-purple-100/80 hover:text-purple-700', 'solid' => 'bg-purple-600', 'pill' => 'bg-purple-200 text-purple-800'],
-    'orange' => ['icon' => 'text-orange-500', 'badge' => 'bg-orange-100 text-orange-700', 'tile' => 'bg-orange-50/80 border-orange-200/80 hover:bg-orange-100/80 hover:text-brand-orange', 'solid' => 'bg-brand-orange', 'pill' => 'bg-orange-200 text-orange-800'],
-  ];
-
-  // [full url, icon bg, color token, icon, title, subtitle, badge text, badge bg]
-  $megaDeals = [
-    [$colUrl('new_arrival'), 'bg-orange-100', 'brand-orange', 'fa-sparkles', 'Fresh New Arrivals', "This week's latest drops", 'NEW', 'bg-brand-orange'],
-    [$colUrl('best_seller'), 'bg-red-100', 'red-500', 'fa-fire', 'Top 20 Best Sellers', 'Most loved by parents', 'HOT', 'bg-red-500'],
-    [route('shop', ['maxPrice' => 499]), 'bg-emerald-100', 'emerald-600', 'fa-coins', 'Pocket Toys < ₹499', 'Budget-friendly fun', 'SAVER', 'bg-emerald-600'],
-    [route('shop', ['maxPrice' => 999]), 'bg-blue-100', 'brand-blue', 'fa-tags', 'Value Picks < ₹999', 'Top-rated smart buys', 'VALUE', 'bg-brand-blue'],
-    [route('shop', ['category' => 'gifts']), 'bg-rose-100', 'rose-600', 'fa-gift', 'Birthday Gift Finder', 'Ready-to-gift combos', 'GIFT', 'bg-rose-500'],
-    [$colUrl('trending'), 'bg-purple-100', 'purple-600', 'fa-chart-line', 'Trending This Week', 'Fast selling right now', 'TREND', 'bg-purple-600'],
-  ];
-
-@endphp
-
 <body class="has-bottom-nav bg-warm-cream text-body-text">
 
   <!-- ============================================================
@@ -195,8 +232,7 @@
           </button>
 
           <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
-            <img src="{{ asset('assets/logo.png') }}" alt="Aparatus Pastime - Kids Toys & Sports"
-              class="h-9 sm:h-11 md:h-12 w-auto object-contain">
+            <img src="{{ $headerLogo }}" alt="{{ $siteName }}" class="h-9 sm:h-11 md:h-12 w-auto object-contain">
           </a>
         </div>
 
@@ -284,7 +320,7 @@
             <div
               class="absolute right-0 top-full mt-1 w-52 bg-white border border-brand-border rounded-2xl shadow-xl py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-200 font-heading">
               <div class="px-4 py-2 border-b border-brand-border">
-                <p class="text-xs text-brand-muted font-sans">Welcome to Playroom,</p>
+                <p class="text-xs text-brand-muted font-sans">Welcome to {{ $siteName }},</p>
                 <p class="text-sm font-bold text-dark-navy truncate">
                   {{ $isLoggedIn ? $customerName : 'Guest Explorer' }}
                 </p>
@@ -393,295 +429,228 @@
               <div
                 class="max-w-[1440px] mx-auto px-3 sm:px-4 lg:px-5 xl:px-8 py-3.5 xl:py-5 space-y-3.5 xl:space-y-4 relative z-10">
 
-                <!-- 5-COLUMN DIRECTORY GRID -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2.5 xl:gap-4 items-stretch">
+                <!-- 4-COLUMN DIRECTORY GRID -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5 xl:gap-4 items-stretch">
 
-                  <!-- Col 1: SHOP BY CATEGORY (Warm Coral Card) -->
-                  <div
-                    class="bg-[#FFF9F5] border border-orange-200/90 rounded-xl xl:rounded-2xl p-2.5 lg:p-3 xl:p-4 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-orange-300 transition-all duration-200">
-                    <div class="space-y-2">
-                      <div class="flex items-center gap-2 pb-2 border-b border-orange-200/70">
-                        <div
-                          class="w-6 h-6 xl:w-7 xl:h-7 rounded-lg xl:rounded-xl bg-brand-orange text-white flex items-center justify-center text-[10px] xl:text-xs shadow-2xs shrink-0">
-                          <i class="fa-solid fa-shapes"></i>
-                        </div>
-                        <div class="min-w-0">
-                          <h4
-                            class="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-dark-navy font-heading truncate">
-                            CATEGORIES</h4>
-                          <span
-                            class="text-[9px] xl:text-[10px] text-brand-muted font-normal font-sans block truncate">Browse
-                            by toy type</span>
-                        </div>
-                      </div>
-                      <ul class="space-y-0.5 xl:space-y-1 text-xs font-semibold font-sans">
-                        @foreach ($megaCategories as $i)
-                          <li>
-                            <a href="{{ route('shop', ['category' => $i[0]]) }}"
-                              class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
-                              <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
-                                <div
-                                  class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg {{ $i[1] }} text-{{ $i[2] }} flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
-                                  <i class="fa-solid {{ $i[3] }}"></i>
-                                </div>
-                                <div class="min-w-0">
-                                  <div
-                                    class="font-heading font-bold text-dark-navy group-hover/link:text-{{ $i[2] }} leading-tight text-[11px] xl:text-xs truncate">
-                                    {{ $i[4] }}
-                                  </div>
-                                  <div
-                                    class="text-[9px] xl:text-[10px] text-brand-muted font-normal truncate hidden sm:block">
-                                    {{ $i[5] }}
-                                  </div>
-                                </div>
-                              </div>
-                              <i
-                                class="fa-solid fa-chevron-right text-[7px] xl:text-[8px] text-slate-400 group-hover/link:text-{{ $i[2] }} group-hover/link:translate-x-0.5 transition shrink-0 ml-1"></i>
-                            </a>
-                          </li>
-                        @endforeach
-                      </ul>
-                    </div>
-                    <div class="pt-2 border-t border-orange-200 mt-1.5 xl:mt-2">
-                      <a href="{{ route('categories') }}"
-                        class="inline-flex items-center gap-1.5 text-brand-orange hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
-                        <span>View All Categories</span>
-                        <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
-                      </a>
-                    </div>
-                  </div>
-
-                  <!-- Col 2: SHOP BY AGE (Sky Blue Card) -->
-                  <div
-                    class="bg-[#F0F7FF] border border-blue-200/90 rounded-xl xl:rounded-2xl p-2.5 lg:p-3 xl:p-4 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-blue-300 transition-all duration-200">
-                    <div class="space-y-2">
-                      <div class="flex items-center gap-2 pb-2 border-b border-blue-200/70">
-                        <div
-                          class="w-6 h-6 xl:w-7 xl:h-7 rounded-lg xl:rounded-xl bg-brand-blue text-white flex items-center justify-center text-[10px] xl:text-xs shadow-2xs shrink-0">
-                          <i class="fa-solid fa-child-reaching"></i>
-                        </div>
-                        <div class="min-w-0">
-                          <h4
-                            class="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-dark-navy font-heading truncate">
-                            BY AGE GROUP</h4>
-                          <span
-                            class="text-[9px] xl:text-[10px] text-brand-muted font-normal font-sans block truncate">Age-matched
-                            discovery</span>
-                        </div>
-                      </div>
-                      <ul class="space-y-0.5 xl:space-y-1.5 text-xs font-semibold font-sans">
-                        @foreach ($ages as $a)
-                          <li>
-                            <a href="{{ route('shop', ['age' => $a[0]]) }}"
-                              class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
-                              <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
-                                <div
-                                  class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg {{ $a[1] }} text-white font-heading font-bold text-[9px] xl:text-[10px] flex items-center justify-center shadow-2xs group-hover/link:scale-105 transition shrink-0">
-                                  {{ $a[2] }}
-                                </div>
-                                <div class="min-w-0">
-                                  <div
-                                    class="font-heading font-bold text-dark-navy group-hover/link:text-{{ $a[3] }} leading-tight flex items-center gap-1 text-[11px] xl:text-xs truncate">
-                                    <i class="fa-solid {{ $a[4] }} {{ $a[5] }} text-[8px] xl:text-[9px]"></i>
-                                    <span class="truncate">{{ $a[6] }}</span>
-                                  </div>
-                                  <div
-                                    class="text-[9px] xl:text-[10px] text-brand-muted font-normal truncate hidden sm:block">
-                                    {{ $a[7] }}
-                                  </div>
-                                </div>
-                              </div>
-                              <i
-                                class="fa-solid fa-chevron-right text-[7px] xl:text-[8px] text-slate-400 group-hover/link:text-{{ $a[3] }} group-hover/link:translate-x-0.5 transition shrink-0 ml-1"></i>
-                            </a>
-                          </li>
-                        @endforeach
-                      </ul>
-                    </div>
-                    <div class="pt-2 border-t border-blue-200 mt-1.5 xl:mt-2">
-                      <a href="{{ route('shop') }}"
-                        class="inline-flex items-center gap-1.5 text-brand-blue hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
-                        <span>Find by Milestone Guide</span>
-                        <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
-                      </a>
-                    </div>
-                  </div>
-
-                  <!-- Col 3: SHOP BY INTEREST (Sunny Amber Card) -->
-                  <div
-                    class="bg-[#FFFDF0] border border-amber-200/90 rounded-xl xl:rounded-2xl p-2.5 lg:p-3 xl:p-4 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-amber-300 transition-all duration-200">
-                    <div class="space-y-2">
-                      <div class="flex items-center gap-2 pb-2 border-b border-amber-200/70">
-                        <div
-                          class="w-6 h-6 xl:w-7 xl:h-7 rounded-lg xl:rounded-xl bg-amber-500 text-white flex items-center justify-center text-[10px] xl:text-xs shadow-2xs shrink-0">
-                          <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        </div>
-                        <div class="min-w-0">
-                          <h4
-                            class="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-dark-navy font-heading truncate">
-                            PLAY STYLE</h4>
-                          <span
-                            class="text-[9px] xl:text-[10px] text-brand-muted font-normal font-sans block truncate">Passion
-                            & interests</span>
-                        </div>
-                      </div>
-                      <ul class="space-y-0.5 xl:space-y-1 text-xs font-semibold font-sans">
-                        @foreach ($megaThemes as $i)
-                          <li>
-                            <a href="{{ route('shop', ['category' => $i[0]]) }}"
-                              class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
-                              <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
-                                <div
-                                  class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg {{ $i[1] }} text-{{ $i[2] }} flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
-                                  <i class="fa-solid {{ $i[3] }}"></i>
-                                </div>
-                                <div class="min-w-0">
-                                  <div
-                                    class="font-heading font-bold text-dark-navy group-hover/link:text-{{ $i[2] }} leading-tight text-[11px] xl:text-xs truncate">
-                                    {{ $i[4] }}
-                                  </div>
-                                  <div
-                                    class="text-[9px] xl:text-[10px] text-brand-muted font-normal truncate hidden sm:block">
-                                    {{ $i[5] }}
-                                  </div>
-                                </div>
-                              </div>
-                              <i
-                                class="fa-solid fa-chevron-right text-[7px] xl:text-[8px] text-slate-400 group-hover/link:text-{{ $i[2] }} group-hover/link:translate-x-0.5 transition shrink-0 ml-1"></i>
-                            </a>
-                          </li>
-                        @endforeach
-                      </ul>
-                    </div>
-                    <div class="pt-2 border-t border-amber-200 mt-1.5 xl:mt-2">
-                      <a href="{{ route('shop') }}"
-                        class="inline-flex items-center gap-1.5 text-amber-600 hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
-                        <span>Explore All Themes</span>
-                        <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
-                      </a>
-                    </div>
-                  </div>
-
-                  <!-- Col 4: CURATIONS & DEALS (Soft Rose Card) -->
-                  <div
-                    class="bg-[#FFF5F7] border border-rose-200/90 rounded-xl xl:rounded-2xl p-2.5 lg:p-3 xl:p-4 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-rose-300 transition-all duration-200">
-                    <div class="space-y-2">
-                      <div class="flex items-center gap-2 pb-2 border-b border-rose-200/70">
-                        <div
-                          class="w-6 h-6 xl:w-7 xl:h-7 rounded-lg xl:rounded-xl bg-rose-500 text-white flex items-center justify-center text-[10px] xl:text-xs shadow-2xs shrink-0">
-                          <i class="fa-solid fa-tags"></i>
-                        </div>
-                        <div class="min-w-0">
-                          <h4
-                            class="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-dark-navy font-heading truncate">
-                            CURATED & DEALS</h4>
-                          <span
-                            class="text-[9px] xl:text-[10px] text-brand-muted font-normal font-sans block truncate">Handpicked
-                            collections</span>
-                        </div>
-                      </div>
-                      <ul class="space-y-0.5 xl:space-y-1 text-xs font-semibold font-sans">
-                        @foreach ($megaDeals as $d)
-                          <li>
-                            <a href="{{ $d[0] }}"
-                              class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
-                              <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
-                                <div
-                                  class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg {{ $d[1] }} text-{{ $d[2] }} flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
-                                  <i class="fa-solid {{ $d[3] }}"></i>
-                                </div>
-                                <div class="min-w-0">
-                                  <div
-                                    class="font-heading font-bold text-dark-navy group-hover/link:text-{{ $d[2] }} leading-tight text-[11px] xl:text-xs truncate">
-                                    {{ $d[4] }}
-                                  </div>
-                                  <div
-                                    class="text-[9px] xl:text-[10px] text-brand-muted font-normal truncate hidden sm:block">
-                                    {{ $d[5] }}
-                                  </div>
-                                </div>
-                              </div>
-                              <span
-                                class="text-[8px] xl:text-[9px] font-bold text-white {{ $d[7] }} px-1.5 py-0.5 rounded-full font-heading uppercase shrink-0 ml-1">{{ $d[6] }}</span>
-                            </a>
-                          </li>
-                        @endforeach
-                      </ul>
-                    </div>
-                    <div class="pt-2 border-t border-rose-200 mt-1.5 xl:mt-2">
-                      <a href="{{ route('shop') }}"
-                        class="inline-flex items-center gap-1.5 text-rose-600 hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
-                        <span>Browse All Curations</span>
-                        <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
-                      </a>
-                    </div>
-                  </div>
-
-                  <!-- Col 5: FEATURED SPOTLIGHT CARD & PROMO -->
-                  <div class="flex flex-col justify-between space-y-2 xl:space-y-3">
+                  <!-- Col 1: CATEGORY -->
+                  @if ($megaCategories->isNotEmpty())
                     <div
-                      class="bg-[#FFFDF4] border-2 border-amber-300 rounded-xl xl:rounded-2xl p-2.5 lg:p-3 xl:p-3.5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200 relative overflow-hidden group/spotlight">
-                      <div>
-                        <div class="flex items-center justify-between mb-1 xl:mb-2">
-                          <span
-                            class="bg-brand-orange text-white text-[9px] xl:text-[10px] font-bold px-2 py-0.5 rounded-full font-heading uppercase tracking-wide shadow-2xs">
-                            <i class="fa-solid fa-crown mr-1 text-play-yellow"></i>TOP SELLER
-                          </span>
+                      class="bg-[#FFF9F5] border border-orange-200/90 rounded-xl xl:rounded-2xl p-2.5 lg:p-3 xl:p-4 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-orange-300 transition-all duration-200">
+                      <div class="space-y-2">
+                        <div class="flex items-center gap-2 pb-2 border-b border-orange-200/70">
                           <div
-                            class="flex items-center gap-1 text-[10px] xl:text-[11px] font-bold text-dark-navy font-heading">
-                            <i class="fa-solid fa-star text-amber-500 text-[10px] xl:text-xs"></i>
-                            <span>4.9</span>
-                            <span class="text-[8px] xl:text-[9px] text-brand-muted font-normal">(428)</span>
+                            class="w-6 h-6 xl:w-7 xl:h-7 rounded-lg xl:rounded-xl bg-brand-orange text-white flex items-center justify-center text-[10px] xl:text-xs shadow-2xs shrink-0">
+                            <i class="fa-solid fa-shapes"></i>
+                          </div>
+                          <div class="min-w-0">
+                            <h4
+                              class="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-dark-navy font-heading truncate">
+                              CATEGORY</h4>
+                            <span
+                              class="text-[9px] xl:text-[10px] text-brand-muted font-normal font-sans block truncate">Browse
+                              by toy type</span>
                           </div>
                         </div>
-                        <h5 class="font-heading font-bold text-dark-navy text-[11px] xl:text-xs leading-snug truncate">
-                          Magnetic 3D Master Tiles</h5>
-                        <p class="text-[9px] xl:text-[10px] text-brand-muted mt-0.5 font-sans leading-relaxed truncate">
-                          100-piece translucent building set</p>
+                        <ul class="space-y-0.5 xl:space-y-1 text-xs font-semibold font-sans">
+                          @foreach ($megaCategories as $c)
+                            @php $pal = $megaPalette[$loop->index % count($megaPalette)]; @endphp
+                            <li>
+                              <a href="{{ route('shop', ['category' => $c->slug]) }}"
+                                class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                                <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
+                                  <div
+                                    class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg {{ $pal[0] }} {{ $pal[1] }} flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
+                                    <i class="fa-solid {{ $c->icon ?: 'fa-shapes' }}"></i>
+                                  </div>
+                                  <div
+                                    class="font-heading font-bold text-dark-navy group-hover/link:text-brand-orange leading-tight text-[11px] xl:text-xs truncate">
+                                    {{ $c->name }}
+                                  </div>
+                                </div>
+                                @if ($c->products_count > 0)
+                                  <span
+                                    class="text-[9px] xl:text-[10px] text-brand-muted font-bold shrink-0 ml-1">{{ $c->products_count }}</span>
+                                @endif
+                              </a>
+                            </li>
+                          @endforeach
+                        </ul>
                       </div>
-
-                      <div
-                        class="my-1.5 xl:my-2 flex items-center justify-center p-1.5 xl:p-2 bg-white rounded-lg xl:rounded-xl shadow-xs border border-amber-200/80">
-                        <img
-                          src="https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80"
-                          alt="Magnetic 3D Master Tiles"
-                          class="h-14 xl:h-20 w-auto object-contain drop-shadow-md group-hover/spotlight:scale-105 transition duration-300">
-                      </div>
-
-                      <div>
-                        <div class="flex items-baseline gap-1.5 mb-1.5 font-heading">
-                          <span class="text-xs xl:text-sm font-bold text-dark-navy">₹2,199</span>
-                          <span class="text-[10px] xl:text-xs text-brand-muted line-through font-normal">₹2,899</span>
-                          <span
-                            class="text-[8px] xl:text-[9px] font-bold text-white bg-brand-orange px-1.5 py-0.2 rounded-full">24%
-                            OFF</span>
-                        </div>
-                        <a href="{{ route('product', ['slug' => 'magnetic-learning-set']) }}"
-                          class="w-full btn-play-orange text-[10px] xl:text-xs py-1.5 xl:py-2 px-2 rounded-lg xl:rounded-xl text-center block transition font-heading font-bold text-white shadow-md hover:shadow-lg truncate">
-                          PLAY SOMETHING NEW →
+                      <div class="pt-2 border-t border-orange-200 mt-1.5 xl:mt-2">
+                        <a href="{{ route('categories') }}"
+                          class="inline-flex items-center gap-1.5 text-brand-orange hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
+                          <span>View All Categories</span>
+                          <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
                         </a>
                       </div>
                     </div>
+                  @endif
 
-                    <!-- Mini Coupon Banner -->
+                  <!-- Col 2: AGE GROUP -->
+                  @if (count($ages))
                     <div
-                      class="bg-[#F0F7FF] border border-blue-200 rounded-lg xl:rounded-xl p-2 xl:p-2.5 flex items-center justify-between text-[10px] xl:text-xs font-heading shadow-2xs">
-                      <div class="flex items-center gap-1.5 min-w-0">
-                        <div
-                          class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg bg-blue-100 text-brand-blue flex items-center justify-center text-[10px] shrink-0">
-                          <i class="fa-solid fa-gift"></i>
+                      class="bg-[#F0F7FF] border border-blue-200/90 rounded-xl xl:rounded-2xl p-2.5 lg:p-3 xl:p-4 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-blue-300 transition-all duration-200">
+                      <div class="space-y-2">
+                        <div class="flex items-center gap-2 pb-2 border-b border-blue-200/70">
+                          <div
+                            class="w-6 h-6 xl:w-7 xl:h-7 rounded-lg xl:rounded-xl bg-brand-blue text-white flex items-center justify-center text-[10px] xl:text-xs shadow-2xs shrink-0">
+                            <i class="fa-solid fa-child-reaching"></i>
+                          </div>
+                          <div class="min-w-0">
+                            <h4
+                              class="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-dark-navy font-heading truncate">
+                              AGE GROUP</h4>
+                            <span
+                              class="text-[9px] xl:text-[10px] text-brand-muted font-normal font-sans block truncate">Age-matched
+                              discovery</span>
+                          </div>
                         </div>
-                        <div class="min-w-0">
-                          <div class="text-[8px] xl:text-[9px] text-brand-muted leading-tight truncate">First Order
-                            Discount</div>
-                          <div class="font-bold text-dark-navy truncate">10% OFF: <span
-                              class="text-brand-orange font-mono font-bold">PLAY10</span></div>
-                        </div>
+                        <ul class="space-y-0.5 xl:space-y-1.5 text-xs font-semibold font-sans">
+                          @foreach ($ages as $a)
+                            <li>
+                              <a href="{{ route('shop', ['age' => $a[0]]) }}"
+                                class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                                <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
+                                  <div
+                                    class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg {{ $a[1] }} text-white font-heading font-bold text-[9px] xl:text-[10px] flex items-center justify-center shadow-2xs group-hover/link:scale-105 transition shrink-0">
+                                    {{ $a[2] }}
+                                  </div>
+                                  <div class="min-w-0">
+                                    <div
+                                      class="font-heading font-bold text-dark-navy group-hover/link:text-{{ $a[3] }} leading-tight flex items-center gap-1 text-[11px] xl:text-xs truncate">
+                                      <i class="fa-solid {{ $a[4] }} {{ $a[5] }} text-[8px] xl:text-[9px]"></i>
+                                      <span class="truncate">{{ $a[6] }}</span>
+                                    </div>
+                                    @if ($a[7])
+                                      <div
+                                        class="text-[9px] xl:text-[10px] text-brand-muted font-normal truncate hidden sm:block">
+                                        {{ $a[7] }}
+                                      </div>
+                                    @endif
+                                  </div>
+                                </div>
+                                <i
+                                  class="fa-solid fa-chevron-right text-[7px] xl:text-[8px] text-slate-400 group-hover/link:text-{{ $a[3] }} group-hover/link:translate-x-0.5 transition shrink-0 ml-1"></i>
+                              </a>
+                            </li>
+                          @endforeach
+                        </ul>
                       </div>
-                      <span
-                        class="text-[8px] xl:text-[9px] bg-brand-orange text-white px-1.5 py-0.5 rounded-full font-bold shadow-2xs shrink-0 ml-1">ACTIVE</span>
+                      <div class="pt-2 border-t border-blue-200 mt-1.5 xl:mt-2">
+                        <a href="{{ route('shop') }}"
+                          class="inline-flex items-center gap-1.5 text-brand-blue hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
+                          <span>Shop All Ages</span>
+                          <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
+                        </a>
+                      </div>
                     </div>
-                  </div>
+                  @endif
+
+                  <!-- Col 3: COLLECTIONS (New Arrival, Featured, Best Seller...) -->
+                  @if ($megaCollections->isNotEmpty())
+                    <div
+                      class="bg-[#FFF5F7] border border-rose-200/90 rounded-xl xl:rounded-2xl p-2.5 lg:p-3 xl:p-4 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-rose-300 transition-all duration-200">
+                      <div class="space-y-2">
+                        <div class="flex items-center gap-2 pb-2 border-b border-rose-200/70">
+                          <div
+                            class="w-6 h-6 xl:w-7 xl:h-7 rounded-lg xl:rounded-xl bg-rose-500 text-white flex items-center justify-center text-[10px] xl:text-xs shadow-2xs shrink-0">
+                            <i class="fa-solid fa-tags"></i>
+                          </div>
+                          <div class="min-w-0">
+                            <h4
+                              class="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-dark-navy font-heading truncate">
+                              COLLECTIONS</h4>
+                            <span
+                              class="text-[9px] xl:text-[10px] text-brand-muted font-normal font-sans block truncate">Handpicked
+                              for you</span>
+                          </div>
+                        </div>
+                        <ul class="space-y-0.5 xl:space-y-1 text-xs font-semibold font-sans">
+                          @foreach ($megaCollections as $mc)
+                            @php $mclr = $hdrColors[$mc->header_color] ?? $hdrColors['amber']; @endphp
+                            <li>
+                              <a href="{{ $colUrl($mc->slug) }}"
+                                class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                                <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
+                                  <div
+                                    class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg {{ $mclr['solid'] }} text-white flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
+                                    <i class="fa-solid {{ $mc->header_icon ?: 'fa-star' }}"></i>
+                                  </div>
+                                  <div
+                                    class="font-heading font-bold text-dark-navy group-hover/link:text-rose-600 leading-tight text-[11px] xl:text-xs truncate">
+                                    {{ $mc->name }}
+                                  </div>
+                                </div>
+                                @if ($mc->header_badge)
+                                  <span
+                                    class="{{ $mclr['pill'] }} text-[8px] xl:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full font-heading uppercase shrink-0 ml-1">{{ $mc->header_badge }}</span>
+                                @endif
+                              </a>
+                            </li>
+                          @endforeach
+                        </ul>
+                      </div>
+                      <div class="pt-2 border-t border-rose-200 mt-1.5 xl:mt-2">
+                        <a href="{{ route('shop') }}"
+                          class="inline-flex items-center gap-1.5 text-rose-600 hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
+                          <span>Browse Full Catalog</span>
+                          <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
+                        </a>
+                      </div>
+                    </div>
+                  @endif
+
+                  <!-- Col 4: PRICE RANGE -->
+                  @if ($megaPrices->isNotEmpty())
+                    <div
+                      class="bg-[#F4FAF6] border border-emerald-200/90 rounded-xl xl:rounded-2xl p-2.5 lg:p-3 xl:p-4 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-emerald-300 transition-all duration-200">
+                      <div class="space-y-2">
+                        <div class="flex items-center gap-2 pb-2 border-b border-emerald-200/70">
+                          <div
+                            class="w-6 h-6 xl:w-7 xl:h-7 rounded-lg xl:rounded-xl bg-emerald-600 text-white flex items-center justify-center text-[10px] xl:text-xs shadow-2xs shrink-0">
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                          </div>
+                          <div class="min-w-0">
+                            <h4
+                              class="text-[11px] xl:text-xs font-bold uppercase tracking-wider text-dark-navy font-heading truncate">
+                              PRICE RANGE</h4>
+                            <span
+                              class="text-[9px] xl:text-[10px] text-brand-muted font-normal font-sans block truncate">Shop
+                              within your budget</span>
+                          </div>
+                        </div>
+                        <ul class="space-y-0.5 xl:space-y-1 text-xs font-semibold font-sans">
+                          @foreach ($megaPrices as $key => $p)
+                            @php $pal = $megaPalette[($loop->index + 4) % count($megaPalette)]; @endphp
+                            <li>
+                              <a href="{{ route('shop', ['price' => $key]) }}"
+                                class="p-1 xl:p-1.5 -mx-0.5 rounded-lg xl:rounded-xl hover:bg-white transition flex items-center justify-between group/link">
+                                <div class="flex items-center gap-1.5 xl:gap-2 min-w-0">
+                                  <div
+                                    class="w-5 h-5 xl:w-6 xl:h-6 rounded-md xl:rounded-lg {{ $pal[0] }} {{ $pal[1] }} flex items-center justify-center text-[9px] xl:text-[10px] group-hover/link:scale-110 transition shrink-0">
+                                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                                  </div>
+                                  <div
+                                    class="font-heading font-bold text-dark-navy group-hover/link:text-emerald-600 leading-tight text-[11px] xl:text-xs truncate">
+                                    {{ $p['label'] }}
+                                  </div>
+                                </div>
+                                <i
+                                  class="fa-solid fa-chevron-right text-[7px] xl:text-[8px] text-slate-400 group-hover/link:text-emerald-600 group-hover/link:translate-x-0.5 transition shrink-0 ml-1"></i>
+                              </a>
+                            </li>
+                          @endforeach
+                        </ul>
+                      </div>
+                      <div class="pt-2 border-t border-emerald-200 mt-1.5 xl:mt-2">
+                        <a href="{{ route('shop') }}"
+                          class="inline-flex items-center gap-1.5 text-emerald-600 hover:text-dark-navy font-bold font-heading text-[10px] xl:text-xs transition">
+                          <span>All Prices</span>
+                          <i class="fa-solid fa-arrow-right text-[8px] xl:text-[10px]"></i>
+                        </a>
+                      </div>
+                    </div>
+                  @endif
 
                 </div>
 
@@ -708,7 +677,7 @@
                   </div>
                   <a href="{{ route('shop') }}"
                     class="text-brand-orange hover:text-dark-navy font-bold flex items-center gap-1 transition shrink-0 ml-auto">
-                    <span>Browse Entire Catalog (500+ Toys)</span>
+                    <span>Browse Entire Catalog ({{ $totalProducts }}+ Products)</span>
                     <i class="fa-solid fa-arrow-right text-[9px]"></i>
                   </a>
                 </div>
@@ -774,7 +743,7 @@
         class="p-3.5 sm:p-4 bg-gradient-to-b from-[#FFF9F5] to-white border-b border-brand-border/80 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-2.5">
           <a href="{{ route('home') }}" class="flex items-center gap-2">
-            <img src="{{ asset('assets/logo.png') }}" alt="Aparatus" class="h-8 sm:h-9 w-auto object-contain">
+            <img src="{{ $headerLogo }}" alt="{{ $siteName }}" class="h-8 sm:h-9 w-auto object-contain">
           </a>
           <span
             class="text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-soft-orange text-brand-orange border border-orange-200 shadow-2xs font-heading">
@@ -798,10 +767,10 @@
           </div>
           <div class="min-w-0">
             <p class="text-[11px] font-bold font-heading text-dark-navy truncate">
-              {{ $isLoggedIn ? 'Hi, ' . $customerName : 'Welcome, Play Explorer! 🎈' }}
+              {{ $isLoggedIn ? 'Hi, ' . $customerName : 'Welcome to ' . $siteName }}
             </p>
             <p class="text-[9px] text-brand-blue font-sans font-semibold truncate">
-              {{ $isLoggedIn ? 'VIP Playroom Member' : 'Use code PLAY15 for 15% OFF' }}
+              {{ $isLoggedIn ? 'Welcome back' : 'Sign in to track your orders' }}
             </p>
           </div>
         </div>
@@ -873,246 +842,195 @@
           <span
             class="text-[11px] font-extrabold uppercase tracking-wider text-dark-navy font-heading flex items-center gap-1.5">
             <i class="fa-solid fa-compass text-brand-orange"></i>
-            <span>SHOP BY MEGA MENU</span>
-          </span>
-          <span
-            class="text-[9px] font-extrabold text-brand-orange bg-orange-100 px-2 py-0.5 rounded-full uppercase tracking-wide">
-            DRAWER EXPLORER
+            <span>SHOP BY</span>
           </span>
         </div>
 
-        <!-- 1. CATEGORIES ACCORDION CARD (Warm Coral) -->
-        <div class="mobile-drawer-accordion-card bg-[#FFF9F5] border border-orange-200/90 rounded-2xl p-3 shadow-2xs">
-          <button type="button"
-            class="mobile-drawer-accordion-toggle w-full flex items-center justify-between text-left focus:outline-none cursor-pointer">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div
-                class="w-7 h-7 rounded-xl bg-brand-orange text-white flex items-center justify-center text-xs shadow-2xs shrink-0">
-                <i class="fa-solid fa-shapes"></i>
-              </div>
-              <div class="min-w-0">
-                <div class="font-heading font-bold text-xs text-dark-navy truncate">Popular Categories</div>
-                <div class="text-[9px] text-brand-muted font-sans truncate">Toys, Games, Sports & More</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <span
-                class="bg-orange-100 text-brand-orange text-[9px] font-extrabold px-1.5 py-0.5 rounded-md font-heading">6</span>
-              <i
-                class="mobile-drawer-accordion-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
-            </div>
-          </button>
-
-          <div
-            class="mobile-drawer-accordion-content space-y-1 pt-2.5 mt-2 border-t border-orange-200/70 text-xs font-semibold font-sans">
-            <!-- Injected via JavaScript from categories.js -->
-            <div id="mobile-drawer-categories" class="space-y-1"></div>
-            <div class="pt-1.5 border-t border-orange-100">
-              <a href="{{ route('categories') }}"
-                class="flex items-center justify-center gap-1.5 text-[11px] font-bold font-heading text-brand-orange hover:text-dark-navy py-1 transition">
-                <span>View All Categories</span>
-                <i class="fa-solid fa-arrow-right text-[9px]"></i>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. AGE GROUPS ACCORDION CARD (Cool Sky) -->
-        <div class="mobile-drawer-accordion-card bg-[#F6FAFD] border border-blue-200/90 rounded-2xl p-3 shadow-2xs">
-          <button type="button"
-            class="mobile-drawer-accordion-toggle w-full flex items-center justify-between text-left focus:outline-none cursor-pointer">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div
-                class="w-7 h-7 rounded-xl bg-brand-blue text-white flex items-center justify-center text-xs shadow-2xs shrink-0">
-                <i class="fa-solid fa-child"></i>
-              </div>
-              <div class="min-w-0">
-                <div class="font-heading font-bold text-xs text-dark-navy truncate">Shop By Age Group</div>
-                <div class="text-[9px] text-brand-muted font-sans truncate">Age-Matched Milestone Guide</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <span
-                class="bg-blue-100 text-brand-blue text-[9px] font-extrabold px-1.5 py-0.5 rounded-md font-heading">{{ count($ages) }}</span>
-              <i
-                class="mobile-drawer-accordion-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
-            </div>
-          </button>
-
-          <div
-            class="mobile-drawer-accordion-content hidden space-y-1 pt-2.5 mt-2 border-t border-blue-200/70 text-xs font-semibold font-sans">
-            @foreach ($ages as $a)
-              <a href="{{ route('shop', ['age' => $a[0]]) }}"
-                class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-{{ $a[3] }} group/item">
-                <div class="flex items-center gap-2 min-w-0">
-                  <div
-                    class="w-6 h-6 rounded-lg {{ $a[1] }} text-white font-heading font-bold text-[9px] flex items-center justify-center shadow-2xs shrink-0">
-                    {{ $a[2] }}
-                  </div>
-                  <div class="min-w-0">
-                    <div class="font-heading font-bold text-xs text-dark-navy group-hover/item:text-{{ $a[3] }} truncate">
-                      {{ $a[6] }}
-                    </div>
-                    <div class="text-[9px] text-brand-muted truncate">{{ $a[7] }}</div>
-                  </div>
+        <!-- 1. CATEGORIES -->
+        @if ($megaCategories->isNotEmpty())
+          <div class="mobile-drawer-accordion-card bg-[#FFF9F5] border border-orange-200/90 rounded-2xl p-3 shadow-2xs">
+            <button type="button"
+              class="mobile-drawer-accordion-toggle w-full flex items-center justify-between text-left focus:outline-none cursor-pointer">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div
+                  class="w-7 h-7 rounded-xl bg-brand-orange text-white flex items-center justify-center text-xs shadow-2xs shrink-0">
+                  <i class="fa-solid fa-shapes"></i>
                 </div>
+                <div class="font-heading font-bold text-xs text-dark-navy truncate">Categories</div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span
+                  class="bg-orange-100 text-brand-orange text-[9px] font-extrabold px-1.5 py-0.5 rounded-md font-heading">{{ $megaCategories->count() }}</span>
                 <i
-                  class="fa-solid fa-chevron-right text-[8px] text-slate-400 group-hover/item:text-{{ $a[3] }} transition shrink-0"></i>
-              </a>
-            @endforeach
-
-            <div class="pt-1.5 border-t border-blue-100">
-              <a href="{{ route('shop') }}"
-                class="flex items-center justify-center gap-1.5 text-[11px] font-bold font-heading text-brand-blue hover:text-dark-navy py-1 transition">
-                <span>Find by Milestone Guide</span>
-                <i class="fa-solid fa-arrow-right text-[9px]"></i>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. DISCOVERY THEMES ACCORDION CARD (Sunny Amber) -->
-        <div class="mobile-drawer-accordion-card bg-[#FFFDF0] border border-amber-200/90 rounded-2xl p-3 shadow-2xs">
-          <button type="button"
-            class="mobile-drawer-accordion-toggle w-full flex items-center justify-between text-left focus:outline-none cursor-pointer">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div
-                class="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xs shadow-2xs shrink-0">
-                <i class="fa-solid fa-lightbulb"></i>
+                  class="mobile-drawer-accordion-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
               </div>
-              <div class="min-w-0">
-                <div class="font-heading font-bold text-xs text-dark-navy truncate">Discovery Themes</div>
-                <div class="text-[9px] text-brand-muted font-sans truncate">Curated by Play Style</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <span
-                class="bg-amber-100 text-amber-700 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md font-heading">4</span>
-              <i
-                class="mobile-drawer-accordion-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
-            </div>
-          </button>
+            </button>
 
-          <div class="mobile-drawer-accordion-content hidden pt-2.5 mt-2 border-t border-amber-200/70">
-            <div class="grid grid-cols-2 gap-2">
-              <a href="{{ route('shop', ['tag' => 'creative']) }}"
-                class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
-                <div
-                  class="w-6 h-6 rounded-lg bg-pink-100 text-pink-500 flex items-center justify-center text-xs mb-1 group-hover/btn:scale-110 transition">
-                  <i class="fa-solid fa-palette"></i>
-                </div>
-                <span
-                  class="font-heading font-bold text-dark-navy text-[11px] group-hover/btn:text-pink-600 truncate w-full">Arts
-                  & Crafts</span>
-                <span class="text-[8px] text-brand-muted font-sans">DIY & Painting</span>
-              </a>
-              <a href="{{ route('shop', ['tag' => 'sports']) }}"
-                class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
-                <div
-                  class="w-6 h-6 rounded-lg bg-blue-100 text-brand-blue flex items-center justify-center text-xs mb-1 group-hover/btn:scale-110 transition">
-                  <i class="fa-solid fa-volleyball"></i>
-                </div>
-                <span
-                  class="font-heading font-bold text-dark-navy text-[11px] group-hover/btn:text-brand-blue truncate w-full">Active
-                  Play</span>
-                <span class="text-[8px] text-brand-muted font-sans">Fitness & Fun</span>
-              </a>
-              <a href="{{ route('shop', ['tag' => 'mind']) }}"
-                class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
-                <div
-                  class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs mb-1 group-hover/btn:scale-110 transition">
-                  <i class="fa-solid fa-brain"></i>
-                </div>
-                <span
-                  class="font-heading font-bold text-dark-navy text-[11px] group-hover/btn:text-emerald-600 truncate w-full">Brain
-                  Teasers</span>
-                <span class="text-[8px] text-brand-muted font-sans">Logic & IQ</span>
-              </a>
-              <a href="{{ route('shop', ['tag' => 'pretend']) }}"
-                class="p-2 rounded-xl bg-white border border-amber-100 hover:border-amber-300 hover:shadow-2xs transition group/btn flex flex-col items-center text-center">
-                <div
-                  class="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xs mb-1 group-hover/btn:scale-110 transition">
-                  <i class="fa-solid fa-masks-theater"></i>
-                </div>
-                <span
-                  class="font-heading font-bold text-dark-navy text-[11px] group-hover/btn:text-amber-600 truncate w-full">Role
-                  Play</span>
-                <span class="text-[8px] text-brand-muted font-sans">Costumes & Sets</span>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. FEATURED SPOTLIGHT & BEST SELLER (Fresh Emerald) -->
-        <div class="mobile-drawer-accordion-card bg-[#F4FAF6] border border-emerald-200/90 rounded-2xl p-3 shadow-2xs">
-          <a href="{{ route('product', ['id' => 1]) }}"
-            class="flex items-center gap-3 bg-white p-2 rounded-xl border border-emerald-100 hover:border-emerald-300 transition group/spotlight">
-            <div class="w-14 h-14 rounded-lg overflow-hidden bg-slate-50 shrink-0 relative">
-              <img src="{{ asset('assets/images/products/soccer-ball.jpg') }}" alt="Match Pro Football"
-                class="w-full h-full object-cover group-hover/spotlight:scale-105 transition duration-300">
-              <span
-                class="absolute top-0.5 left-0.5 bg-brand-orange text-white text-[7px] font-bold px-1 rounded font-heading">TOP</span>
-            </div>
-            <div class="min-w-0 flex-1">
-              <span
-                class="text-[8px] font-extrabold text-emerald-700 uppercase tracking-wider block font-heading">FEATURED
-                STAR</span>
-              <h5
-                class="font-heading font-bold text-xs text-dark-navy group-hover/spotlight:text-brand-orange transition truncate">
-                Match Pro Football - Size 5</h5>
-              <div class="flex items-center justify-between mt-1">
-                <span class="text-[10px] text-amber-500 font-bold flex items-center gap-1">
-                  <i class="fa-solid fa-star"></i>4.8
-                </span>
-                <span class="font-heading font-extrabold text-xs text-brand-blue">₹999</span>
+            <div
+              class="mobile-drawer-accordion-content space-y-1 pt-2.5 mt-2 border-t border-orange-200/70 text-xs font-semibold font-sans">
+              @foreach ($megaCategories as $c)
+                @php $pal = $megaPalette[$loop->index % count($megaPalette)]; @endphp
+                <a href="{{ route('shop', ['category' => $c->slug]) }}"
+                  class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-brand-orange group/item">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div
+                      class="w-6 h-6 rounded-lg {{ $pal[0] }} {{ $pal[1] }} flex items-center justify-center text-[10px] shrink-0">
+                      <i class="fa-solid {{ $c->icon ?: 'fa-shapes' }}"></i>
+                    </div>
+                    <span class="font-heading font-bold text-xs truncate">{{ $c->name }}</span>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-[8px] text-slate-400 shrink-0"></i>
+                </a>
+              @endforeach
+              <div class="pt-1.5 border-t border-orange-100">
+                <a href="{{ route('categories') }}"
+                  class="flex items-center justify-center gap-1.5 text-[11px] font-bold font-heading text-brand-orange hover:text-dark-navy py-1 transition">
+                  <span>View All Categories</span>
+                  <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                </a>
               </div>
             </div>
-          </a>
-        </div>
-
-        <!-- 5. PLAY CLUB PERKS & SPECIAL PROMO (Royal Lavender) -->
-        <div class="bg-[#FAF7FE] border border-purple-200/90 rounded-2xl p-3 shadow-2xs space-y-2">
-          <div
-            class="bg-gradient-to-br from-purple-600 to-indigo-700 text-white rounded-xl p-2.5 shadow-xs space-y-1.5 relative overflow-hidden">
-            <div class="flex items-center justify-between">
-              <span
-                class="inline-block bg-amber-400 text-purple-950 text-[8px] font-extrabold px-1.5 py-0.5 rounded font-heading uppercase tracking-wide">PLAY
-                CLUB PASS</span>
-              <span class="text-amber-300 text-[10px] font-mono font-bold">15% OFF</span>
-            </div>
-            <h5 class="font-heading font-extrabold text-xs leading-tight">Flat 15% OFF On 1st Order</h5>
-            <p class="text-[9px] text-purple-100 font-sans">
-              Use code <span
-                class="font-mono font-bold text-amber-300 bg-purple-800/60 px-1 py-0.5 rounded">PLAY15</span> at
-              checkout
-            </p>
-            <a href="#"
-              class="inline-block bg-white text-purple-700 hover:bg-amber-300 hover:text-purple-950 font-heading font-bold text-[9px] px-2.5 py-1 rounded-md transition shadow-2xs">
-              Claim Discount Now →
-            </a>
           </div>
+        @endif
 
-          <!-- Quick Customer Links in Drawer -->
-          <div class="pt-1 grid grid-cols-2 gap-1.5 text-[10px] font-heading font-semibold text-dark-navy">
+        <!-- 2. AGE GROUPS -->
+        @if (count($ages))
+          <div class="mobile-drawer-accordion-card bg-[#F6FAFD] border border-blue-200/90 rounded-2xl p-3 shadow-2xs">
+            <button type="button"
+              class="mobile-drawer-accordion-toggle w-full flex items-center justify-between text-left focus:outline-none cursor-pointer">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div
+                  class="w-7 h-7 rounded-xl bg-brand-blue text-white flex items-center justify-center text-xs shadow-2xs shrink-0">
+                  <i class="fa-solid fa-child"></i>
+                </div>
+                <div class="font-heading font-bold text-xs text-dark-navy truncate">Age Group</div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span
+                  class="bg-blue-100 text-brand-blue text-[9px] font-extrabold px-1.5 py-0.5 rounded-md font-heading">{{ count($ages) }}</span>
+                <i
+                  class="mobile-drawer-accordion-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+              </div>
+            </button>
+
+            <div
+              class="mobile-drawer-accordion-content hidden space-y-1 pt-2.5 mt-2 border-t border-blue-200/70 text-xs font-semibold font-sans">
+              @foreach ($ages as $a)
+                <a href="{{ route('shop', ['age' => $a[0]]) }}"
+                  class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy group/item">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div
+                      class="w-6 h-6 rounded-lg {{ $a[1] }} text-white font-heading font-bold text-[9px] flex items-center justify-center shadow-2xs shrink-0">
+                      {{ $a[2] }}
+                    </div>
+                    <div class="min-w-0">
+                      <div class="font-heading font-bold text-xs truncate">{{ $a[6] }}</div>
+                      @if ($a[7])
+                        <div class="text-[9px] text-brand-muted truncate">{{ $a[7] }}</div>
+                      @endif
+                    </div>
+                  </div>
+                  <i class="fa-solid fa-chevron-right text-[8px] text-slate-400 shrink-0"></i>
+                </a>
+              @endforeach
+            </div>
+          </div>
+        @endif
+
+        <!-- 3. COLLECTIONS -->
+        @if ($megaCollections->isNotEmpty())
+          <div class="mobile-drawer-accordion-card bg-[#FFF5F7] border border-rose-200/90 rounded-2xl p-3 shadow-2xs">
+            <button type="button"
+              class="mobile-drawer-accordion-toggle w-full flex items-center justify-between text-left focus:outline-none cursor-pointer">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div
+                  class="w-7 h-7 rounded-xl bg-rose-500 text-white flex items-center justify-center text-xs shadow-2xs shrink-0">
+                  <i class="fa-solid fa-tags"></i>
+                </div>
+                <div class="font-heading font-bold text-xs text-dark-navy truncate">Collections</div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span
+                  class="bg-rose-100 text-rose-700 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md font-heading">{{ $megaCollections->count() }}</span>
+                <i
+                  class="mobile-drawer-accordion-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+              </div>
+            </button>
+
+            <div
+              class="mobile-drawer-accordion-content hidden space-y-1 pt-2.5 mt-2 border-t border-rose-200/70 text-xs font-semibold font-sans">
+              @foreach ($megaCollections as $mc)
+                @php $mclr = $hdrColors[$mc->header_color] ?? $hdrColors['amber']; @endphp
+                <a href="{{ $colUrl($mc->slug) }}"
+                  class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy group/item">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div
+                      class="w-6 h-6 rounded-lg {{ $mclr['solid'] }} text-white flex items-center justify-center text-[10px] shrink-0">
+                      <i class="fa-solid {{ $mc->header_icon ?: 'fa-star' }}"></i>
+                    </div>
+                    <span class="font-heading font-bold text-xs truncate">{{ $mc->name }}</span>
+                  </div>
+                  @if ($mc->header_badge)
+                    <span
+                      class="{{ $mclr['pill'] }} text-[8px] font-extrabold px-1.5 py-0.5 rounded-full font-heading uppercase shrink-0 ml-1">{{ $mc->header_badge }}</span>
+                  @endif
+                </a>
+              @endforeach
+            </div>
+          </div>
+        @endif
+
+        <!-- 4. PRICE RANGE -->
+        @if ($megaPrices->isNotEmpty())
+          <div class="mobile-drawer-accordion-card bg-[#F4FAF6] border border-emerald-200/90 rounded-2xl p-3 shadow-2xs">
+            <button type="button"
+              class="mobile-drawer-accordion-toggle w-full flex items-center justify-between text-left focus:outline-none cursor-pointer">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div
+                  class="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs shadow-2xs shrink-0">
+                  <i class="fa-solid fa-indian-rupee-sign"></i>
+                </div>
+                <div class="font-heading font-bold text-xs text-dark-navy truncate">Price Range</div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                <span
+                  class="bg-emerald-100 text-emerald-700 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md font-heading">{{ $megaPrices->count() }}</span>
+                <i
+                  class="mobile-drawer-accordion-chevron fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+              </div>
+            </button>
+
+            <div
+              class="mobile-drawer-accordion-content hidden space-y-1 pt-2.5 mt-2 border-t border-emerald-200/70 text-xs font-semibold font-sans">
+              @foreach ($megaPrices as $key => $p)
+                <a href="{{ route('shop', ['price' => $key]) }}"
+                  class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy group/item">
+                  <span class="font-heading font-bold text-xs">{{ $p['label'] }}</span>
+                  <i class="fa-solid fa-chevron-right text-[8px] text-slate-400 shrink-0"></i>
+                </a>
+              @endforeach
+            </div>
+          </div>
+        @endif
+
+        <!-- 5. QUICK LINKS -->
+        <div class="bg-[#FAF7FE] border border-purple-200/90 rounded-2xl p-3 shadow-2xs">
+          <div class="grid grid-cols-2 gap-1.5 text-[10px] font-heading font-semibold text-dark-navy">
             <a href="{{ route('user.track-order') }}"
               class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
-              <i class="fa-solid fa-truck-fast text-[10px] text-purple-600"></i>
-              <span>Track Order</span>
+              <i class="fa-solid fa-truck-fast text-[10px] text-purple-600"></i><span>Track Order</span>
             </a>
             <a href="{{ route('faq') }}"
               class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
-              <i class="fa-regular fa-circle-question text-[10px] text-purple-600"></i>
-              <span>Help & FAQ</span>
+              <i class="fa-regular fa-circle-question text-[10px] text-purple-600"></i><span>Help & FAQ</span>
             </a>
             <a href="{{ route('contact') }}"
               class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
-              <i class="fa-solid fa-headset text-[10px] text-purple-600"></i>
-              <span>Contact Us</span>
+              <i class="fa-solid fa-headset text-[10px] text-purple-600"></i><span>Contact Us</span>
             </a>
             <a href="{{ route('about') }}"
               class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-purple-100/70 text-purple-800 transition">
-              <i class="fa-solid fa-book-open text-[10px] text-purple-600"></i>
-              <span>Our Story</span>
+              <i class="fa-solid fa-book-open text-[10px] text-purple-600"></i><span>Our Story</span>
             </a>
           </div>
         </div>
@@ -1263,65 +1181,76 @@
 
           <a href="{{ route('home') }}"
             class="inline-block bg-white p-3 rounded-2xl shadow-lg border border-white/40 hover:scale-105 transition-transform duration-300">
-            <img src="{{ asset('assets/logo.png') }}" alt="Aparatus Pastime" class="h-10 w-auto object-contain">
+            <img src="{{ $footerLogo }}" alt="{{ $siteName }}" class="h-10 w-auto object-contain">
           </a>
 
-          <div class="space-y-1">
-            <span
-              class="inline-block bg-brand-orange text-white text-[10px] font-bold font-heading px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
-              KIDS • TOYS • GAMES • ACTIVE PLAY
-            </span>
-            <p class="text-xs font-bold font-heading text-white tracking-widest uppercase">PLAY. LEARN. EXPLORE.</p>
-          </div>
+          @if ($general?->tagline)
+            <div class="space-y-1">
+              <p class="text-xs font-bold font-heading text-white tracking-widest uppercase">{{ $general->tagline }}</p>
+            </div>
+          @endif
 
-          <p class="text-white/80 text-xs leading-relaxed font-sans max-w-sm">
-            Aparatus Pastime curates premium sports equipment, tactical board games, educational STEM kits, and creative
-            activity toys built for joyful childhood adventures and family memories.
-          </p>
+          @if ($general?->footer_description)
+            <p class="text-white/80 text-xs leading-relaxed font-sans max-w-sm">{{ $general->footer_description }}</p>
+          @endif
 
           <!-- Direct Contact Details -->
           <div class="space-y-2 pt-2 text-xs font-sans text-white/85">
-            <div class="flex items-center gap-2.5">
-              <div
-                class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-play-yellow text-xs shrink-0">
-                <i class="fa-solid fa-phone"></i>
+            @if ($sitePhone)
+              <div class="flex items-center gap-2.5">
+                <div
+                  class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-play-yellow text-xs shrink-0">
+                  <i class="fa-solid fa-phone"></i>
+                </div>
+                <span>
+                  <a href="tel:{{ preg_replace('/[^\d+]/', '', $sitePhone) }}"
+                    class="hover:text-play-yellow transition">{{ $sitePhone }}</a>
+                  @if ($general?->working_hours)
+                    <span class="text-white/50 text-[11px]">({{ $general->working_hours }})</span>
+                  @endif
+                </span>
               </div>
-              <span>+91 98765 43210 <span class="text-white/50 text-[11px]">(Mon–Sat, 9AM–7PM)</span></span>
-            </div>
-            <div class="flex items-center gap-2.5">
-              <div class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-mint text-xs shrink-0"><i
-                  class="fa-solid fa-envelope"></i></div>
-              <a href="mailto:support@aparatuspastime.com"
-                class="hover:text-mint transition">support@aparatuspastime.com</a>
-            </div>
-            <div class="flex items-center gap-2.5">
-              <div
-                class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-sky-blue text-xs shrink-0">
-                <i class="fa-solid fa-location-dot"></i>
+            @endif
+            @if ($siteEmail)
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-mint text-xs shrink-0">
+                  <i class="fa-solid fa-envelope"></i>
+                </div>
+                <a href="mailto:{{ $siteEmail }}" class="hover:text-mint transition">{{ $siteEmail }}</a>
               </div>
-              <span>Mumbai & Bengaluru, India</span>
-            </div>
+            @endif
+            @if ($siteAddress)
+              <div class="flex items-center gap-2.5">
+                <div
+                  class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-sky-blue text-xs shrink-0">
+                  <i class="fa-solid fa-location-dot"></i>
+                </div>
+                <span>{{ $siteAddress }}</span>
+              </div>
+            @endif
           </div>
 
           <!-- Social Media Channels -->
-          <div class="pt-2">
-            <span class="text-[11px] font-bold font-heading text-white/70 uppercase tracking-wider block mb-2">CONNECT
-              WITH US</span>
-            <div class="flex items-center gap-2.5">
-              <a href="https://instagram.com" target="_blank" rel="noopener"
-                class="w-9 h-9 rounded-xl bg-white/10 hover:bg-gradient-to-tr hover:from-amber-500 hover:via-pink-500 hover:to-purple-600 text-white flex items-center justify-center transition hover:scale-110 shadow-xs"
-                title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-              <a href="https://facebook.com" target="_blank" rel="noopener"
-                class="w-9 h-9 rounded-xl bg-white/10 hover:bg-blue-600 text-white flex items-center justify-center transition hover:scale-110 shadow-xs"
-                title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-              <a href="https://youtube.com" target="_blank" rel="noopener"
-                class="w-9 h-9 rounded-xl bg-white/10 hover:bg-red-600 text-white flex items-center justify-center transition hover:scale-110 shadow-xs"
-                title="YouTube"><i class="fa-brands fa-youtube"></i></a>
-              <a href="https://wa.me/919876543210" target="_blank" rel="noopener"
-                class="w-9 h-9 rounded-xl bg-white/10 hover:bg-emerald-500 text-white flex items-center justify-center transition hover:scale-110 shadow-xs"
-                title="WhatsApp Support"><i class="fa-brands fa-whatsapp"></i></a>
+          @if ($socials->isNotEmpty() || $waUrl)
+            <div class="pt-2">
+              <span class="text-[11px] font-bold font-heading text-white/70 uppercase tracking-wider block mb-2">CONNECT
+                WITH US</span>
+              <div class="flex flex-wrap items-center gap-2.5">
+                @foreach ($socials as $s)
+                  <a href="{{ $s[0] }}" target="_blank" rel="noopener" title="{{ $s[3] }}"
+                    class="w-9 h-9 rounded-xl bg-white/10 {{ $s[2] }} text-white flex items-center justify-center transition hover:scale-110 shadow-xs">
+                    <i class="{{ $s[1] }}"></i>
+                  </a>
+                @endforeach
+                @if ($waUrl)
+                  <a href="{{ $waUrl }}" target="_blank" rel="noopener" title="WhatsApp Support"
+                    class="w-9 h-9 rounded-xl bg-white/10 hover:bg-emerald-500 text-white flex items-center justify-center transition hover:scale-110 shadow-xs">
+                    <i class="fa-brands fa-whatsapp"></i>
+                  </a>
+                @endif
+              </div>
             </div>
-          </div>
+          @endif
 
         </div>
 
@@ -1335,27 +1264,11 @@
               <i class="fa-solid fa-shapes"></i><span>SHOP</span>
             </h4>
             <ul class="space-y-2 text-white/80">
-              <li><a href="{{ route('shop', ['category' => 'toys']) }}"
-                  class="hover:text-play-yellow transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Kids Toys</a></li>
-              <li><a href="{{ route('shop', ['category' => 'games']) }}"
-                  class="hover:text-play-yellow transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Board Games</a></li>
-              <li><a href="{{ route('shop', ['category' => 'sports']) }}"
-                  class="hover:text-play-yellow transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Sports Goods</a></li>
-              <li><a href="{{ route('shop', ['category' => 'outdoor']) }}"
-                  class="hover:text-play-yellow transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Outdoor Play</a></li>
-              <li><a href="{{ route('shop', ['category' => 'educational']) }}"
-                  class="hover:text-play-yellow transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>STEM Kits</a></li>
-              <li><a href="{{ route('shop', ['category' => 'activity']) }}"
-                  class="hover:text-play-yellow transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Creative Arts</a></li>
-              <li><a href="{{ route('shop', ['category' => 'gifts']) }}"
-                  class="hover:text-play-yellow transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Gifts & Sets</a></li>
+              @foreach ($megaCategories as $c)
+                <li><a href="{{ route('shop', ['category' => $c->slug]) }}"
+                    class="hover:text-play-yellow transition flex items-center gap-1.5"><i
+                      class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>{{ $c->name }}</a></li>
+              @endforeach
               <li><a href="{{ route('categories') }}"
                   class="hover:text-play-yellow transition flex items-center gap-1.5 font-bold text-play-yellow/90"><i
                     class="fa-solid fa-arrow-right text-[9px]"></i>All Categories</a></li>
@@ -1373,22 +1286,17 @@
                     class="hover:text-sky-blue transition flex items-center gap-1.5"><i
                       class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>{{ $g->label }}</a></li>
               @endforeach
-              <li><a href="{{ $colUrl('new_arrival') }}"
-                  class="hover:text-sky-blue transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>New Arrivals</a></li>
-              <li><a href="{{ $colUrl('best_seller') }}"
-                  class="hover:text-sky-blue transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Best Sellers</a></li>
-              <li><a href="{{ $colUrl('trending') }}"
-                  class="hover:text-sky-blue transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Trending Now</a></li>
+              @foreach ($headerCollections as $hc)
+                <li><a href="{{ $colUrl($hc->slug) }}" class="hover:text-sky-blue transition flex items-center gap-1.5"><i
+                      class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>{{ $hc->name }}</a></li>
+              @endforeach
             </ul>
           </div>
 
-          <!-- COLUMN 3: HELP & CARE -->
+          <!-- COLUMN 3: HELP & INFO -->
           <div class="space-y-3 font-sans text-xs">
             <h4 class="font-heading font-bold text-xs uppercase tracking-wider text-mint flex items-center gap-1.5">
-              <i class="fa-solid fa-headset"></i><span>HELP & CARE</span>
+              <i class="fa-solid fa-circle-info"></i><span>HELP & INFO</span>
             </h4>
             <ul class="space-y-2 text-white/80">
               <li><a href="{{ route('user.track-order') }}"
@@ -1398,24 +1306,22 @@
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Help & FAQ</a></li>
               <li><a href="{{ route('contact') }}" class="hover:text-mint transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Contact Us</a></li>
-              <li><a href="{{ $pageUrl('shipping-policy') }}"
-                  class="hover:text-mint transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Shipping Info</a></li>
-              <li><a href="{{ $pageUrl('returns-policy') }}"
-                  class="hover:text-mint transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Easy Returns</a></li>
-              <li><a href="{{ $pageUrl('cancellation-policy') }}"
-                  class="hover:text-mint transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Cancellation</a></li>
-              <li><a href="{{ $pageUrl('payment-policy') }}"
-                  class="hover:text-mint transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Payment Safety</a></li>
-              <li><a href="https://wa.me/919876543210" target="_blank" rel="noopener"
-                  class="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1.5 font-semibold"><i
-                    class="fa-brands fa-whatsapp text-[11px]"></i>Live WhatsApp</a></li>
+              <li><a href="{{ route('about') }}" class="hover:text-mint transition flex items-center gap-1.5"><i
+                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Our Story</a></li>
+              <li><a href="{{ route('blogs') }}" class="hover:text-mint transition flex items-center gap-1.5"><i
+                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Playroom Blog</a></li>
+              <li><a href="{{ route('search') }}" class="hover:text-mint transition flex items-center gap-1.5"><i
+                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Search Toys</a></li>
+              <li><a href="{{ route('shop') }}"
+                  class="hover:text-mint transition flex items-center gap-1.5 font-bold text-mint"><i
+                    class="fa-solid fa-arrow-right text-[9px]"></i>View Catalog</a></li>
+              @if ($waUrl)
+                <li><a href="{{ $waUrl }}" target="_blank" rel="noopener"
+                    class="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1.5 font-semibold"><i
+                      class="fa-brands fa-whatsapp text-[11px]"></i>Live WhatsApp</a></li>
+              @endif
             </ul>
           </div>
-
           <!-- COLUMN 4: MY ACCOUNT -->
           <div class="space-y-3 font-sans text-xs">
             <h4
@@ -1450,35 +1356,22 @@
             </ul>
           </div>
 
-          <!-- COLUMN 5: ABOUT & INFO -->
-          <div class="space-y-3 font-sans text-xs">
-            <h4
-              class="font-heading font-bold text-xs uppercase tracking-wider text-soft-coral flex items-center gap-1.5">
-              <i class="fa-solid fa-heart"></i><span>ABOUT & INFO</span>
-            </h4>
-            <ul class="space-y-2 text-white/80">
-              <li><a href="{{ route('about') }}" class="hover:text-soft-coral transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Our Story</a></li>
-              <li><a href="{{ route('blogs') }}" class="hover:text-soft-coral transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Playroom Blog</a></li>
-              <li><a href="{{ route('about') }}" class="hover:text-soft-coral transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Safety Standards</a></li>
-              <li><a href="{{ $pageUrl('terms-and-conditions') }}"
-                  class="hover:text-soft-coral transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Terms of Service</a></li>
-              <li><a href="{{ $pageUrl('privacy-policy') }}"
-                  class="hover:text-soft-coral transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Privacy Policy</a></li>
-              <li><a href="{{ $pageUrl('cookie-policy') }}"
-                  class="hover:text-soft-coral transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Cookie Policy</a></li>
-              <li><a href="{{ route('search') }}" class="hover:text-soft-coral transition flex items-center gap-1.5"><i
-                    class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Search Toys</a></li>
-              <li><a href="{{ route('shop') }}"
-                  class="hover:text-soft-coral transition flex items-center gap-1.5 font-bold text-soft-coral/90"><i
-                    class="fa-solid fa-arrow-right text-[9px]"></i>View Catalog</a></li>
-            </ul>
-          </div>
+          <!-- COLUMN 5: POLICIES & LEGAL (dynamic pages) -->
+          @if ($footerPages->isNotEmpty())
+            <div class="space-y-3 font-sans text-xs">
+              <h4
+                class="font-heading font-bold text-xs uppercase tracking-wider text-soft-coral flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-heart"></i><span>POLICIES & LEGAL</span>
+              </h4>
+              <ul class="space-y-2 text-white/80">
+                @foreach ($footerPages as $page)
+                  <li><a href="{{ route('page.show', ['slug' => $page->slug]) }}"
+                      class="hover:text-soft-coral transition flex items-center gap-1.5"><i
+                        class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>{{ $page->heading }}</a></li>
+                @endforeach
+              </ul>
+            </div>
+          @endif
 
         </div>
 
@@ -1506,12 +1399,14 @@
         <div class="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
           <span class="font-heading font-bold text-white flex items-center gap-1.5">
             <i class="fa-solid fa-sparkles text-play-yellow"></i>
-            <span>Aparatus Pastime</span>
+            <span>{{ $siteName }}</span>
           </span>
+          @if ($general?->tagline)
+            <span class="hidden sm:inline text-white/40">•</span>
+            <span>{{ $general->tagline }}</span>
+          @endif
           <span class="hidden sm:inline text-white/40">•</span>
-          <span>Play. Learn. Explore.</span>
-          <span class="hidden sm:inline text-white/40">•</span>
-          <span>© {{ date('Y') }} Aparatus Pastime. All rights reserved.</span>
+          <span>{{ $general?->footer_copyright ?: '© ' . date('Y') . ' ' . $siteName . '. All rights reserved.' }}</span>
         </div>
 
         <!-- Payment Icons & SSL Badges -->
@@ -1550,29 +1445,6 @@
       const base = @json(url('/') . '/');
       const shopUrl = @json(route('shop'));
 
-      // 1. Mobile bottom nav (still JS-rendered)
-      document.getElementById('mobile-bottom-nav-root').innerHTML = Components.renderMobileBottomNav(activePage, base);
-
-      // 2. Mobile drawer categories (from categories.js) — must run BEFORE initGlobalInteractions
-      //    so the injected links also get the "close drawer on click" listener.
-      const drawerCats = document.getElementById('mobile-drawer-categories');
-      if (drawerCats) {
-        drawerCats.innerHTML = categories.map(c => `
-          <a href="${shopUrl}?category=${c.slug}" class="p-1.5 rounded-xl hover:bg-white transition flex items-center justify-between text-dark-navy hover:text-brand-orange group/item">
-            <div class="flex items-center gap-2 min-w-0">
-              <div class="w-6 h-6 rounded-lg bg-orange-100 text-brand-orange flex items-center justify-center text-[10px] group-hover/item:scale-110 transition shrink-0">
-                <i class="fa-solid ${c.icon}"></i>
-              </div>
-              <div class="min-w-0">
-                <span class="font-heading font-bold text-dark-navy group-hover/item:text-brand-orange text-xs block truncate">${c.name}</span>
-              </div>
-            </div>
-            <i class="fa-solid fa-chevron-right text-[8px] text-slate-400 group-hover/item:text-brand-orange group-hover/item:translate-x-0.5 transition shrink-0"></i>
-          </a>
-        `).join('');
-      }
-
-      // 4. Global interactions
       Components.initGlobalInteractions(base);
     });
   </script>
@@ -2042,8 +1914,8 @@
           <a href="${esc(p.url)}" class="flex items-center gap-3 p-2 rounded-xl hover:bg-soft-blue transition">
             <div class="w-10 h-10 rounded-lg bg-soft-blue overflow-hidden shrink-0 flex items-center justify-center">
               ${p.image
-                ? `<img src="${esc(p.image)}" alt="" class="w-full h-full object-cover">`
-                : '<i class="fa-solid fa-image text-brand-border"></i>'}
+            ? `<img src="${esc(p.image)}" alt="" class="w-full h-full object-cover">`
+            : '<i class="fa-solid fa-image text-brand-border"></i>'}
             </div>
             <div class="min-w-0 flex-1">
               <div class="text-xs font-bold text-dark-navy truncate">${esc(p.name)}</div>
@@ -2110,7 +1982,7 @@
       input.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
     })();
   </script>
-  
+
   @include('front-pages.partials.mini-cart')
   <!-- PAGE SPECIFIC SCRIPTS -->
   @stack('scripts')

@@ -140,6 +140,7 @@ Route::middleware('maintenance.mode')->group(function () {
             Route::get('/dashboard', [UserOrderController::class, 'dashboard'])->name('dashboard');
             Route::get('/orders', [UserOrderController::class, 'index'])->name('orders');
             Route::get('/order-detail', [UserOrderController::class, 'show'])->name('order-detail');
+            Route::get('/my-orders/invoice', [UserOrderController::class, 'invoiceDownload'])->name('invoice.download');
             Route::get('/track-order', [UserOrderController::class, 'track'])->name('track-order');
 
             Route::get('/reviews', [UserReviewController::class, 'index'])->name('reviews');

@@ -127,8 +127,6 @@
                 <li><a href="{{ route('admin.blogs.index') }}">Blog Management</a></li>
                 <li><a href="{{ route('admin.dynamic-pages.index') }}">Dynamic Pages</a></li>
                 <li><a href="{{ route('admin.announcements.index') }}">Announcement Bar</a></li>
-                <li><a href="{{ route('admin.teams.index') }}">Manage Teams</a></li>
-                <li><a href="{{ route('admin.testimonials.index') }}">Testimonial & Feedback</a></li>
             </ul>
         </li>
 
@@ -140,7 +138,6 @@
             <a href="#"><i class="fa-solid fa-envelope"></i> Enquiries</a>
             <ul>
                 <li><a href="{{ route('admin.contact-enquiries.index') }}">Contact Us Enquiries</a></li>
-                <li><a href="{{ route('admin.other-enquiries.index') }}">Other Enquiries</a></li>
             </ul>
         </li>
 

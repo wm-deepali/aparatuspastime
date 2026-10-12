@@ -270,12 +270,11 @@
         }
 
         .field-input,
-        .field-select {
+        .field-select,
+        .field-textarea {
             width: 100%;
-            height: 38px;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            padding: 0 12px;
             font-size: 13.5px;
             color: var(--text-primary);
             background: var(--surface);
@@ -285,26 +284,18 @@
         }
 
         .field-input,
-        .field-textarea {
-            width: 100%;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
+        .field-select {
+            height: 38px;
             padding: 0 12px;
-            font-size: 13.5px;
-            color: var(--text-primary);
-            background: var(--surface);
-            outline: none;
-            transition: border-color .15s, box-shadow .15s;
-            font-family: var(--font);
+        }
+
+        .field-textarea {
+            padding: 10px 12px;
+            resize: vertical;
         }
 
         .field-input:focus,
-        .field-select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(48, 61, 137, .12);
-        }
-
-        .field-input:focus,
+        .field-select:focus,
         .field-textarea:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(48, 61, 137, .12);
@@ -452,6 +443,17 @@
                 </div>
             </div>
 
+            @if ($errors->any())
+                <div
+                    style="background:var(--red-bg);color:var(--red);border:1px solid var(--red);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:13px">
+                    <ul style="margin:0;padding-left:18px">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <form id="editForm" method="POST" action="{{ route('admin.collections.update', $collection->id) }}">
                 @csrf
                 @method('PUT')
@@ -500,6 +502,56 @@
 
                             </div>
                         </div>
+
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>Header Navigation</h5>
+                            </div>
+                            <div class="section-card-body" style="padding:16px 20px">
+                                <div class="toggle-row">
+                                    <div>
+                                        <div class="toggle-label">Show in header</div>
+                                        <div class="toggle-sub">Adds a link in the main menu</div>
+                                    </div>
+                                    <select name="show_in_header" class="field-select-sm">
+                                        <option value="1" {{ old('show_in_header', $collection->show_in_header ? 1 : 0) == 1 ? 'selected' : '' }}>Yes</option>
+                                        <option value="0" {{ old('show_in_header', $collection->show_in_header ? 1 : 0) == 0 ? 'selected' : '' }}>No</option>
+                                    </select>
+                                </div>
+
+                                <div class="field-group" style="margin-top:14px">
+                                    <label class="field-label">Header Order</label>
+                                    <input type="number" name="header_order" class="field-input" style="max-width:120px"
+                                        value="{{ old('header_order', $collection->header_order ?? 0) }}">
+                                    <div class="field-hint">Lower numbers appear first.</div>
+                                </div>
+
+                                <div class="field-group">
+                                    <label class="field-label">Icon</label>
+                                    <input type="text" name="header_icon" class="field-input"
+                                        value="{{ old('header_icon', $collection->header_icon) }}"
+                                        placeholder="fa-solid fa-star">
+                                    <div class="field-hint">Font Awesome classes.</div>
+                                </div>
+
+                                <div class="field-group">
+                                    <label class="field-label">Color</label>
+                                    <input type="text" name="header_color" class="field-input" list="headerColors"
+                                        value="{{ old('header_color', $collection->header_color) }}" placeholder="mint">
+                                    <datalist id="headerColors">
+                                        <option value="mint">
+                                        <option value="soft-coral">
+                                    </datalist>
+                                    <div class="field-hint">Use a color name that exists in your Tailwind config.</div>
+                                </div>
+
+                                <div class="field-group">
+                                    <label class="field-label">Badge Text</label>
+                                    <input type="text" name="header_badge" class="field-input" maxlength="20"
+                                        value="{{ old('header_badge', $collection->header_badge) }}" placeholder="NEW">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- ── RIGHT column ── -->
@@ -526,6 +578,7 @@
 
                             </div>
                         </div>
+
                         <div class="section-card">
                             <div class="section-card-header">
                                 <h5>Settings</h5>

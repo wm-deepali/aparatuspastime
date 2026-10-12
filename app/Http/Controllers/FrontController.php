@@ -31,7 +31,7 @@ class FrontController extends Controller
 
     // Age groups now come from the age_groups table (admin → Manage Home Page → Age Groups)
 
-    private const PRICE_RANGES = [
+    public const PRICE_RANGES = [
         'all' => ['label' => 'All Prices', 'min' => null, 'max' => null],
         '0-500' => ['label' => 'Under ₹500', 'min' => null, 'max' => 500],
         '500-1000' => ['label' => '₹500 – ₹1,000', 'min' => 500, 'max' => 1000],

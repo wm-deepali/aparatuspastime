@@ -41,7 +41,7 @@ class CollectionController extends Controller
             'name' => 'required|max:255',
             'meta_title' => 'nullable|max:255',
             'meta_description' => 'nullable',
-        ]);
+        ] + $this->headerRules());
 
         $slug = $request->slug
             ? Str::slug($request->slug)
@@ -56,7 +56,7 @@ class CollectionController extends Controller
             'meta_title' => $request->meta_title,
             'meta_description' => $request->meta_description,
             // is_system is never set from a request, only by the seeder/migration
-        ]);
+        ] + $this->headerData($request));
 
         return redirect()
             ->route('admin.collections.index')
@@ -76,7 +76,7 @@ class CollectionController extends Controller
             'name' => 'required|max:255',
             'meta_title' => 'nullable|max:255',
             'meta_description' => 'nullable',
-        ]);
+        ] + $this->headerRules());
 
         $collection = Collection::findOrFail($id);
 
@@ -86,7 +86,7 @@ class CollectionController extends Controller
             'sort_order' => $request->sort_order ?? 0,
             'meta_title' => $request->meta_title,
             'meta_description' => $request->meta_description,
-        ];
+        ] + $this->headerData($request);
 
         // System collections keep their code/slug: the storefront looks them up by code
         if (!$collection->is_system) {
@@ -120,5 +120,33 @@ class CollectionController extends Controller
         return response()->json([
             'message' => 'Collection deleted successfully.'
         ]);
+    }
+
+    /**
+     * Validation rules for the header navigation fields.
+     */
+    private function headerRules(): array
+    {
+        return [
+            'show_in_header' => 'nullable|boolean',
+            'header_order'   => 'nullable|integer|min:0',
+            'header_icon'    => 'nullable|string|max:100',
+            'header_color'   => 'nullable|string|max:50',
+            'header_badge'   => 'nullable|string|max:20',
+        ];
+    }
+
+    /**
+     * Header navigation data shared by store() and update().
+     */
+    private function headerData(Request $request): array
+    {
+        return [
+            'show_in_header' => $request->boolean('show_in_header'),
+            'header_order'   => $request->header_order ?? 0,
+            'header_icon'    => $request->header_icon,
+            'header_color'   => $request->header_color,
+            'header_badge'   => $request->header_badge,
+        ];
     }
 }

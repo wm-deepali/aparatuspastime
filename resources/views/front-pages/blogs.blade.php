@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'The Playroom Blog | Aparatus Pastime - Play Ideas & Guides')
-@section('meta_description', 'Ideas, guides, and inspiration for better playtime, developmental toys, STEM learning, and outdoor family fun.')
 @section('active_nav', 'home')
 
 @section('content')

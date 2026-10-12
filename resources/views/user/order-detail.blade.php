@@ -47,6 +47,13 @@
               <i class="fa-solid fa-print text-xs"></i>
               <span>Print</span>
             </button>
+            @if ($order->invoice)
+              <a href="{{ route('user.invoice.download', ['orderId' => $order->order_number]) }}"
+                class="px-4 py-2.5 bg-white border border-brand-border hover:bg-soft-yellow text-brand-navy font-bold font-heading text-xs rounded-xl transition flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice text-xs"></i>
+                <span>Download Invoice</span>
+              </a>
+            @endif
             <a href="{{ route('user.track-order', ['orderId' => $order->order_number]) }}"
               class="px-4 py-2.5 bg-brand-orange hover:bg-brand-bright-orange text-white font-bold font-heading text-xs rounded-xl shadow-xs transition flex items-center gap-2">
               <i class="fa-solid fa-truck-fast text-xs"></i>

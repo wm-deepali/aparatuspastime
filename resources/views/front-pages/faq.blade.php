@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'FAQ & Help Center | Aparatus - Sports Goods & Toys')
-@section('meta_description', 'Find instant answers to common questions about Aparatus sports goods, toys, delivery speeds, safety testing, and 7-day returns.')
 @section('active_nav', 'faq')
 
 @push('styles')

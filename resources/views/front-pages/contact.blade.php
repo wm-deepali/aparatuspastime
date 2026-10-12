@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Contact Us | ' . ($setting->site_name ?: 'Aparatus Pastime') . ' - Kids Toys & Sports')
-@section('meta_description', 'Have a question about an order, gift bundle or product? Contact the ' . ($setting->site_name ?: 'Aparatus Pastime') . ' team.')
 @section('active_nav', 'contact')
 
 @php

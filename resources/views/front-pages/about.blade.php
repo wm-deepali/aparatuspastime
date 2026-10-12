@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', $about->meta_title ?: 'About Us | Aparatus Pastime')
-@section('meta_description', $about->meta_description)
 @section('active_nav', 'about')
 
 @php

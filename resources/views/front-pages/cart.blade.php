@@ -1,6 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'Your Play Bag | Aparatus Pastime')
 @section('active_nav', 'cart')
 
 @php

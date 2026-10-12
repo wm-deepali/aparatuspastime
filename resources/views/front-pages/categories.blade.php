@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', 'All Categories | Aparatus Pastime - Kids Toys & Sports')
-@section('meta_description', 'Browse our complete collection of kids toys, board games, athletic sports gear, outdoor adventure essentials, and STEM kits.')
 @section('active_nav', 'categories')
 
 @section('content')

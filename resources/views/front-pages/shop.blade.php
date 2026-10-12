@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@section('title', ($activeCategory ? $activeCategory->name : 'Find Something Fun') . ' | Aparatus Pastime - Kids Toys, Games & Sports')
-@section('meta_description', $activeCategory->meta_description ?? 'Explore our collection of toys, games, sports and activities for curious little minds and active families.')
 @section('active_nav', 'shop')
 
 @section('content')

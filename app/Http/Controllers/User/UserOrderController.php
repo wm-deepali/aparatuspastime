@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderTracker;
 use Illuminate\Http\Request;
+use App\Models\InvoiceSetting;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class UserOrderController extends Controller
 {
@@ -43,7 +45,7 @@ class UserOrderController extends Controller
 
         $orders = Order::where('customer_id', $customer->id)
             ->when($status !== 'all', fn($q) => $q->whereIn('status', self::GROUPS[$status][1]))
-            ->with(['items.product.images', 'items.imageVariant', 'items.addons'])
+            ->with(['items.product.images', 'items.imageVariant', 'items.addons', 'invoice'])
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -76,6 +78,7 @@ class UserOrderController extends Controller
                 'city',
                 'courier',
                 'statusHistory',
+                'invoice',
             ])
             ->firstOrFail();
 
@@ -165,5 +168,53 @@ class UserOrderController extends Controller
             'closedCount',
             'recentOrders'
         ));
+    }
+
+    public function invoiceDownload(Request $request)
+    {
+        $customer = auth('customer')->user();
+        $number = (string) $request->query('orderId');
+
+        // Scoped to logged-in customer
+        $order = Order::where('customer_id', $customer->id)
+            ->where('order_number', $number)
+            ->with(['invoice', 'items.product', 'items.addons', 'state', 'city'])
+            ->firstOrFail();
+
+        $invoice = $order->invoice;
+
+        if (!$invoice) {
+            return back()->with('error', 'Invoice is not available for this order yet.');
+        }
+
+        $setting = InvoiceSetting::with(['state', 'city'])->first();
+
+        $logo_64 = null;
+        if ($setting?->company_logo) {
+            $logoPath = storage_path('app/public/' . $setting->company_logo);
+            if (file_exists($logoPath)) {
+                $logo_64 = 'data:' . mime_content_type($logoPath) . ';base64,' .
+                    base64_encode(file_get_contents($logoPath));
+            }
+        }
+
+        $pdf = Pdf::loadView('admin.orders.invoice', [
+            'order' => $order,
+            'invoice' => $invoice,
+            'setting' => $setting,
+            'isPdf' => true,
+            'logo_64' => $logo_64,
+        ])
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+                'isRemoteEnabled' => false,
+                'isHtml5ParserEnabled' => true,
+                'dpi' => 150,
+            ]);
+
+        $safeNumber = preg_replace('/[\/\\\\#]+/', '-', $invoice->invoice_number);
+
+        return $pdf->download('Invoice-' . $safeNumber . '.pdf');
     }
 }

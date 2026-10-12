@@ -114,11 +114,12 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-8 items-start mb-10">
 
         <!-- CARD 1 (LEFT): GALLERY & TRUST PERKS -->
-        <div
+         <div
           class="lg:col-span-6 xl:col-span-7 bg-white rounded-3xl border border-brand-border p-4 sm:p-6 xl:p-7 shadow-xs space-y-4">
 
+          {{-- CHANGED: blur background hata diya. Image ab seedha card ko end to end cover karti hai --}}
           <div
-            class="relative bg-gradient-to-br from-soft-blue via-soft-yellow/20 to-soft-mint/30 rounded-3xl border border-brand-border p-4 sm:p-8 aspect-square sm:aspect-16/12 flex items-center justify-center overflow-hidden group select-none shadow-inner">
+            class="relative bg-gradient-to-br from-soft-blue via-soft-yellow/20 to-soft-mint/30 rounded-3xl border border-brand-border p-0 aspect-square sm:aspect-auto sm:h-[500px] xl:h-[560px] overflow-hidden group select-none shadow-inner">
 
             <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
               @if ($badge)
@@ -143,12 +144,17 @@
               </button>
             </div>
 
-            <div class="w-full h-full flex items-center justify-center p-2 cursor-zoom-in">
+            {{-- CHANGED: object-cover = image poora card bharegi, zoom card ke andar hi clip hoga --}}
+            <div id="pdp-zoom-wrap"
+              class="absolute inset-0 z-0 overflow-hidden cursor-zoom-in">
               @if ($mainImg)
                 <img id="pdp-main-image" src="{{ $mainImg }}" alt="{{ $product->name }}"
-                  class="max-h-[360px] max-w-full object-contain transition duration-300 drop-shadow-md group-hover:scale-105">
+                  class="w-full h-full object-cover object-center will-change-transform"
+                  style="transition: transform .2s ease-out; transform-origin: center center;" draggable="false">
               @else
-                <i class="fa-solid fa-image text-6xl text-brand-border"></i>
+                <div class="w-full h-full flex items-center justify-center">
+                  <i class="fa-solid fa-image text-6xl text-brand-border"></i>
+                </div>
               @endif
             </div>
 
@@ -203,6 +209,7 @@
           </div>
 
         </div>
+
 
         <!-- CARD 2 (RIGHT): PURCHASE HUB -->
         <div
@@ -983,4 +990,54 @@
       }
     });
   </script>
+
+<script>
+  (function () {
+    var wrap = document.getElementById('pdp-zoom-wrap');
+    var main = document.getElementById('pdp-main-image');
+    if (!wrap || !main) return;
+
+    var ZOOM = 2; // zoom level yahan se badlo
+    var zoomed = false;
+
+    function setOrigin(x, y) {
+      var r = wrap.getBoundingClientRect();
+      var px = Math.min(100, Math.max(0, ((x - r.left) / r.width) * 100));
+      var py = Math.min(100, Math.max(0, ((y - r.top) / r.height) * 100));
+      main.style.transformOrigin = px + '% ' + py + '%';
+    }
+    function zoomIn(x, y) {
+      setOrigin(x, y);
+      main.style.transform = 'scale(' + ZOOM + ')';
+      zoomed = true;
+    }
+    function zoomOut() {
+      main.style.transform = 'scale(1)';
+      main.style.transformOrigin = 'center center';
+      zoomed = false;
+    }
+
+    // Desktop: hover pe zoom, mouse ke saath move
+    wrap.addEventListener('pointerenter', function (e) {
+      if (e.pointerType === 'mouse') zoomIn(e.clientX, e.clientY);
+    });
+    wrap.addEventListener('pointermove', function (e) {
+      if (e.pointerType === 'mouse' && zoomed) setOrigin(e.clientX, e.clientY);
+    });
+    wrap.addEventListener('pointerleave', function (e) {
+      if (e.pointerType === 'mouse') zoomOut();
+    });
+
+    // Mobile: tap se zoom in/out
+    wrap.addEventListener('click', function (e) {
+      if (e.pointerType === 'mouse') return;
+      zoomed ? zoomOut() : zoomIn(e.clientX, e.clientY);
+    });
+
+    // Image change (next/prev/thumbnail) par zoom reset
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('#gallery-prev, #gallery-next, .thumb-btn')) zoomOut();
+    });
+  })();
+</script>
 @endpush
