@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\AgeGroup;
+use App\Models\Collection;
+use App\Models\Setting;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 
@@ -32,6 +34,12 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('wishlistCount', count($wishIds));
             $view->with('navAgeGroups', AgeGroup::active()->ordered()->get());
+            $view->with('headerCollections', Collection::forHeader()->get());
+
+            if (!isset($view->getData()['popularSearches'])) {
+                $view->with('popularSearches', Setting::first()?->popular_search_list ?? []);
+            }
+
         });
 
         View::composer('*', function ($view) {

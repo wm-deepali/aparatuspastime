@@ -48,35 +48,30 @@
                                 <strong>Email</strong>
                             </div>
                             <div class="col-md-9">
-                                {{ $enquiry->email }}
+                                <a href="mailto:{{ $enquiry->email }}">{{ $enquiry->email }}</a>
                             </div>
                         </div>
 
                         <div class="row mb-4">
                             <div class="col-md-3">
-                                <strong>Mobile</strong>
+                                <strong>Phone</strong>
                             </div>
                             <div class="col-md-9">
-                                {{ $enquiry->mobile }}
+                                @if ($enquiry->phone)
+                                    <a href="tel:{{ preg_replace('/[^\d+]/', '', $enquiry->phone) }}">{{ $enquiry->phone }}</a>
+                                @else
+                                    —
+                                @endif
                             </div>
                         </div>
 
                         <div class="row mb-4">
                             <div class="col-md-3">
-                                <strong>Company</strong>
-                            </div>
-                            <div class="col-md-9">
-                                {{ $enquiry->company ?: '—' }}
-                            </div>
-                        </div>
-
-                        <div class="row mb-4">
-                            <div class="col-md-3">
-                                <strong>Inquiry Type</strong>
+                                <strong>Subject</strong>
                             </div>
                             <div class="col-md-9">
                                 <span class="inq-tag">
-                                    {{ $enquiry->inquiry_type ?: 'General' }}
+                                    {{ $enquiry->subject ?: 'General' }}
                                 </span>
                             </div>
                         </div>

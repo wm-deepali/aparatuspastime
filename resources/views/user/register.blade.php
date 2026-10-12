@@ -8,6 +8,7 @@
   $errCls = 'hidden mt-1 text-[11px] font-semibold text-red-500 font-sans';
   $googleUrl = route('user.google', array_filter(['redirect' => request('redirect')]));
   $freeShip = (float) ($general->free_shipping_threshold ?? 0);
+  $pageUrl = fn(string $slug) => route('page.show', ['slug' => $slug]);
 @endphp
 
 @section('content')
@@ -165,7 +166,7 @@
               <div class="flex items-start gap-2 pt-1">
                 <input type="checkbox" id="su-terms" name="terms" value="1" class="rounded text-brand-blue focus:ring-brand-blue mt-0.5 cursor-pointer">
                 <label for="su-terms" class="text-[11px] text-brand-muted leading-relaxed cursor-pointer font-sans">
-                  I agree to the <a href="{{ route('terms') }}" class="text-brand-blue font-bold hover:underline">Terms & Conditions</a> and acknowledge the <a href="{{ route('privacy-policy') }}" class="text-brand-blue font-bold hover:underline">Privacy Policy</a>.
+                  I agree to the <a href="{{ $pageUrl('terms-and-conditions') }}" class="text-brand-blue font-bold hover:underline">Terms & Conditions</a> and acknowledge the <a href="{{ $pageUrl('privacy-policy') }}" class="text-brand-blue font-bold hover:underline">Privacy Policy</a>.
                 </label>
               </div>
               <p data-error-for="terms" class="{{ $errCls }}"></p>

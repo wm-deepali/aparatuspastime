@@ -36,7 +36,12 @@ class Setting extends Model
         'product_reviews',
         'wishlist',
         'stock_alerts',
-        'cod_enabled'
+        'cod_enabled',
+        'working_hours',
+        'email_response_note',
+        'address_short',
+        'enquiry_subjects',
+        'popular_searches',
     ];
 
     protected $casts = [
@@ -46,4 +51,26 @@ class Setting extends Model
         'stock_alerts' => 'boolean',
         'cod_enabled' => 'boolean',
     ];
+
+    /**
+     * Subject dropdown options for the contact form, one per line in the admin field.
+     */
+    public function getEnquirySubjectListAttribute(): array
+    {
+        return collect(preg_split('/\r\n|\r|\n/', (string) $this->enquiry_subjects))
+            ->map(fn($s) => trim($s))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    public function getPopularSearchListAttribute(): array
+    {
+        return collect(preg_split('/\r\n|\r|\n/', (string) $this->popular_searches))
+            ->map(fn($s) => trim($s))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
 }

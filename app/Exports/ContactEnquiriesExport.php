@@ -19,7 +19,7 @@ class ContactEnquiriesExport implements FromCollection, WithHeadings, WithMappin
 
     public function headings(): array
     {
-        return ['#', 'Name', 'Email', 'Mobile', 'Inquiry Type', 'Message', 'Date'];
+        return ['#', 'Name', 'Email', 'Phone', 'Subject', 'Message', 'Status', 'Date'];
     }
 
     public function map($item): array
@@ -31,9 +31,10 @@ class ContactEnquiriesExport implements FromCollection, WithHeadings, WithMappin
             $index,
             $item->name,
             $item->email,
-            $item->mobile ?? '—',
-            $item->inquiry_type ?? '—',
-            $item->message ?? '—',
+            $item->phone ?: '—',
+            $item->subject ?: '—',
+            $item->message ?: '—',
+            $item->is_read ? 'Read' : 'Unread',
             $item->created_at->format('d M Y h:i A'),
         ];
     }

@@ -19,18 +19,22 @@ class ContactEnquiryController extends Controller
 
     public function show(ContactEnquiry $contactEnquiry)
     {
+        if (!$contactEnquiry->is_read) {
+            $contactEnquiry->update(['is_read' => true]);
+        }
+
         return view(
             'admin.contact-enquiries.show',
             ['enquiry' => $contactEnquiry]
         );
     }
 
-
     public function export()
     {
         $filename = 'contact_enquiries_' . now()->format('Y_m_d_His') . '.xlsx';
         return Excel::download(new ContactEnquiriesExport(), $filename);
     }
+
     public function bulkDelete(Request $request)
     {
         $ids = $request->input('ids', []);

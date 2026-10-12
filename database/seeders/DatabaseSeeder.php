@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call(BlogSeeder::class);
         $this->call(ProductSeeder::class);
         $this->call(CategorySeeder::class);
+        $this->call(AboutPageSeeder::class);
         $this->call(DynamicPageSeeder::class);
         $this->call(HomeContentSeeder::class);
         $this->call(ProductAttributeSeeder::class);

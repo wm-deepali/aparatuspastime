@@ -109,16 +109,6 @@
     ['outdoor', 'bg-teal-100', 'teal-600', 'fa-trophy', 'Lawn Tournaments', 'Family Party & Fun'],
   ];
 
-  // [full url, icon bg, color token, icon, title, subtitle, badge text, badge bg]
-  $megaDeals = [
-    [route('new-arrivals'), 'bg-orange-100', 'brand-orange', 'fa-sparkles', 'Fresh New Arrivals', "This week's latest drops", 'NEW', 'bg-brand-orange'],
-    [route('shop', ['filter' => 'bestseller']), 'bg-red-100', 'red-500', 'fa-fire', 'Top 20 Best Sellers', 'Most loved by parents', 'HOT', 'bg-red-500'],
-    [route('shop', ['maxPrice' => 499]), 'bg-emerald-100', 'emerald-600', 'fa-coins', 'Pocket Toys < ₹499', 'Budget-friendly fun', 'SAVER', 'bg-emerald-600'],
-    [route('shop', ['maxPrice' => 999]), 'bg-blue-100', 'brand-blue', 'fa-tags', 'Value Picks < ₹999', 'Top-rated smart buys', 'VALUE', 'bg-brand-blue'],
-    [route('shop', ['category' => 'gifts']), 'bg-rose-100', 'rose-600', 'fa-gift', 'Birthday Gift Finder', 'Ready-to-gift combos', 'GIFT', 'bg-rose-500'],
-    [route('shop', ['filter' => 'trending']), 'bg-purple-100', 'purple-600', 'fa-chart-line', 'Trending This Week', 'Fast selling right now', 'TREND', 'bg-purple-600'],
-  ];
-
   // [shop query params, label]
   $footerTopics = [
     [['category' => 'educational'], '#STEMRobotics'],
@@ -138,6 +128,28 @@
   $customerFirst = $customerName !== '' ? explode(' ', trim($customerName))[0] : '';
   $customerInitial = $customerFirst !== '' ? strtoupper(mb_substr($customerFirst, 0, 1)) : 'U';
   $pageUrl = fn(string $slug) => route('page.show', ['slug' => $slug]);
+  $colUrl = fn(string $slug) => route('collections.show', ['slug' => $slug]);
+
+  // header collection colour keys -> full Tailwind classes
+  $hdrColors = [
+    'emerald' => ['icon' => 'text-emerald-500', 'badge' => 'bg-emerald-100 text-emerald-700', 'tile' => 'bg-emerald-50/80 border-emerald-200/80 hover:bg-emerald-100/80 hover:text-emerald-700', 'solid' => 'bg-emerald-600', 'pill' => 'bg-emerald-200 text-emerald-800'],
+    'amber' => ['icon' => 'text-amber-500', 'badge' => 'bg-amber-100 text-amber-800', 'tile' => 'bg-amber-50/80 border-amber-200/80 hover:bg-amber-100/80 hover:text-amber-700', 'solid' => 'bg-amber-500', 'pill' => 'bg-amber-200 text-amber-900'],
+    'blue' => ['icon' => 'text-blue-500', 'badge' => 'bg-blue-100 text-blue-700', 'tile' => 'bg-blue-50/80 border-blue-200/80 hover:bg-blue-100/80 hover:text-brand-blue', 'solid' => 'bg-brand-blue', 'pill' => 'bg-blue-200 text-blue-800'],
+    'rose' => ['icon' => 'text-rose-500', 'badge' => 'bg-rose-100 text-rose-700', 'tile' => 'bg-rose-50/80 border-rose-200/80 hover:bg-rose-100/80 hover:text-rose-700', 'solid' => 'bg-rose-500', 'pill' => 'bg-rose-200 text-rose-800'],
+    'purple' => ['icon' => 'text-purple-500', 'badge' => 'bg-purple-100 text-purple-700', 'tile' => 'bg-purple-50/80 border-purple-200/80 hover:bg-purple-100/80 hover:text-purple-700', 'solid' => 'bg-purple-600', 'pill' => 'bg-purple-200 text-purple-800'],
+    'orange' => ['icon' => 'text-orange-500', 'badge' => 'bg-orange-100 text-orange-700', 'tile' => 'bg-orange-50/80 border-orange-200/80 hover:bg-orange-100/80 hover:text-brand-orange', 'solid' => 'bg-brand-orange', 'pill' => 'bg-orange-200 text-orange-800'],
+  ];
+
+  // [full url, icon bg, color token, icon, title, subtitle, badge text, badge bg]
+  $megaDeals = [
+    [$colUrl('new_arrival'), 'bg-orange-100', 'brand-orange', 'fa-sparkles', 'Fresh New Arrivals', "This week's latest drops", 'NEW', 'bg-brand-orange'],
+    [$colUrl('best_seller'), 'bg-red-100', 'red-500', 'fa-fire', 'Top 20 Best Sellers', 'Most loved by parents', 'HOT', 'bg-red-500'],
+    [route('shop', ['maxPrice' => 499]), 'bg-emerald-100', 'emerald-600', 'fa-coins', 'Pocket Toys < ₹499', 'Budget-friendly fun', 'SAVER', 'bg-emerald-600'],
+    [route('shop', ['maxPrice' => 999]), 'bg-blue-100', 'brand-blue', 'fa-tags', 'Value Picks < ₹999', 'Top-rated smart buys', 'VALUE', 'bg-brand-blue'],
+    [route('shop', ['category' => 'gifts']), 'bg-rose-100', 'rose-600', 'fa-gift', 'Birthday Gift Finder', 'Ready-to-gift combos', 'GIFT', 'bg-rose-500'],
+    [$colUrl('trending'), 'bg-purple-100', 'purple-600', 'fa-chart-line', 'Trending This Week', 'Fast selling right now', 'TREND', 'bg-purple-600'],
+  ];
+
 @endphp
 
 <body class="has-bottom-nav bg-warm-cream text-body-text">
@@ -204,21 +216,28 @@
           <!-- LIVE SEARCH SUGGESTIONS DROPDOWN -->
           <div id="search-suggestions-dropdown"
             class="hidden absolute top-full left-0 right-0 mt-2 bg-white border border-brand-border rounded-2xl shadow-2xl z-50 p-4 overflow-hidden font-heading">
-            <div class="mb-3">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-brand-muted">POPULAR SEARCHES</span>
-              <div class="flex flex-wrap gap-1.5 mt-2 font-sans">
-                @foreach (['Building Blocks', 'Board Games', 'Football', 'STEM Toys', 'Outdoor Games', 'Birthday Gifts'] as $term)
-                  <a href="{{ route('search', ['q' => $term]) }}"
-                    class="text-xs bg-soft-blue hover:bg-soft-orange text-dark-navy hover:text-brand-orange px-3 py-1 rounded-full transition font-semibold">
-                    <i class="fa-solid fa-sparkles text-[10px] text-play-yellow mr-1"></i>{{ $term }}
-                  </a>
-                @endforeach
-              </div>
-            </div>
 
-            <div id="search-live-results" class="border-t border-brand-border pt-3 space-y-2">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-brand-muted">MATCHING PRODUCTS</span>
-              <div id="search-live-products" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
+            @if (!empty($popularSearches))
+              <div id="search-popular-block">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-muted">POPULAR SEARCHES</span>
+                <div class="flex flex-wrap gap-1.5 mt-2 font-sans">
+                  @foreach ($popularSearches as $term)
+                    <a href="{{ route('search', ['q' => $term]) }}"
+                      class="text-xs bg-soft-blue hover:bg-soft-orange text-dark-navy hover:text-brand-orange px-3 py-1 rounded-full transition font-semibold">
+                      <i class="fa-solid fa-sparkles text-[10px] text-play-yellow mr-1"></i>{{ $term }}
+                    </a>
+                  @endforeach
+                </div>
+              </div>
+            @endif
+
+            <div id="search-live-results" class="hidden space-y-2">
+              <div id="search-live-categories" class="flex flex-wrap gap-1.5 font-sans"></div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-brand-muted block">MATCHING
+                PRODUCTS</span>
+              <div id="search-live-products" class="space-y-1 max-h-72 overflow-y-auto"></div>
+              <a id="search-live-all" href="#"
+                class="hidden text-center text-[11px] font-bold text-brand-blue hover:text-brand-orange pt-2 border-t border-brand-border transition"></a>
             </div>
           </div>
         </div>
@@ -698,21 +717,22 @@
             </div>
           </div>
 
-          <a href="{{ route('new-arrivals') }}"
-            class="{{ $navBase }} {{ $activeNav === 'new-arrivals' ? $navOn : $navOff }}">
-            <i class="fa-solid fa-wand-magic-sparkles text-[11px] xl:text-xs text-emerald-500"></i>
-            <span>New Arrivals</span>
-            <span
-              class="bg-emerald-100 text-emerald-700 text-[8px] xl:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full hidden xl:inline-block leading-none">NEW</span>
-          </a>
-
-          <a href="{{ route('shop', ['filter' => 'bestseller']) }}"
-            class="{{ $navBase }} {{ $activeNav === 'bestsellers' ? $navOn : $navOff }}">
-            <i class="fa-solid fa-fire text-[11px] xl:text-xs text-amber-500"></i>
-            <span>Best Sellers</span>
-            <span
-              class="bg-amber-100 text-amber-800 text-[8px] xl:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full hidden xl:inline-block leading-none">HOT</span>
-          </a>
+          @foreach ($headerCollections as $hc)
+            @php
+              $clr = $hdrColors[$hc->header_color] ?? $hdrColors['amber'];
+              $isActive = $activeNav === 'collection-' . $hc->slug;
+            @endphp
+            <a href="{{ $colUrl($hc->slug) }}" class="{{ $navBase }} {{ $isActive ? $navOn : $navOff }}">
+              @if ($hc->header_icon)
+                <i class="fa-solid {{ $hc->header_icon }} text-[11px] xl:text-xs {{ $clr['icon'] }}"></i>
+              @endif
+              <span>{{ $hc->name }}</span>
+              @if ($hc->header_badge)
+                <span
+                  class="{{ $clr['badge'] }} text-[8px] xl:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full hidden xl:inline-block leading-none">{{ $hc->header_badge }}</span>
+              @endif
+            </a>
+          @endforeach
 
           <a href="{{ route('shop') }}" class="{{ $navBase }} {{ $activeNav === 'age' ? $navOn : $navOff }}">
             <i class="fa-solid fa-child-reaching text-[11px] xl:text-xs text-purple-500"></i>
@@ -827,34 +847,25 @@
               <div class="text-[9px] text-brand-muted font-sans truncate">All Products</div>
             </div>
           </a>
-          <a href="{{ route('new-arrivals') }}"
-            class="flex items-center gap-2 p-2 rounded-xl bg-emerald-50/80 border border-emerald-200/80 hover:bg-emerald-100/80 text-dark-navy hover:text-emerald-700 transition shadow-2xs group">
-            <div
-              class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-2xs shrink-0 group-hover:scale-105 transition">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-            </div>
-            <div class="min-w-0">
-              <div class="font-heading font-bold text-xs leading-tight flex items-center gap-1">
-                <span>New</span>
-                <span class="bg-emerald-200 text-emerald-800 text-[8px] px-1 rounded font-extrabold">NEW</span>
+          @foreach ($headerCollections as $hc)
+            @php $clr = $hdrColors[$hc->header_color] ?? $hdrColors['amber']; @endphp
+            <a href="{{ $colUrl($hc->slug) }}"
+              class="flex items-center gap-2 p-2 rounded-xl border {{ $clr['tile'] }} text-dark-navy transition shadow-2xs group">
+              <div
+                class="w-7 h-7 rounded-lg {{ $clr['solid'] }} text-white flex items-center justify-center text-xs shadow-2xs shrink-0 group-hover:scale-105 transition">
+                <i class="fa-solid {{ $hc->header_icon ?: 'fa-star' }}"></i>
               </div>
-              <div class="text-[9px] text-brand-muted font-sans truncate">Fresh Drops</div>
-            </div>
-          </a>
-          <a href="{{ route('shop', ['filter' => 'bestseller']) }}"
-            class="flex items-center gap-2 p-2 rounded-xl bg-amber-50/80 border border-amber-200/80 hover:bg-amber-100/80 text-dark-navy hover:text-amber-700 transition shadow-2xs group">
-            <div
-              class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shadow-2xs shrink-0 group-hover:scale-105 transition">
-              <i class="fa-solid fa-fire"></i>
-            </div>
-            <div class="min-w-0">
-              <div class="font-heading font-bold text-xs leading-tight flex items-center gap-1">
-                <span>Popular</span>
-                <span class="bg-amber-200 text-amber-900 text-[8px] px-1 rounded font-extrabold">HOT</span>
+              <div class="min-w-0">
+                <div class="font-heading font-bold text-xs leading-tight flex items-center gap-1">
+                  <span class="truncate">{{ $hc->name }}</span>
+                  @if ($hc->header_badge)
+                    <span
+                      class="{{ $clr['pill'] }} text-[8px] px-1 rounded font-extrabold shrink-0">{{ $hc->header_badge }}</span>
+                  @endif
+                </div>
               </div>
-              <div class="text-[9px] text-brand-muted font-sans truncate">Best Sellers</div>
-            </div>
-          </a>
+            </a>
+          @endforeach
         </div>
 
         <!-- MEGA MENU TITLE -->
@@ -1075,7 +1086,7 @@
                 class="font-mono font-bold text-amber-300 bg-purple-800/60 px-1 py-0.5 rounded">PLAY15</span> at
               checkout
             </p>
-            <a href="{{ route('new-arrivals') }}"
+            <a href="#"
               class="inline-block bg-white text-purple-700 hover:bg-amber-300 hover:text-purple-950 font-heading font-bold text-[9px] px-2.5 py-1 rounded-md transition shadow-2xs">
               Claim Discount Now →
             </a>
@@ -1362,13 +1373,13 @@
                     class="hover:text-sky-blue transition flex items-center gap-1.5"><i
                       class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>{{ $g->label }}</a></li>
               @endforeach
-              <li><a href="{{ route('new-arrivals') }}"
+              <li><a href="{{ $colUrl('new_arrival') }}"
                   class="hover:text-sky-blue transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>New Arrivals</a></li>
-              <li><a href="{{ route('shop', ['filter' => 'bestseller']) }}"
+              <li><a href="{{ $colUrl('best_seller') }}"
                   class="hover:text-sky-blue transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Best Sellers</a></li>
-              <li><a href="{{ route('shop', ['filter' => 'trending']) }}"
+              <li><a href="{{ $colUrl('trending') }}"
                   class="hover:text-sky-blue transition flex items-center gap-1.5"><i
                     class="fa-solid fa-chevron-right text-[9px] opacity-60"></i>Trending Now</a></li>
             </ul>
@@ -1976,6 +1987,130 @@
     })();
   </script>
 
+  <script>
+    (function () {
+      const input = document.getElementById('global-search-input');
+      const box = document.getElementById('search-suggestions-dropdown');
+      if (!input || !box) return;
+
+      const clearBtn = document.getElementById('search-clear-btn');
+      const popular = document.getElementById('search-popular-block');
+      const live = document.getElementById('search-live-results');
+      const list = document.getElementById('search-live-products');
+      const cats = document.getElementById('search-live-categories');
+      const allLink = document.getElementById('search-live-all');
+      const suggestUrl = @json(route('search.suggest'));
+      const searchUrl = @json(route('search'));
+
+      let timer = null;
+      let ctrl = null;
+
+      const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const money = (n) => '₹' + Number(n).toLocaleString('en-IN');
+
+      const open = () => box.classList.remove('hidden');
+      const close = () => box.classList.add('hidden');
+
+      function showPopular() {
+        live.classList.add('hidden');
+        if (popular) { popular.classList.remove('hidden'); open(); } else { close(); }
+      }
+
+      function showLive() {
+        if (popular) popular.classList.add('hidden');
+        live.classList.remove('hidden');
+        open();
+      }
+
+      function render(data, q) {
+        const products = data.products || [];
+        const categories = data.categories || [];
+
+        cats.innerHTML = categories.map((c) =>
+          `<a href="${esc(c.url)}" class="text-xs bg-soft-orange hover:bg-brand-orange hover:text-white text-brand-orange px-3 py-1 rounded-full transition font-bold">
+             <i class="fa-solid fa-shapes text-[10px] mr-1"></i>${esc(c.name)}
+           </a>`
+        ).join('');
+
+        if (!products.length) {
+          list.innerHTML = `<div class="py-4 text-center text-xs text-brand-muted font-sans">No products found for "${esc(q)}".</div>`;
+          allLink.classList.add('hidden');
+          return;
+        }
+
+        list.innerHTML = products.map((p) => `
+          <a href="${esc(p.url)}" class="flex items-center gap-3 p-2 rounded-xl hover:bg-soft-blue transition">
+            <div class="w-10 h-10 rounded-lg bg-soft-blue overflow-hidden shrink-0 flex items-center justify-center">
+              ${p.image
+                ? `<img src="${esc(p.image)}" alt="" class="w-full h-full object-cover">`
+                : '<i class="fa-solid fa-image text-brand-border"></i>'}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="text-xs font-bold text-dark-navy truncate">${esc(p.name)}</div>
+              ${p.category ? `<div class="text-[10px] text-brand-muted font-sans truncate">${esc(p.category)}</div>` : ''}
+            </div>
+            <div class="text-xs font-extrabold text-brand-blue shrink-0">${money(p.price)}</div>
+          </a>`).join('');
+
+        allLink.href = searchUrl + '?q=' + encodeURIComponent(q);
+        allLink.textContent = 'See all results for "' + q + '" →';
+        allLink.classList.remove('hidden');
+      }
+
+      async function fetchSuggestions(q) {
+        if (ctrl) ctrl.abort();
+        ctrl = new AbortController();
+
+        list.innerHTML = '<div class="py-4 text-center text-brand-muted"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+        cats.innerHTML = '';
+        allLink.classList.add('hidden');
+        showLive();
+
+        try {
+          const res = await fetch(suggestUrl + '?q=' + encodeURIComponent(q), {
+            headers: { 'Accept': 'application/json' },
+            signal: ctrl.signal,
+          });
+          if (!res.ok) throw new Error('bad response');
+          render(await res.json(), q);
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+          list.innerHTML = '<div class="py-4 text-center text-xs text-brand-muted font-sans">Could not load suggestions.</div>';
+        }
+      }
+
+      input.addEventListener('input', () => {
+        const q = input.value.trim();
+        clearBtn?.classList.toggle('hidden', q === '');
+        clearTimeout(timer);
+
+        if (q.length < 2) {
+          if (ctrl) ctrl.abort();
+          showPopular();
+          return;
+        }
+        timer = setTimeout(() => fetchSuggestions(q), 250);
+      });
+
+      input.addEventListener('focus', () => {
+        const q = input.value.trim();
+        if (q.length >= 2) showLive(); else showPopular();
+      });
+
+      clearBtn?.addEventListener('click', () => {
+        input.value = '';
+        clearBtn.classList.add('hidden');
+        showPopular();
+        input.focus();
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!box.contains(e.target) && e.target !== input) close();
+      });
+      input.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    })();
+  </script>
+  
   @include('front-pages.partials.mini-cart')
   <!-- PAGE SPECIFIC SCRIPTS -->
   @stack('scripts')

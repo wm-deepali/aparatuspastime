@@ -33,7 +33,6 @@ use App\Http\Controllers\Admin\{
     ReturnReasonController,
     SeoController,
     StoredCartController,
-    SupplierEnquiryController,
     TeamController,
     TestimonialController,
     VendorTypeController,
@@ -45,7 +44,6 @@ use App\Http\Controllers\Admin\{
     ProductReportController,
     CustomerReportController,
     EmailTemplateController,
-    CouponEnquiryController,
     CustomerWishlistController,
     NotificationController,
     OrderReportController,
@@ -55,7 +53,8 @@ use App\Http\Controllers\Admin\{
     RedirectController,
     NdrController,
     NdrReportController,
-    AgeGroupController
+    AgeGroupController,
+    AboutPageController
 };
 
 use Illuminate\Support\Facades\Route;
@@ -85,12 +84,13 @@ Route::middleware('maintenance.mode')->group(function () {
         Route::get('/blog-detail/{slug}', 'blogShow')->name('blog.show');
         Route::get('/faq', 'faq')->name('faq');
         Route::get('/page/{slug}', 'dynamicPage')->name('page.show');
+        Route::get('/about', 'about')->name('about');
+        Route::get('/contact', 'contact')->name('contact');
+        Route::post('/contact', 'storeContact')->name('contact.store');
+        Route::get('/collections/{slug}', 'collection')->name('collections.show');
+        Route::get('/search', 'search')->name('search');
+        Route::get('/search/suggest', 'searchSuggest')->middleware('throttle:60,1')->name('search.suggest');
 
-        Route::view('/about', 'front-pages.about')->name('about');
-        Route::view('/contact', 'front-pages.contact')->name('contact');
-        Route::view('/new-arrivals', 'front-pages.new-arrivals')->name('new-arrivals');
-        Route::view('/search', 'front-pages.search')->name('search');
-        
     });
 
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
@@ -232,9 +232,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('faq-items/{id}', [FaqController::class, 'updateFaq'])->name('faq-items.update');
         Route::delete('faq-items/{id}', [FaqController::class, 'destroyFaq'])->name('faq-items.destroy');
 
-
         Route::resource('blogs', BlogController::class)->names('blogs');
 
+        Route::get('about-page', [AboutPageController::class, 'index'])->name('about.index');
+        Route::put('about-page', [AboutPageController::class, 'update'])->name('about.update');
 
         Route::resource('clients', ClientController::class)->names('clients');
 
@@ -249,14 +250,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('other-enquiries/export', [OtherEnquiryController::class, 'export'])->name('other-enquiries.export');
         Route::delete('other-enquiries/bulk-delete', [OtherEnquiryController::class, 'bulkDelete'])->name('other-enquiries.bulk-delete');
         Route::resource('other-enquiries', OtherEnquiryController::class);
-
-        Route::get('supplier-enquiries/export', [SupplierEnquiryController::class, 'export'])->name('supplier-enquiries.export');
-        Route::delete('supplier-enquiries/bulk-delete', [SupplierEnquiryController::class, 'bulkDelete'])->name('supplier-enquiries.bulk-delete');
-        Route::resource('supplier-enquiries', SupplierEnquiryController::class);
-
-        Route::resource('coupon-enquiries', CouponEnquiryController::class);
-        Route::delete('coupon-enquiries/bulk-delete', [CouponEnquiryController::class, 'bulkDelete'])->name('coupon-enquiries.bulk-delete');
-        Route::get('coupon-enquiries-export', [CouponEnquiryController::class, 'export'])->name('coupon-enquiries.export');
 
         Route::resource('awards', AwardController::class);
 

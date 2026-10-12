@@ -12,12 +12,11 @@ return new class extends Migration {
 
             $table->string('name');
             $table->string('email');
-            $table->string('mobile');
-
-            $table->string('company')->nullable();
-            $table->string('inquiry_type')->nullable();
-
+            $table->string('phone')->nullable();
+            $table->string('subject');
             $table->text('message');
+
+            $table->boolean('is_read')->default(false);
 
             $table->timestamps();
         });

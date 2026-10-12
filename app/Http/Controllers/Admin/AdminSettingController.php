@@ -17,7 +17,6 @@ use App\Models\GoogleSetting;
 
 class AdminSettingController extends Controller
 {
-    // ðŸ”¹ Show form
     public function index(Request $request)
     {
         $invoice_setting = InvoiceSetting::first();
@@ -27,13 +26,21 @@ class AdminSettingController extends Controller
         $states = State::all();
         $couriers = Courier::latest()->get();
         $activeTab = $request->tab ?? 'general';
-        
-         $google_setting = GoogleSetting::current(); // 👈 new
+
+        $google_setting = GoogleSetting::current();
+
+        // Saved state ki cities server-side render hongi
+        $invoice_cities = ($invoice_setting && $invoice_setting->company_state)
+            ? City::where('state_id', $invoice_setting->company_state)
+                ->orderBy('name')
+                ->get(['id', 'name'])
+            : collect();
 
         return view(
             'admin.admin-settings.index',
             compact(
                 'invoice_setting',
+                'invoice_cities',
                 'smtp',
                 'payment',
                 'general',
@@ -45,78 +52,83 @@ class AdminSettingController extends Controller
         );
     }
 
-    // ðŸ”¹ Save settings
     public function invoiceSettingStore(Request $request)
     {
-        $rules = [
+        $validated = $request->validate([
             // Company
-            'company_name' => 'required|string|max:255',
-            'company_address' => 'required|string',
-            'company_state' => 'required|exists:states,id',
-            'company_city' => 'required|exists:cities,id',
-            'company_pincode' => 'required|string|max:10',
+            'company_name' => 'nullable|string|max:255',
+            'company_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
+            'company_address' => 'nullable|string',
+            'company_state' => 'nullable|exists:states,id',
+            'company_city' => 'nullable|exists:cities,id',
+            'company_pincode' => 'nullable|string|max:10',
             'company_phone' => 'nullable|string|max:20',
             'company_email' => 'nullable|email|max:255',
+            'company_gstin' => 'nullable|string|max:15',
+            'company_pan' => 'nullable|string|max:10',
+            // Tax
+            'cgst' => 'nullable|numeric|min:0|max:100',
+            'sgst' => 'nullable|numeric|min:0|max:100',
+            'igst' => 'nullable|numeric|min:0|max:100',
+            'tax_type' => 'nullable|in:inclusive,exclusive',
+            'business_type' => 'nullable|in:registered,unregistered',
             // Invoice
-            'invoice_prefix' => 'required|string|max:20',
-            'invoice_serial' => 'required|integer|min:1',
+            'invoice_prefix' => 'nullable|string|max:20',
+            'invoice_serial' => 'nullable|integer|min:1',
             'invoice_year_format' => 'nullable|in:none,slash,year',
             'invoice_separator' => 'nullable|string|max:5',
             'invoice_date_format' => 'nullable|in:d/m/Y,d M Y,m-d-Y',
-            // Tax
-            'tax_type' => 'nullable|in:inclusive,exclusive',
-            'business_type' => 'nullable|in:registered,unregistered',
             // Footer
             'terms_conditions' => 'nullable|string',
-        ];
+        ]);
 
-        // GST Validation Only For Registered
-        if ($request->business_type == 'registered') {
-            $rules['company_gstin'] = 'required|string|max:15';
-            $rules['company_pan'] = 'required|string|max:10';
-            $rules['cgst'] = 'required|numeric|min:0|max:100';
-            $rules['sgst'] = 'required|numeric|min:0|max:100';
-            $rules['igst'] = 'required|numeric|min:0|max:100';
-        }
+        unset($validated['company_logo']); // file alag handle hoti hai
 
-        $validated = $request->validate($rules);
+        // Non-nullable DB columns ke liye defaults
+        $validated['cgst'] = $validated['cgst'] ?? 9;
+        $validated['sgst'] = $validated['sgst'] ?? 9;
+        $validated['igst'] = $validated['igst'] ?? 18;
+        $validated['tax_type'] = $validated['tax_type'] ?? 'inclusive';
+        $validated['business_type'] = $validated['business_type'] ?? 'registered';
+        $validated['invoice_prefix'] = $validated['invoice_prefix'] ?? 'INV';
+        $validated['invoice_serial'] = $validated['invoice_serial'] ?? 1;
+        $validated['invoice_year_format'] = $validated['invoice_year_format'] ?? 'slash';
+        $validated['invoice_separator'] = $validated['invoice_separator'] ?? '/';
+        $validated['invoice_date_format'] = $validated['invoice_date_format'] ?? 'd M Y';
 
         // Checkboxes
-        $validated['show_gst_breakup'] =
-            $request->has('show_gst_breakup');
-        $validated['auto_generate_invoice'] =
-            $request->has('auto_generate_invoice');
-        $validated['email_invoice_customer'] =
-            $request->has('email_invoice_customer');
+        $validated['show_gst_breakup'] = $request->has('show_gst_breakup');
+        $validated['auto_generate_invoice'] = $request->has('auto_generate_invoice');
+        $validated['email_invoice_customer'] = $request->has('email_invoice_customer');
 
-        // Unregistered Business
-        if ($request->business_type == 'unregistered') {
+        // Unregistered business
+        if ($validated['business_type'] === 'unregistered') {
             $validated['company_gstin'] = null;
             $validated['company_pan'] = null;
             $validated['cgst'] = 0;
             $validated['sgst'] = 0;
             $validated['igst'] = 0;
-            $validated['show_gst_breakup'] = 0;
+            $validated['show_gst_breakup'] = false;
         }
 
-        // Logo Upload
+        $setting = InvoiceSetting::first() ?? new InvoiceSetting();
+
+        // Logo upload (purana delete karke naya save)
         if ($request->hasFile('company_logo')) {
-            $validated['company_logo'] = $request
-                ->file('company_logo')
-                ->store('company', 'public');
+            if ($setting->company_logo && Storage::disk('public')->exists($setting->company_logo)) {
+                Storage::disk('public')->delete($setting->company_logo);
+            }
+            $validated['company_logo'] = $request->file('company_logo')->store('company', 'public');
         }
 
-        InvoiceSetting::updateOrCreate(
-            ['id' => 1],
-            $validated
-        );
+        // forceFill = $fillable ka issue bypass
+        $setting->forceFill($validated)->save();
 
         return redirect()
             ->route('admin.admin-setting.index', ['tab' => 'gst'])
             ->with('success', 'Invoice & GST settings updated successfully.');
     }
 
-    // ðŸ”¥ Generate Invoice Number (SAFE VERSION)
     public static function generateInvoiceNumber()
     {
         return DB::transaction(function () {
@@ -239,6 +251,7 @@ class AdminSettingController extends Controller
         $validated = $request->validate([
             'site_name' => 'nullable|string|max:255',
             'tagline' => 'nullable|string|max:255',
+            'popular_searches' => 'nullable|string|max:1000',
             'admin_email' => 'nullable|email|max:255',
             'support_email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
@@ -259,57 +272,28 @@ class AdminSettingController extends Controller
             'favicon' => 'nullable|image|mimes:jpg,jpeg,png,ico,webp|max:1024',
             'admin_login_logo' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp|max:2048',
             'admin_dashboard_logo' => 'nullable|image|mimes:jpg,jpeg,png,svg,webp|max:2048',
+
+            // contact page
+            'working_hours' => 'nullable|string|max:255',
+            'email_response_note' => 'nullable|string|max:255',
+            'address_short' => 'nullable|string|max:255',
+            'enquiry_subjects' => 'nullable|string|max:2000',
         ]);
 
-        $validated['maintenance_mode']
-            = $request->has('maintenance_mode');
-        $validated['product_reviews']
-            = $request->has('product_reviews');
-        $validated['wishlist']
-            = $request->has('wishlist');
-        $validated['stock_alerts']
-            = $request->has('stock_alerts');
-        $validated['cod_enabled']
-            = $request->has('cod_enabled');
+        $validated['maintenance_mode'] = $request->has('maintenance_mode');
+        $validated['product_reviews'] = $request->has('product_reviews');
+        $validated['wishlist'] = $request->has('wishlist');
+        $validated['stock_alerts'] = $request->has('stock_alerts');
+        $validated['cod_enabled'] = $request->has('cod_enabled');
 
-        // Header Logo
-        if ($request->hasFile('header_logo')) {
-            if ($general && $general->header_logo && Storage::disk('public')->exists($general->header_logo)) {
-                Storage::disk('public')->delete($general->header_logo);
+        // Logo / favicon uploads (replace old file when a new one is uploaded)
+        foreach (['header_logo', 'footer_logo', 'favicon', 'admin_login_logo', 'admin_dashboard_logo'] as $field) {
+            if ($request->hasFile($field)) {
+                if ($general && $general->$field && Storage::disk('public')->exists($general->$field)) {
+                    Storage::disk('public')->delete($general->$field);
+                }
+                $validated[$field] = $request->file($field)->store('settings', 'public');
             }
-            $validated['header_logo'] = $request->file('header_logo')->store('settings', 'public');
-        }
-
-        // Footer Logo
-        if ($request->hasFile('footer_logo')) {
-            if ($general && $general->footer_logo && Storage::disk('public')->exists($general->footer_logo)) {
-                Storage::disk('public')->delete($general->footer_logo);
-            }
-            $validated['footer_logo'] = $request->file('footer_logo')->store('settings', 'public');
-        }
-
-        // Favicon
-        if ($request->hasFile('favicon')) {
-            if ($general && $general->favicon && Storage::disk('public')->exists($general->favicon)) {
-                Storage::disk('public')->delete($general->favicon);
-            }
-            $validated['favicon'] = $request->file('favicon')->store('settings', 'public');
-        }
-
-        // Admin Login Page Logo
-        if ($request->hasFile('admin_login_logo')) {
-            if ($general && $general->admin_login_logo && Storage::disk('public')->exists($general->admin_login_logo)) {
-                Storage::disk('public')->delete($general->admin_login_logo);
-            }
-            $validated['admin_login_logo'] = $request->file('admin_login_logo')->store('settings', 'public');
-        }
-
-        // Admin Dashboard Logo
-        if ($request->hasFile('admin_dashboard_logo')) {
-            if ($general && $general->admin_dashboard_logo && Storage::disk('public')->exists($general->admin_dashboard_logo)) {
-                Storage::disk('public')->delete($general->admin_dashboard_logo);
-            }
-            $validated['admin_dashboard_logo'] = $request->file('admin_dashboard_logo')->store('settings', 'public');
         }
 
         Setting::updateOrCreate(
@@ -363,7 +347,7 @@ class AdminSettingController extends Controller
                 'Courier deleted successfully.'
             );
     }
-    
+
     public function googleSettingStore(Request $request)
     {
         $request->validate([
@@ -420,5 +404,5 @@ class AdminSettingController extends Controller
             ->route('admin.admin-setting.index', ['tab' => 'tracking'])
             ->with('success', 'Tracking settings saved successfully.');
     }
-    
+
 }

@@ -2,22 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AgeGroup;
-use App\Models\Category;
-use App\Models\Collection;
-use App\Models\InvoiceSetting;
-use App\Models\Product;
-use Illuminate\Http\Request;
-use App\Traits\LogsApiCalls;
-use App\Models\HomeSlider;
-use App\Models\HomeUsp;
-use App\Models\HomeInterest;
-use App\Models\HomeFeature;
-use App\Models\HomeTestimonial;
-use App\Models\HomeSection;
 use App\Models\Blog;
+use App\Models\Product;
+use App\Models\HomeUsp;
+use App\Models\Setting;
+use App\Models\Category;
+use App\Models\AgeGroup;
+use App\Models\AboutStat;
+use App\Models\AboutPage;
+use App\Models\Collection;
+use App\Models\HomeSlider;
+use App\Models\AboutBelief;
+use App\Models\HomeFeature;
+use App\Models\HomeSection;
 use App\Models\FaqCategory;
 use App\Models\DynamicPage;
+use App\Models\HomeInterest;
+use Illuminate\Http\Request;
+use App\Traits\LogsApiCalls;
+use App\Models\ContactEnquiry;
+use App\Models\InvoiceSetting;
+use App\Models\HomeTestimonial;
+use Illuminate\Validation\Rule;
 
 class FrontController extends Controller
 {
@@ -501,8 +507,169 @@ class FrontController extends Controller
     public function dynamicPage(string $slug)
     {
         $page = DynamicPage::active()->where('slug', $slug)->firstOrFail();
- 
+
         return view('front-pages.policy', compact('page'));
     }
+
+    public function about()
+    {
+        $about = AboutPage::first() ?? new AboutPage();
+        $stats = AboutStat::active()->ordered()->get();
+        $beliefs = AboutBelief::active()->ordered()->get();
+
+        return view('front-pages.about', compact('about', 'stats', 'beliefs'));
+    }
+
+    public function contact()
+    {
+        $setting = Setting::first() ?? new Setting();
+        $subjects = $setting->enquiry_subject_list ?: ['General Enquiry'];
+
+        return view('front-pages.contact', compact('setting', 'subjects'));
+    }
+
+    public function storeContact(Request $request)
+    {
+        $setting = Setting::first() ?? new Setting();
+        $subjects = $setting->enquiry_subject_list ?: ['General Enquiry'];
+
+        $data = $request->validate([
+            'name' => 'required|string|max:100',
+            'email' => 'required|email|max:150',
+            'phone' => 'nullable|string|max:20',
+            'subject' => ['required', 'string', Rule::in($subjects)],
+            'message' => 'required|string|max:2000',
+        ]);
+
+        ContactEnquiry::create($data);
+
+        return response()->json([
+            'message' => 'Thank you! Your message has been sent. We will reply shortly.',
+        ]);
+    }
+
+    public function collection(Request $request, string $slug)
+    {
+        $collection = Collection::where('slug', $slug)
+            ->where('status', 1)
+            ->firstOrFail();
+
+        $sort = $request->get('sort', 'featured');
+
+        $query = $collection->products()
+            ->where('products.status', 1);   // use the same "active product" condition your shop() query uses
+
+        switch ($sort) {
+            case 'price-low':
+                $query->orderBy('products.price', 'asc');
+                break;
+            case 'price-high':
+                $query->orderBy('products.price', 'desc');
+                break;
+            default:
+                $sort = 'featured';
+                $query->orderBy('products.id', 'desc');
+        }
+
+        $products = $query->paginate(12)->withQueryString();
+
+        return view('front-pages.collection', compact('collection', 'products', 'sort'));
+    }
+
+
+    /**
+     * Shared product search: every word must match the name, short description or category name.
+     */
+    private function searchQuery(string $q)
+    {
+        $query = Product::query()->where('products.status', 1);   // same "active product" condition as shop()
+
+        if ($q !== '') {
+            $terms = array_slice(array_filter(preg_split('/\s+/', $q)), 0, 5);
+
+            foreach ($terms as $term) {
+                $like = '%' . addcslashes($term, '%_\\') . '%';
+
+                $query->where(function ($w) use ($like) {
+                    $w->where('products.name', 'like', $like)
+                        ->orWhere('products.short_description', 'like', $like)
+                        ->orWhereHas('category', fn($c) => $c->where('name', 'like', $like));
+                });
+            }
+        }
+
+        return $query;
+    }
+
+    public function search(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+        $sort = $request->get('sort', 'relevance');
+
+        $query = $this->searchQuery($q);
+
+        switch ($sort) {
+            case 'price-low':
+                $query->orderBy('products.price', 'asc');
+                break;
+            case 'price-high':
+                $query->orderBy('products.price', 'desc');
+                break;
+            case 'newest':
+                $query->orderBy('products.id', 'desc');
+                break;
+            default:
+                $sort = 'relevance';
+                if ($q !== '') {
+                    // names that start with the query come first
+                    $query->orderByRaw('CASE WHEN products.name LIKE ? THEN 0 ELSE 1 END', [addcslashes($q, '%_\\') . '%']);
+                }
+                $query->orderBy('products.id', 'desc');
+        }
+
+        $products = $query->paginate(12)->withQueryString();
+
+        $setting = Setting::first();
+        $popularSearches = $setting?->popular_search_list ?? [];
+
+        return view('front-pages.search', compact('q', 'sort', 'products', 'popularSearches'));
+    }
+
+    public function searchSuggest(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+
+        if (mb_strlen($q) < 2) {
+            return response()->json(['products' => [], 'categories' => []]);
+        }
+
+        $products = $this->searchQuery($q)
+            ->with('category')
+            ->orderByRaw('CASE WHEN products.name LIKE ? THEN 0 ELSE 1 END', [addcslashes($q, '%_\\') . '%'])
+            ->limit(6)
+            ->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'price' => $p->price,
+                'image' => $p->image_url ?? null,   // use the same image source your product-card partial uses
+                'category' => $p->category->name ?? null,
+                'url' => route('product', ['slug' => $p->slug]),
+            ]);
+
+        $categories = Category::where('name', 'like', '%' . addcslashes($q, '%_\\') . '%')
+            ->limit(3)
+            ->get(['name', 'slug'])
+            ->map(fn($c) => [
+                'name' => $c->name,
+                'url' => route('shop', ['category' => $c->slug]),
+            ]);
+
+        return response()->json([
+            'products' => $products,
+            'categories' => $categories,
+        ]);
+    }
+
 
 }

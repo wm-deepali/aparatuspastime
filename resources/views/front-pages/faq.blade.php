@@ -54,6 +54,7 @@
 
     $contact = $contact ?? [];
     $totalFaqs = $categories->sum(fn($c) => $c->faqs->count());
+    $pageUrl = fn(string $slug) => route('page.show', ['slug' => $slug]);
   @endphp
 
   <div class="py-8 md:py-12">
@@ -369,7 +370,7 @@
                   </span>
                   <i class="fa-solid fa-chevron-right text-[10px] text-brand-muted group-hover:text-white"></i>
                 </a>
-                <a href="{{ route('returns') }}"
+                <a href="{{ $pageUrl('returns-policy') }}"
                   class="p-2.5 rounded-xl bg-soft-mint hover:bg-emerald-600 hover:text-white text-emerald-800 flex items-center justify-between transition group">
                   <span class="flex items-center gap-2 font-bold">
                     <i class="fa-solid fa-rotate-left text-emerald-600 group-hover:text-white"></i>

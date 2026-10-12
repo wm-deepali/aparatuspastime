@@ -9,9 +9,18 @@ class ContactEnquiry extends Model
     protected $fillable = [
         'name',
         'email',
-        'mobile',
-        'company',
-        'inquiry_type',
-        'message'
+        'phone',
+        'subject',
+        'message',
+        'is_read',
     ];
+
+    protected $casts = [
+        'is_read' => 'boolean',
+    ];
+
+    public function scopeUnread($query)
+    {
+        return $query->where('is_read', false);
+    }
 }
