@@ -304,6 +304,7 @@ class CheckoutController extends Controller
 
                 'subtotal' => $cart->subtotal,
                 'discount' => $cart->discount,
+                'shipping_charge' => $cart->shipping_charge,
                 'tax_amount' => $cart->tax_amount,
                 'grand_total' => $cart->grand_total,
 
@@ -423,6 +424,7 @@ class CheckoutController extends Controller
 
                     'subtotal' => $order->subtotal,
                     'discount' => $order->discount,
+                    'shipping_charge' => $order->shipping_charge,
                     'tax_amount' => $order->tax_amount,
                     'grand_total' => $order->grand_total,
 
@@ -1043,6 +1045,17 @@ class CheckoutController extends Controller
                 </span>
             </div>
         ";
+        }
+
+        if ($order->shipping_charge > 0) {
+            $orderSummary .= "
+        <div style='display:table;width:100%;padding:5px 0;'>
+            <span style='display:table-cell;font-size:13px;color:#666;'>Shipping</span>
+            <span style='display:table-cell;text-align:right;font-size:13px;color:#333;'>
+                ₹ " . number_format($order->shipping_charge, 2) . "
+            </span>
+        </div>
+    ";
         }
 
         if ($order->tax_amount > 0) {

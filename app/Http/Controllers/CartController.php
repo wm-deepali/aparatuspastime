@@ -341,7 +341,7 @@ class CartController extends Controller
 
         $summary = $cart ? $this->summaryPayload($cart) : null;
 
-        $freeShippingThreshold = (float) (\App\Models\Setting::first()->free_shipping_threshold ?? 0); // same column as in mini()
+        $freeShippingThreshold = (float) (\App\Models\ShippingSetting::first()->free_delivery_threshold ?? 0);
 
         return view('front-pages.cart', compact('cart', 'summary', 'freeShippingThreshold'));
     }
@@ -668,14 +668,20 @@ class CartController extends Controller
 
         $mrpTotal = $cart->items->sum(fn($i) => $this->itemMrp($i) * $i->quantity);
         $subtotal = (float) $cart->subtotal;
+        $shipping = \App\Services\ShippingCalculator::forCart($cart);
+
+        // Same basis the free-delivery rule uses: raw items total minus coupon discount
+        $shippingBasis = max(0, (float) $cart->items->sum('total') - (float) $cart->discount);
 
         return [
             'count' => (int) $cart->items->sum('quantity'),
             'mrp_total' => (float) $mrpTotal,
             'savings' => max(0, (float) $mrpTotal - $subtotal),
             'subtotal' => $subtotal,
+            'shipping_basis' => $shippingBasis,
             'discount' => (float) $cart->discount,
             'tax' => (float) $cart->tax_amount,
+            'shipping' => $shipping['known'] ? (float) $cart->shipping_charge : null,
             'grand_total' => (float) $cart->grand_total,
             'coupon_code' => $cart->coupon_code,
         ];
@@ -686,7 +692,7 @@ class CartController extends Controller
      * subtotal/quantity. Removes the coupon if it no longer qualifies,
      * and re-syncs a percentage discount's amount if the subtotal shifted.
      *
-     * Call this after any operation that changes cart contents (add,
+     * Call this after anyperation that changes cart contents (add,
      * remove, quantity update) — right after recalculateTotals()/refresh().
      */
     private function revalidateCoupon(Cart $cart): ?array
@@ -744,7 +750,7 @@ class CartController extends Controller
             ? Cart::where('user_id', auth('customer')->id())->first()
             : Cart::where('session_id', session()->getId())->first();
 
-        $threshold = (float) (\App\Models\Setting::first()->free_shipping_threshold ?? 0); // adjust column name
+        $threshold = (float) (\App\Models\ShippingSetting::first()->free_delivery_threshold ?? 0);
 
         if (!$cart) {
             return response()->json([
@@ -790,7 +796,10 @@ class CartController extends Controller
         })->values();
 
         $subtotal = (float) $cart->subtotal;
-        $remaining = $threshold ? max(0, $threshold - $subtotal) : 0;
+        $basis = max(0, (float) $cart->items->sum('total') - (float) $cart->discount);
+        $remaining = $threshold ? max(0, $threshold - $basis) : 0;
+
+        $shipping = \App\Services\ShippingCalculator::forCart($cart);
 
         return response()->json([
             'count' => (int) $cart->items->sum('quantity'),
@@ -802,7 +811,8 @@ class CartController extends Controller
             'coupon' => $cart->coupon_code,
             'free_shipping_threshold' => $threshold ?: null,
             'amount_for_free_shipping' => $remaining,
-            'free_shipping_percent' => $threshold ? min(100, (int) floor($subtotal / $threshold * 100)) : 0,
+            'free_shipping_percent' => $threshold ? min(100, (int) floor($basis / $threshold * 100)) : 0,
+            'shipping' => $shipping['known'] ? (float) $cart->shipping_charge : null,
         ]);
     }
 
