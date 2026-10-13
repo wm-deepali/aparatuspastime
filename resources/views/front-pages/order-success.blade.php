@@ -92,7 +92,7 @@
 
         <!-- ACTION BUTTONS -->
         <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <a href="{{ route('track-order', ['orderId' => $order->order_number]) }}"
+          <a href="{{ route('user.track-order', ['orderId' => $order->order_number]) }}"
              class="w-full sm:w-auto btn-play-orange text-xs sm:text-sm px-8 py-3.5 rounded-xl shadow-md transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-truck text-xs"></i>
             <span>TRACK ORDER</span>

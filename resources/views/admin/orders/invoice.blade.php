@@ -710,6 +710,13 @@
                             </tr>
                         @endif
 
+                        @if(($invoice->shipping_charge ?? 0) > 0)
+                            <tr>
+                                <td class="t-label">Shipping</td>
+                                <td class="t-value">&#8377;{{ number_format($invoice->shipping_charge, 2) }}</td>
+                            </tr>
+                        @endif
+
                         {{-- GST rows --}}
                         @if($setting?->show_gst_breakup)
 

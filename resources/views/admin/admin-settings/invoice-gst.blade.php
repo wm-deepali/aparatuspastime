@@ -5,7 +5,7 @@
 @endphp
 
 @if ($errors->any())
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" id="invoiceFormErrors" tabindex="-1">
         <ul class="mb-0">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -241,8 +241,12 @@
                         <label class="field-label">Starting Serial Number</label>
                         <input name="invoice_serial" type="number" class="field-input monospace" id="invSerial"
                             value="{{ old('invoice_serial', $invoice_setting->invoice_serial ?? 1) }}" min="1"
-                            oninput="updatePreview()">
-                        <span class="field-hint">Next invoice will use this number.</span>
+                            placeholder="1" oninput="updatePreview()">
+                        <span class="field-hint">
+                            Zeros are added automatically (5 digits). Example: <strong>1</strong> becomes
+                            <strong class="monospace">00001</strong>, <strong>25</strong> becomes
+                            <strong class="monospace">00025</strong>.
+                        </span>
                     </div>
 
                     <div class="field-group">
@@ -254,11 +258,11 @@
                             </option>
                             <option value="slash"
                                 {{ old('invoice_year_format', $invoice_setting->invoice_year_format ?? 'slash') == 'slash' ? 'selected' : '' }}>
-                                FY Slash (2025-26)
+                                FY Slash (2026-27)
                             </option>
                             <option value="year"
                                 {{ old('invoice_year_format', $invoice_setting->invoice_year_format ?? 'slash') == 'year' ? 'selected' : '' }}>
-                                Year Only (2025)
+                                Year Only (2026)
                             </option>
                         </select>
                     </div>
@@ -276,7 +280,7 @@
                         <label class="field-label">Preview</label>
                         <div class="serial-preview">
                             <span class="serial-preview-label">Next invoice:</span>
-                            <span class="serial-preview-value" id="serialPreview">OC-2025-26-1001</span>
+                            <span class="serial-preview-value" id="serialPreview">INV/2026-27/00001</span>
                         </div>
                     </div>
 
@@ -337,6 +341,7 @@
 </form>
 
 <script>
+    // Logo preview
     (function () {
         const input = document.getElementById('invoiceLogoInput');
         const box = document.getElementById('invoiceLogoPreview');
@@ -363,4 +368,33 @@
             if (existing) existing.style.display = 'block';
         };
     })();
+
+    // Live invoice number preview (serial padded to 5 digits, same as controller)
+    function updatePreview() {
+        const prefix = document.getElementById('invPrefix').value.trim();
+        const serial = String(parseInt(document.getElementById('invSerial').value || 1, 10)).padStart(5, '0');
+        const yearMode = document.getElementById('invYear').value;
+        const sep = document.getElementById('invSep').value || '/';
+
+        const y = new Date().getFullYear();
+        const yearPart = yearMode === 'slash'
+            ? y + '-' + String(y + 1).slice(-2)
+            : (yearMode === 'year' ? String(y) : '');
+
+        document.getElementById('serialPreview').textContent =
+            [prefix, yearPart, serial].filter(Boolean).join(sep);
+    }
+    document.addEventListener('DOMContentLoaded', updatePreview);
 </script>
+
+@if ($errors->any())
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const box = document.getElementById('invoiceFormErrors');
+        if (box) {
+            box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            box.focus({ preventScroll: true });
+        }
+    });
+</script>
+@endif

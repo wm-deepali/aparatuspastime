@@ -831,27 +831,14 @@
                         onclick="switchTab('couriers', this)">
                         <i class="fa-solid fa-truck"></i> Courier Management
                     </button>
-                      <button class="tab-btn {{ $activeTab == 'tracking' ? 'active' : '' }}"
-    onclick="switchTab('tracking', this)">
-    <i class="fa-brands fa-google"></i> Tracking &amp; Pixels
-</button>
-               <!--   <button class="tab-btn {{ $activeTab == 'whatsapp' ? 'active' : '' }}"
-                        onclick="switchTab('whatsapp', this)">
-                        <i class="fa-solid fa-truck"></i> WhatsApp Setting
+                    <button class="tab-btn {{ $activeTab == 'tracking' ? 'active' : '' }}"
+                        onclick="switchTab('tracking', this)">
+                        <i class="fa-brands fa-google"></i> Tracking &amp; Pixels
                     </button>
-                    <button class="tab-btn {{ $activeTab == 'google-setting' ? 'active' : '' }}"
-                        onclick="switchTab('google-setting', this)">
-                        <i class="fa-solid fa-truck"></i> Google Setting
-                    </button>  -->
-              {{--        <button class="tab-btn {{ $activeTab == 'delivery-setting' ? 'active' : '' }}"
-                        onclick="switchTab('delivery-setting', this)">
-                        <i class="fa-solid fa-truck"></i> Delivery Setting
-                    </button> --}}
-                    
-                   {{--   <button class="tab-btn {{ $activeTab == 'sme-api' ? 'active' : '' }}"
-                        onclick="switchTab('sms-api', this)">
-                        <i class="fa-solid fa-truck"></i> SMS API
-                    </button> --}}
+                    <button class="tab-btn {{ $activeTab == 'shipping' ? 'active' : '' }}"
+                        onclick="switchTab('shipping', this)">
+                        <i class="fa-solid fa-box"></i> Shipping Charges
+                    </button>
                 </div>
 
                 <!-- ══════════════════════════════════
@@ -889,35 +876,16 @@
                      TAB 5 —COURIER
                 ══════════════════════════════════ -->
                 <div class="tab-panel {{ $activeTab == 'couriers' ? 'active' : '' }}" id="tab-couriers">
-                @include('admin.admin-settings.couriers') </div>
-                
-                <div class="tab-panel {{ $activeTab == 'tracking' ? 'active' : '' }}" id="tab-tracking">
-    @include('admin.admin-settings.google-setting')
-</div>
+                    @include('admin.admin-settings.couriers')
+                </div>
 
-                <!-- ══════════════════════════════════
-                     TAB 6 — WHATSAPP
-                ══════════════════════════════════ -->
-        {{-- <div class="tab-panel {{ $activeTab == 'whatsapp' ? 'active' : '' }}" id="tab-whatsapp">
-                    @include('admin.admin-settings.whatsapp') </div> --}}
-                    
-                     <!-- ══════════════════════════════════
-                     TAB 7 — GOOGLE SETTING
-                ══════════════════════════════════ -->
-   {{--     <div class="tab-panel {{ $activeTab == 'google-setting' ? 'active' : '' }}" id="tab-google-setting">
-                    @include('admin.admin-settings.google-setting') </div> --}}
-                    
-               <!-- ══════════════════════════════════
-                     TAB 8 — DELIVERY SETTING
-                ══════════════════════════════════ -->
-             {{--     <div class="tab-panel {{ $activeTab == 'delivery-setting' ? 'active' : '' }}" id="tab-delivery-setting">
-                    @include('admin.admin-settings.delivery-setting') </div>--}}
-                    
-                     <!-- ══════════════════════════════════
-                     TAB 9 — SMS API SETTING
-                ══════════════════════════════════ -->
-                {{--     <div class="tab-panel {{ $activeTab == 'sms-api' ? 'active' : '' }}" id="tab-sms-api">
-                    @include('admin.admin-settings.sms-api') </div> --}}
+                <div class="tab-panel {{ $activeTab == 'tracking' ? 'active' : '' }}" id="tab-tracking">
+                    @include('admin.admin-settings.google-setting')
+                </div>
+
+                <div class="tab-panel {{ $activeTab == 'shipping' ? 'active' : '' }}" id="tab-shipping">
+                    @include('admin.admin-settings.shipping')
+                </div>
             </div>
             <!-- /tab-shell -->
 
@@ -952,7 +920,7 @@
         }, 800);
     }
 
-   
+
 
     // ── Toggle password visibility ──
     function togglePass(id, btn) {
@@ -990,31 +958,6 @@
             toggleMode(liveToggle);
         }
     });
-    
-    // ── Invoice number preview ──
-    function updatePreview() {
-        const prefix = document.getElementById('invPrefix').value || 'INV';
-        const serial = document.getElementById('invSerial').value || '1001';
-        const yearMode = document.getElementById('invYear').value;
-        const sep = document.getElementById('invSep').value;
-
-        const now = new Date();
-        const y = now.getFullYear();
-        const nextY = (y + 1).toString().slice(-2);
-
-        let yearPart = '';
-        if (yearMode === 'slash') yearPart = `${y}-${nextY}`;
-        if (yearMode === 'year') yearPart = `${y}`;
-
-        const parts = [prefix];
-        if (yearPart) parts.push(yearPart);
-        parts.push(serial);
-
-        document.getElementById('serialPreview').textContent = parts.join(sep);
-    }
-
-    // Init preview on load
-    updatePreview();
 
     // ── Section sidenav smooth scroll ──
     document.querySelectorAll('.settings-sidenav a').forEach(link => {
@@ -1064,40 +1007,40 @@
         }
     });
 
-// Image preview (generic — reusable for header_logo, footer_logo, favicon, admin_login_logo, admin_dashboard_logo)
-const uploadFields = [
-    'header_logo',
-    'footer_logo',
-    'favicon',
-    'admin_login_logo',
-    'admin_dashboard_logo'
-];
+    // Image preview (generic — reusable for header_logo, footer_logo, favicon, admin_login_logo, admin_dashboard_logo)
+    const uploadFields = [
+        'header_logo',
+        'footer_logo',
+        'favicon',
+        'admin_login_logo',
+        'admin_dashboard_logo'
+    ];
 
-uploadFields.forEach(function (fieldId) {
-    const input = document.getElementById(fieldId);
-    if (!input) return;
+    uploadFields.forEach(function (fieldId) {
+        const input = document.getElementById(fieldId);
+        if (!input) return;
 
-    input.addEventListener('change', function () {
-        const file = this.files[0];
-        if (!file) return;
+        input.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const previewImg = document.getElementById('preview_' + fieldId);
-            const previewBox = document.getElementById(fieldId + 'Preview');
-            if (previewImg) previewImg.src = e.target.result;
-            if (previewBox) previewBox.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const previewImg = document.getElementById('preview_' + fieldId);
+                const previewBox = document.getElementById(fieldId + 'Preview');
+                if (previewImg) previewImg.src = e.target.result;
+                if (previewBox) previewBox.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
     });
-});
 
-function clearImage(fieldId) {
-    const input = document.getElementById(fieldId);
-    const previewBox = document.getElementById(fieldId + 'Preview');
-    if (input) input.value = '';
-    if (previewBox) previewBox.style.display = 'none';
-}
+    function clearImage(fieldId) {
+        const input = document.getElementById(fieldId);
+        const previewBox = document.getElementById(fieldId + 'Preview');
+        if (input) input.value = '';
+        if (previewBox) previewBox.style.display = 'none';
+    }
 
     function toggleBusinessType() {
 

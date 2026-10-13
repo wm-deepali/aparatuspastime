@@ -6,6 +6,8 @@ use App\Models\AgeGroup;
 use App\Models\Collection;
 use App\Models\DynamicPage;
 use App\Models\Setting;
+use App\Models\ShippingSetting;
+use App\Models\Announcement;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 
@@ -13,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        require_once app_path('Helpers/seo.php');
     }
 
     public function boot()
@@ -24,6 +26,11 @@ class AppServiceProvider extends ServiceProvider
                 : \App\Models\Cart::where('session_id', session()->getId())->first();
 
             $view->with('cartCount', $cart ? (int) $cart->items()->sum('quantity') : 0);
+
+            $view->with([
+                'freeShippingThreshold' => (float) (ShippingSetting::first()->free_delivery_threshold ?? 0),
+                'announcements' => Announcement::active()->get(),
+            ]);
 
             // Wishlist ids are fetched once per request and shared with product-card
             $wishIds = app()->bound('wishlist.ids')

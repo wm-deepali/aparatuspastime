@@ -164,7 +164,6 @@
 
 
         {{-- Admin Setting --}}
-        {{-- Admin Setting --}}
         <li class="{{ request()->routeIs(
     'admin.settings.*',
     'admin.notifications.index',
@@ -175,6 +174,11 @@
 
                 <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'general']) }}">General Setting</a></li>
                 <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'payment']) }}">Payment Gateway</a></li>
+                <li>
+                    <a href="{{ route('admin.admin-setting.index', ['tab' => 'shipping']) }}">
+                        Shipping Charges
+                    </a>
+                </li>
                 <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'smtp']) }}">SMTP</a></li>
                 <li>
                     <a href="{{ route('admin.settings.email-templates.index') }}">

@@ -12,90 +12,90 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderController extends Controller
 {
-   public function index(Request $request)
-{
-    // ── Customer filter (used when viewing orders from a customer's wishlist/profile) ──
-    $customerId = $request->input('customer');
+    public function index(Request $request)
+    {
+        // ── Customer filter (used when viewing orders from a customer's wishlist/profile) ──
+        $customerId = $request->input('customer');
 
-    // ── KPI counts ────────────────────────────────────────
-    $kpi = [
-        'total' => Order::when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-        'pending' => Order::where('status', 'pending')->when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-        'shipped' => Order::where('status', 'shipped')->when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-        'delivered' => Order::where('status', 'delivered')->when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-    ];
+        // ── KPI counts ────────────────────────────────────────
+        $kpi = [
+            'total' => Order::when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'pending' => Order::where('status', 'pending')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'shipped' => Order::where('status', 'shipped')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'delivered' => Order::where('status', 'delivered')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+        ];
 
-    // ── Tab counts ────────────────────────────────────────
-    // NDR and RTO added as their own tabs — without these, orders that fail
-    // delivery (status = 'ndr'/'rto') would only ever show up under "All"
-    // and never surface in a dedicated queue for admins to work through.
-    $tabCounts = [
-        'all' => Order::when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-        'new' => Order::where('status', 'new')->when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-        'processing' => Order::where('status', 'processing')->when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-        'shipped' => Order::where('status', 'shipped')->when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-        'delivered' => Order::where('status', 'delivered')->when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-        'ndr' => Order::where('status', 'ndr')->when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-        'rto' => Order::where('status', 'rto')->when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-        'cancelled' => Order::where('status', 'cancelled')->when($customerId, fn ($q) => $q->where('customer_id', $customerId))->count(),
-    ];
+        // ── Tab counts ────────────────────────────────────────
+        // NDR and RTO added as their own tabs — without these, orders that fail
+        // delivery (status = 'ndr'/'rto') would only ever show up under "All"
+        // and never surface in a dedicated queue for admins to work through.
+        $tabCounts = [
+            'all' => Order::when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'new' => Order::where('status', 'new')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'processing' => Order::where('status', 'processing')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'shipped' => Order::where('status', 'shipped')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'delivered' => Order::where('status', 'delivered')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'ndr' => Order::where('status', 'ndr')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'rto' => Order::where('status', 'rto')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'cancelled' => Order::where('status', 'cancelled')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+        ];
 
-    // ── Base query ────────────────────────────────────────
-    $query = Order::with(['items', 'customer'])
-        ->latest();
+        // ── Base query ────────────────────────────────────────
+        $query = Order::with(['items', 'customer'])
+            ->latest();
 
-    // ── Customer filter ────────────────────────────────────
-    if ($customerId) {
-        $query->where('customer_id', $customerId);
+        // ── Customer filter ────────────────────────────────────
+        if ($customerId) {
+            $query->where('customer_id', $customerId);
+        }
+
+        // ── Status tab filter ─────────────────────────────────
+        $activeTab = $request->input('tab', 'all');
+        if ($activeTab !== 'all') {
+            $query->where('status', $activeTab);
+        }
+
+        // ── Search (order number, name, email) ────────────────
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_email', 'like', "%{$search}%");
+            });
+        }
+
+        // ── Payment status filter ─────────────────────────────
+        if ($payment = $request->input('payment')) {
+            $query->where('payment_status', $payment);
+        }
+
+        // ── Date range filter ─────────────────────────────────
+        if ($from = $request->input('from_date')) {
+            $query->whereDate('created_at', '>=', $from);
+        }
+        if ($to = $request->input('to_date')) {
+            $query->whereDate('created_at', '<=', $to);
+        }
+
+        // ── Paginate ──────────────────────────────────────────
+        $orders = $query->paginate(25)->withQueryString();
+
+        return view('admin.orders.index', compact(
+            'orders',
+            'kpi',
+            'tabCounts',
+            'activeTab'
+        ));
     }
-
-    // ── Status tab filter ─────────────────────────────────
-    $activeTab = $request->input('tab', 'all');
-    if ($activeTab !== 'all') {
-        $query->where('status', $activeTab);
-    }
-
-    // ── Search (order number, name, email) ────────────────
-    if ($search = $request->input('search')) {
-        $query->where(function ($q) use ($search) {
-            $q->where('order_number', 'like', "%{$search}%")
-                ->orWhere('customer_name', 'like', "%{$search}%")
-                ->orWhere('customer_email', 'like', "%{$search}%");
-        });
-    }
-
-    // ── Payment status filter ─────────────────────────────
-    if ($payment = $request->input('payment')) {
-        $query->where('payment_status', $payment);
-    }
-
-    // ── Date range filter ─────────────────────────────────
-    if ($from = $request->input('from_date')) {
-        $query->whereDate('created_at', '>=', $from);
-    }
-    if ($to = $request->input('to_date')) {
-        $query->whereDate('created_at', '<=', $to);
-    }
-
-    // ── Paginate ──────────────────────────────────────────
-    $orders = $query->paginate(25)->withQueryString();
-
-    return view('admin.orders.index', compact(
-        'orders',
-        'kpi',
-        'tabCounts',
-        'activeTab'
-    ));
-}
 
     // ── Export CSV ────────────────────────────────────────────
     public function export(Request $request)
     {
         $query = Order::with('items')->latest();
 
-  if ($customerId = $request->input('customer')) {
-        $query->where('customer_id', $customerId);
-    }
+        if ($customerId = $request->input('customer')) {
+            $query->where('customer_id', $customerId);
+        }
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -135,6 +135,7 @@ class OrderController extends Controller
                 'Items',
                 'Subtotal',
                 'Discount',
+                'Shipping',   // new
                 'Tax',
                 'Grand Total',
                 'Payment',
@@ -150,6 +151,7 @@ class OrderController extends Controller
                     $o->items->count(),
                     $o->subtotal,
                     $o->discount,
+                    $o->shipping_charge ?? 0,   // new
                     $o->tax_amount,
                     $o->grand_total,
                     $o->payment_status,
@@ -291,7 +293,7 @@ class OrderController extends Controller
             $order->statusHistory()->create([
                 'status' => $request->status,
                 'remarks' => $remarks,
-                'previous_status'=> $oldStatus,
+                'previous_status' => $oldStatus,
                 'triggered_by' => 'Admin (' . auth()->user()->name . ')'
             ]);
 
@@ -352,47 +354,47 @@ class OrderController extends Controller
                 ]);
             }
 
-// admin notification
-$adminNotifData = match ($request->status) {
+            // admin notification
+            $adminNotifData = match ($request->status) {
 
-    'shipped' => [
-        'title'   => 'Order shipped',
-        'message' => "Order #{$order->order_number} dispatched"
-            . ($order->tracking_number ? " via {$order->courier?->name}. Tracking ID: {$order->tracking_number}." : '.')
-            . " Expected delivery in 3–5 days.",
-        'icon'      => 'fa-truck',
-        'link_text' => 'Track Shipment',
-    ],
+                'shipped' => [
+                    'title' => 'Order shipped',
+                    'message' => "Order #{$order->order_number} dispatched"
+                        . ($order->tracking_number ? " via {$order->courier?->name}. Tracking ID: {$order->tracking_number}." : '.')
+                        . " Expected delivery in 3–5 days.",
+                    'icon' => 'fa-truck',
+                    'link_text' => 'Track Shipment',
+                ],
 
-    'delivered' => [
-        'title'     => 'Order delivered',
-        'message'   => "Order #{$order->order_number} has been delivered to {$order->customer_name}.",
-        'icon'      => 'fa-box-check',
-        'link_text' => 'View Order',
-    ],
+                'delivered' => [
+                    'title' => 'Order delivered',
+                    'message' => "Order #{$order->order_number} has been delivered to {$order->customer_name}.",
+                    'icon' => 'fa-box-check',
+                    'link_text' => 'View Order',
+                ],
 
-    'cancelled' => [
-        'title'     => 'Order cancelled',
-        'message'   => "Order #{$order->order_number} by {$order->customer_name} (₹" . number_format($order->grand_total, 2) . ") was cancelled."
-            . ($request->note ? " Reason: {$request->note}." : ''),
-        'icon'      => 'fa-times-circle',
-        'link_text' => 'View Order',
-    ],
+                'cancelled' => [
+                    'title' => 'Order cancelled',
+                    'message' => "Order #{$order->order_number} by {$order->customer_name} (₹" . number_format($order->grand_total, 2) . ") was cancelled."
+                        . ($request->note ? " Reason: {$request->note}." : ''),
+                    'icon' => 'fa-times-circle',
+                    'link_text' => 'View Order',
+                ],
 
-    default => null,
-};
+                default => null,
+            };
 
-if ($adminNotifData) {
-    \App\Models\AdminNotification::notify([
-        'type'      => $request->status === 'cancelled' ? 'cancel' : 'order',
-        'title'     => $adminNotifData['title'],
-        'message'   => $adminNotifData['message'],
-        'reference' => '#' . $order->order_number,
-        'icon'      => $adminNotifData['icon'],
-        'url'       => route('admin.orders.show', $order->id),
-        'link_text' => $adminNotifData['link_text'],
-    ]);
-}
+            if ($adminNotifData) {
+                \App\Models\AdminNotification::notify([
+                    'type' => $request->status === 'cancelled' ? 'cancel' : 'order',
+                    'title' => $adminNotifData['title'],
+                    'message' => $adminNotifData['message'],
+                    'reference' => '#' . $order->order_number,
+                    'icon' => $adminNotifData['icon'],
+                    'url' => route('admin.orders.show', $order->id),
+                    'link_text' => $adminNotifData['link_text'],
+                ]);
+            }
 
             /*
             |--------------------------------------------------------------------------
@@ -419,55 +421,55 @@ if ($adminNotifData) {
 
                     foreach ($order->items as $item) {
 
-    // Thumbnail: image variant > product default image > null
-    $thumb = null;
-    if ($item->imageVariant && $item->imageVariant->image) {
-        $thumb = asset('storage/' . $item->imageVariant->image);
-    } elseif ($item->product) {
-        $thumb = $item->product->display_image;
-    }
+                        // Thumbnail: image variant > product default image > null
+                        $thumb = null;
+                        if ($item->imageVariant && $item->imageVariant->image) {
+                            $thumb = asset('storage/' . $item->imageVariant->image);
+                        } elseif ($item->product) {
+                            $thumb = $item->product->display_image;
+                        }
 
-    $imageHtml = $thumb
-        ? "<img src='{$thumb}' alt='{$item->product_name}' style='width:56px;height:56px;object-fit:cover;border-radius:4px;border:1px solid #d0d8d7;display:block;'>"
-        : "<span style='display:block;width:56px;height:56px;background:#e8efee;border-radius:4px;border:1px solid #d0d8d7;'></span>";
+                        $imageHtml = $thumb
+                            ? "<img src='{$thumb}' alt='{$item->product_name}' style='width:56px;height:56px;object-fit:cover;border-radius:4px;border:1px solid #d0d8d7;display:block;'>"
+                            : "<span style='display:block;width:56px;height:56px;background:#e8efee;border-radius:4px;border:1px solid #d0d8d7;'></span>";
 
-    // Variant label from selected_attributes snapshot
-    $variantLabel = null;
-    if (!empty($item->selected_attributes)) {
-        $variantLabel = collect($item->selected_attributes)
-            ->map(function ($value, $key) {
-                if (is_array($value)) {
-                    $attrName = $value['attribute'] ?? $value['name'] ?? $key;
-                    $attrVal = $value['value'] ?? $value['label'] ?? reset($value);
-                    return $attrName . ': ' . $attrVal;
-                }
-                return $key . ': ' . $value;
-            })
-            ->join(' · ');
-    }
+                        // Variant label from selected_attributes snapshot
+                        $variantLabel = null;
+                        if (!empty($item->selected_attributes)) {
+                            $variantLabel = collect($item->selected_attributes)
+                                ->map(function ($value, $key) {
+                                    if (is_array($value)) {
+                                        $attrName = $value['attribute'] ?? $value['name'] ?? $key;
+                                        $attrVal = $value['value'] ?? $value['label'] ?? reset($value);
+                                        return $attrName . ': ' . $attrVal;
+                                    }
+                                    return $key . ': ' . $value;
+                                })
+                                ->join(' · ');
+                        }
 
-    $variantHtml = $variantLabel
-        ? "<div style='font-size:11px;color:#7a9e9c;'>{$variantLabel}</div>"
-        : '';
+                        $variantHtml = $variantLabel
+                            ? "<div style='font-size:11px;color:#7a9e9c;'>{$variantLabel}</div>"
+                            : '';
 
-    // SKU: sku variant > snapshot sku > product sku
-    $sku = optional($item->skuVariant)->sku ?? ($item->sku ?? optional($item->product)->sku);
-    $skuHtml = $sku
-        ? "<div style='font-size:11px;color:#7a9e9c;'>SKU: {$sku}</div>"
-        : '';
+                        // SKU: sku variant > snapshot sku > product sku
+                        $sku = optional($item->skuVariant)->sku ?? ($item->sku ?? optional($item->product)->sku);
+                        $skuHtml = $sku
+                            ? "<div style='font-size:11px;color:#7a9e9c;'>SKU: {$sku}</div>"
+                            : '';
 
-    // Addons — list each one and fold into the line total
-    $addonsTotal = $item->addons->sum('price');
-    $lineTotal = ($item->price * $item->quantity) + $addonsTotal;
+                        // Addons — list each one and fold into the line total
+                        $addonsTotal = $item->addons->sum('price');
+                        $lineTotal = ($item->price * $item->quantity) + $addonsTotal;
 
-    $addonsHtml = '';
-    if ($item->addons->isNotEmpty()) {
-        foreach ($item->addons as $addon) {
-            $addonsHtml .= "<div style='font-size:11px;color:#7a9e9c;'>+ {$addon->detail} (₹" . number_format($addon->price, 2) . ")</div>";
-        }
-    }
+                        $addonsHtml = '';
+                        if ($item->addons->isNotEmpty()) {
+                            foreach ($item->addons as $addon) {
+                                $addonsHtml .= "<div style='font-size:11px;color:#7a9e9c;'>+ {$addon->detail} (₹" . number_format($addon->price, 2) . ")</div>";
+                            }
+                        }
 
-    $orderItems .= "
+                        $orderItems .= "
     <div style='display:table;width:100%;border-bottom:1px solid #e6eae9;padding:14px 0;'>
         <div style='display:table-cell;width:60px;vertical-align:middle;padding-right:14px;'>
             {$imageHtml}
@@ -484,7 +486,7 @@ if ($adminNotifData) {
         </div>
     </div>
 ";
-}
+                    }
 
                     $shippingAddress = "
         <div>
@@ -530,6 +532,10 @@ if ($adminNotifData) {
                             '{order_items}' => $orderItems,
                             '{shipping_address}' => $shippingAddress,
 
+                            '{shipping_charge}' => $order->shipping_charge > 0
+                                ? '₹' . number_format($order->shipping_charge, 2)
+                                : 'FREE',
+
                             '{order_url}' => route('order.success', $order->id),
                         ],
                         $order->customer_name
@@ -555,6 +561,10 @@ if ($adminNotifData) {
                             '{order_items}' => $orderItems,
                             '{shipping_address}' => $shippingAddress,
 
+                            '{shipping_charge}' => $order->shipping_charge > 0
+                                ? '₹' . number_format($order->shipping_charge, 2)
+                                : 'FREE',
+
                             '{review_url}' => route('home'),
                             '{order_url}' => route('order.success', $order->id),
                             '{return_url}' => route('order.success', $order->id),
@@ -573,7 +583,7 @@ if ($adminNotifData) {
                             '{order_number}' => $order->order_number,
 
                             '{cancel_reason}' => $request->note ?: 'Cancelled by store',
-                            '{refund_amount}' => '₹' . number_format($order->grand_total, 2),
+                            '{refund_amount}' => '₹' . number_format($order->grand_total - $order->shipping_charge, 2),
                             '{refund_days}' => '5-7',
 
                             '{shipping_address}' => $shippingAddress,

@@ -854,6 +854,17 @@
                                 </div>
                             @endif
 
+                            <div class="price-row">
+                                <span class="label">Shipping</span>
+                                <span class="value">
+                                    @if($order->shipping_charge > 0)
+                                        ₹{{ number_format($order->shipping_charge, 2) }}
+                                    @else
+                                        <span style="color:var(--green)">FREE</span>
+                                    @endif
+                                </span>
+                            </div>
+
                             {{-- GST breakdown --}}
                             @if($order->tax_amount > 0)
                                 @if($order->gst_type === 'igst' && $order->igst_amount > 0)

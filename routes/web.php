@@ -98,7 +98,7 @@ Route::middleware('maintenance.mode')->group(function () {
 
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::get('/cart', [CartController::class, 'cart'])->name('cart');
-    Route::delete('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.update');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
     Route::post('/cart/apply-coupon', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply');
@@ -324,6 +324,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/settings/courier/store', [AdminSettingController::class, 'courierStore'])->name('couriers.store');
         Route::delete('/settings/courier/{courier}', [AdminSettingController::class, 'courierDelete'])->name('couriers.delete');
         Route::post('admin-setting/google-setting', [AdminSettingController::class, 'googleSettingStore'])->name('admin-setting.google-setting');
+        Route::post('/admin-setting/shipping', [AdminSettingController::class, 'shippingSettingStore'])->name('admin-setting.shipping.store');
 
         Route::get('/security/system-logs', [SystemLogController::class, 'index'])->name('security.system-logs');
 

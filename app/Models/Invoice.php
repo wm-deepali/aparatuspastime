@@ -21,6 +21,7 @@ class Invoice extends Model
 
         'subtotal',
         'discount',
+        'shipping_charge',
         'tax_amount',
         'grand_total',
 

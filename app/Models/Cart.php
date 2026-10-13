@@ -18,6 +18,7 @@ class Cart extends Model
 
         'subtotal',
         'discount',
+        'shipping_charge',
         'tax_amount',
 
         'gst_type',
@@ -69,7 +70,7 @@ class Cart extends Model
 
         $taxAmount = 0;
         $grandTotal = $taxableAmount;
-        $displaySubtotal = $subtotal; // 👈 default — raw items sum, discount subtracted separately in blade
+        $displaySubtotal = $subtotal;
 
         $gstType = null;
 
@@ -105,15 +106,13 @@ class Cart extends Model
                     $cgstRate = $invoiceSetting->cgst ?? 0;
                     $sgstRate = $invoiceSetting->sgst ?? 0;
 
-                    $gstPercentage =
-                        $cgstRate + $sgstRate;
+                    $gstPercentage = $cgstRate + $sgstRate;
 
                 } else {
 
                     $gstType = 'igst';
 
-                    $igstRate =
-                        $invoiceSetting->igst ?? 0;
+                    $igstRate = $invoiceSetting->igst ?? 0;
 
                     $gstPercentage = $igstRate;
                 }
@@ -125,52 +124,54 @@ class Cart extends Model
                 $cgstRate = $invoiceSetting->cgst ?? 0;
                 $sgstRate = $invoiceSetting->sgst ?? 0;
 
-                $gstPercentage =
-                    $cgstRate + $sgstRate;
+                $gstPercentage = $cgstRate + $sgstRate;
             }
 
             if ($invoiceSetting->tax_type === 'exclusive') {
 
-                $taxAmount =
-                    ($taxableAmount * $gstPercentage)
-                    / 100;
+                $taxAmount = ($taxableAmount * $gstPercentage) / 100;
 
-                $grandTotal =
-                    $taxableAmount + $taxAmount;
+                $grandTotal = $taxableAmount + $taxAmount;
 
-                $displaySubtotal = $subtotal; // 👈 raw, as-is (GST added on top)
+                $displaySubtotal = $subtotal;
 
             } else {
 
-                $taxAmount =
-                    ($taxableAmount * $gstPercentage)
-                    /
-                    (100 + $gstPercentage);
+                $taxAmount = ($taxableAmount * $gstPercentage) / (100 + $gstPercentage);
 
                 $grandTotal = $taxableAmount;
 
-                $displaySubtotal = $subtotal - $taxAmount; // 👈 sirf tax hataya, discount nahi
+                $displaySubtotal = $subtotal - $taxAmount;
             }
 
             if ($gstType === 'cgst_sgst') {
 
-                $cgstAmount =
-                    round($taxAmount / 2, 2);
-
-                $sgstAmount =
-                    round($taxAmount / 2, 2);
+                $cgstAmount = round($taxAmount / 2, 2);
+                $sgstAmount = round($taxAmount / 2, 2);
 
             } else {
 
-                $igstAmount =
-                    round($taxAmount, 2);
+                $igstAmount = round($taxAmount, 2);
             }
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Shipping — added after tax (shipping is not taxed here).
+        | Uses the raw items total minus discount, NOT the stored subtotal,
+        | because stored subtotal has tax stripped out in inclusive mode.
+        |--------------------------------------------------------------------------
+        */
+        $shipping = \App\Services\ShippingCalculator::forCart($this, $taxableAmount);
+
+        $shippingCharge = $shipping['charge'];
+        $grandTotal += $shippingCharge;
 
         $this->update([
 
             'subtotal' => round($displaySubtotal, 2),
             'discount' => round($discount, 2),
+            'shipping_charge' => round($shippingCharge, 2),
 
             'gst_type' => $gstType,
 
@@ -188,5 +189,4 @@ class Cart extends Model
             'total_amount' => round($grandTotal, 2),
         ]);
     }
-
 }

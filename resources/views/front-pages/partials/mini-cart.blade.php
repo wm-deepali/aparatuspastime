@@ -63,6 +63,18 @@
     elErr.classList.toggle('hidden', !msg);
   }
 
+  function shippingRow(shipping) {
+    let value;
+    if (shipping === null || shipping === undefined) {
+      value = '<span class="text-[11px] font-heading">Calculated at checkout</span>';
+    } else if (Number(shipping) === 0) {
+      value = '<span class="font-bold text-emerald-600 font-heading">FREE</span>';
+    } else {
+      value = `<span class="font-heading">${money(shipping)}</span>`;
+    }
+    return `<div class="flex justify-between text-brand-muted"><span>Shipping:</span>${value}</div>`;
+  }
+
   function render(d) {
     const count = d.count || 0;
     setHeaderCount(count);
@@ -136,6 +148,7 @@
         <div class="flex justify-between text-brand-muted"><span>Subtotal:</span><span class="font-bold text-dark-navy font-heading">${money(d.subtotal)}</span></div>
         ${d.discount > 0 ? `<div class="flex justify-between text-emerald-600 font-semibold font-heading"><span>Discount${d.coupon ? ' (' + esc(d.coupon) + ')' : ''}:</span><span>-${money(d.discount)}</span></div>` : ''}
         ${d.tax > 0 ? `<div class="flex justify-between text-brand-muted"><span>Tax:</span><span class="font-heading">${money(d.tax)}</span></div>` : ''}
+        ${shippingRow(d.shipping)}
         <div class="flex justify-between text-sm font-bold text-dark-navy pt-2 border-t border-brand-border font-heading"><span>Total Amount:</span><span class="text-brand-navy">${money(d.total)}</span></div>
       </div>
       <div class="space-y-2 pt-1 font-heading">

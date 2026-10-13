@@ -196,26 +196,51 @@
        ============================================================ -->
 
   <!-- TOP MINI STRIP -->
-  <div
-    class="bg-brand-navy text-white text-[10px] sm:text-xs py-1 sm:py-1.5 px-3 sm:px-4 border-b border-white/10 font-heading">
-    <div class="max-w-7xl mx-auto relative flex items-center justify-center min-h-[20px] sm:min-h-[22px]">
-      <!-- Centered Free Shipping Announcement -->
-      <div class="flex items-center justify-center gap-1.5 sm:gap-2 text-center">
-        <span
-          class="bg-brand-orange text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 uppercase tracking-tight shadow-2xs">FREE
-          SHIPPING</span>
-        <span class="tracking-wide text-[10px] sm:text-xs font-semibold">ON ORDERS ABOVE ₹999</span>
-      </div>
-      <!-- Right-aligned Help Contact (Desktop & Tablet) -->
-      <div class="hidden sm:flex items-center gap-2 text-white/90 shrink-0 absolute right-0 top-1/2 -translate-y-1/2">
-        <a href="{{ route('contact') }}"
-          class="hover:text-play-yellow transition flex items-center gap-1 text-[10px] sm:text-xs font-semibold">
-          <i class="fa-solid fa-headset text-play-yellow text-[10px] sm:text-xs"></i>
-          <span>Need Help? Contact Us</span>
-        </a>
+  @php
+    $slides = collect();
+    if (($freeShippingThreshold ?? 0) > 0) {
+      $slides->push(['type' => 'ship']);
+    }
+    foreach (($announcements ?? collect()) as $a) {
+      $slides->push(['type' => 'text', 'title' => $a->title, 'link' => $a->link]);
+    }
+  @endphp
+
+  @if ($slides->isNotEmpty())
+    <div
+      class="bg-brand-navy text-white text-[10px] sm:text-xs py-1 sm:py-1.5 px-3 sm:px-4 border-b border-white/10 font-heading">
+      <div class="max-w-7xl mx-auto relative flex items-center justify-center min-h-[20px] sm:min-h-[22px]">
+
+        <div id="announcement-rotator" class="flex items-center justify-center text-center">
+          @foreach ($slides as $s)
+            <div data-announcement
+              class="{{ $loop->first ? 'flex' : 'hidden' }} items-center justify-center gap-1.5 sm:gap-2">
+              @if ($s['type'] === 'ship')
+                <span
+                  class="bg-brand-orange text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 uppercase tracking-tight shadow-2xs">FREE
+                  SHIPPING</span>
+                <span class="tracking-wide text-[10px] sm:text-xs font-semibold uppercase">On orders above
+                  ₹{{ number_format($freeShippingThreshold, 0) }}</span>
+              @elseif (!empty($s['link']))
+                <a href="{{ $s['link'] }}"
+                  class="tracking-wide text-[10px] sm:text-xs font-semibold hover:text-play-yellow transition underline-offset-2 hover:underline">{{ $s['title'] }}</a>
+              @else
+                <span class="tracking-wide text-[10px] sm:text-xs font-semibold">{{ $s['title'] }}</span>
+              @endif
+            </div>
+          @endforeach
+        </div>
+
+        <div class="hidden sm:flex items-center gap-2 text-white/90 shrink-0 absolute right-0 top-1/2 -translate-y-1/2">
+          <a href="{{ route('contact') }}"
+            class="hover:text-play-yellow transition flex items-center gap-1 text-[10px] sm:text-xs font-semibold">
+            <i class="fa-solid fa-headset text-play-yellow text-[10px] sm:text-xs"></i>
+            <span>Need Help? Contact Us</span>
+          </a>
+        </div>
       </div>
     </div>
-  </div>
+  @endif
 
   <!-- MAIN HEADER ROW -->
   <header id="site-header"
@@ -662,10 +687,12 @@
                       <i class="fa-solid fa-shield-heart text-emerald-500 text-xs xl:text-sm"></i>
                       <span>100% Non-Toxic</span>
                     </span>
-                    <span class="flex items-center gap-1.5 text-dark-navy font-bold">
-                      <i class="fa-solid fa-truck-fast text-brand-blue text-xs xl:text-sm"></i>
-                      <span>Free Shipping &gt; ₹999</span>
-                    </span>
+                    @if (($freeShippingThreshold ?? 0) > 0)
+                      <span class="flex items-center gap-1.5 text-dark-navy font-bold">
+                        <i class="fa-solid fa-truck-fast text-brand-blue text-xs xl:text-sm"></i>
+                        <span>Free Shipping &gt; ₹{{ number_format($freeShippingThreshold, 0) }}</span>
+                      </span>
+                    @endif
                     <span class="flex items-center gap-1.5 text-dark-navy font-bold">
                       <i class="fa-solid fa-rotate-left text-amber-500 text-xs xl:text-sm"></i>
                       <span>7-Day Replacement</span>
@@ -1045,9 +1072,12 @@
           <span class="flex items-center gap-1 font-bold text-dark-navy">
             <i class="fa-solid fa-shield-heart text-emerald-500"></i>Non-Toxic
           </span>
-          <span class="flex items-center gap-1 font-bold text-dark-navy">
-            <i class="fa-solid fa-truck-fast text-brand-blue"></i>Free Ship &gt; ₹999
-          </span>
+          @if (($freeShippingThreshold ?? 0) > 0)
+            <span class="flex items-center gap-1 font-bold text-dark-navy">
+              <i class="fa-solid fa-truck-fast text-brand-blue"></i>Free Ship &gt;
+              ₹{{ number_format($freeShippingThreshold, 0) }}
+            </span>
+          @endif
           <span class="flex items-center gap-1 font-bold text-dark-navy">
             <i class="fa-solid fa-rotate-left text-amber-500"></i>7-Day Return
           </span>
@@ -1150,7 +1180,7 @@
           </div>
           <div>
             <h5 class="font-heading font-bold text-xs text-white">Free Fast Shipping</h5>
-            <p class="text-[10px] text-white/70">On orders above ₹999</p>
+            <p class="text-[10px] text-white/70">On orders above ₹{{ number_format($freeShippingThreshold, 0) }}</p>
           </div>
         </div>
         <div class="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center gap-3">
@@ -1983,7 +2013,21 @@
     })();
   </script>
 
+  <script>
+    (function () {
+      const slides = document.querySelectorAll('[data-announcement]');
+      if (slides.length < 2) return;
+      let i = 0;
+      setInterval(() => {
+        slides[i].classList.replace('flex', 'hidden');
+        i = (i + 1) % slides.length;
+        slides[i].classList.replace('hidden', 'flex');
+      }, 4000);
+    })();
+  </script>
+
   @include('front-pages.partials.mini-cart')
+
   <!-- PAGE SPECIFIC SCRIPTS -->
   @stack('scripts')
 </body>

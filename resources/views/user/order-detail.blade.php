@@ -251,6 +251,15 @@
                 @endif
               @endif
 
+              <div class="flex justify-between">
+                <span>Shipping:</span>
+                @if ($order->shipping_charge > 0)
+                  <span class="font-bold text-brand-navy">₹{{ number_format($order->shipping_charge, 2) }}</span>
+                @else
+                  <span class="text-emerald-700 font-bold">FREE</span>
+                @endif
+              </div>
+
               <div
                 class="flex justify-between text-base font-extrabold font-heading text-brand-navy pt-2 border-t border-brand-border">
                 <span>Total Amount:</span>
