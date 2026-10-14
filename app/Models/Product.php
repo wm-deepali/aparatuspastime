@@ -16,6 +16,7 @@ class Product extends Model
 
         'name',
         'slug',
+        'weight',
 
         'sku',
         'product_code',

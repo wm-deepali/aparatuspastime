@@ -68,11 +68,104 @@
   // ── Wishlist state (guest session or logged-in customer) ───────
   $isWishlisted = \App\Models\Wishlist::current()->where('product_id', $product->id)->exists();
 
+  // ── Free delivery threshold (Shipping Settings) ────────────────
+  $freeThreshold = (float) (\App\Models\ShippingSetting::current()->free_delivery_threshold ?? 0);
+  $freeThresholdLabel = $freeThreshold > 0
+    ? '₹' . rtrim(rtrim(number_format($freeThreshold, 2), '0'), '.')
+    : null;
+
+
+  // ── SEO: URLs & helpers ────────────────────────────────────────
+  $siteName = 'Aparatus Pastime';
+
+  $productUrl = route('product', ['slug' => $product->slug]);
+  $shareText = urlencode('Check out ' . $product->name . ' on Aparatus Pastime! ' . $productUrl);
+
+  $schemaDescription = trim(preg_replace(
+    '/\s+/',
+    ' ',
+    html_entity_decode(strip_tags($product->description ?: $product->short_description ?: $product->name))
+  ));
+  $schemaDescription = Str::limit($schemaDescription, 5000, '');
+
+  // ── SEO: Breadcrumb schema (visible breadcrumb jaisa hi) ───────
+  $breadcrumbItems = [
+    ['name' => 'Home', 'url' => route('home')],
+    ['name' => 'Shop Catalog', 'url' => route('shop')],
+  ];
+  if ($product->category) {
+    $breadcrumbItems[] = [
+      'name' => $product->category->name,
+      'url' => route('shop', ['category' => $product->category->slug]),
+    ];
+  }
+  $breadcrumbItems[] = ['name' => $product->name, 'url' => $productUrl];
+
+  $breadcrumbSchema = [
+    '@context' => 'https://schema.org',
+    '@type' => 'BreadcrumbList',
+    'itemListElement' => collect($breadcrumbItems)->values()->map(fn($b, $i) => [
+      '@type' => 'ListItem',
+      'position' => $i + 1,
+      'name' => $b['name'],
+      'item' => $b['url'],
+    ])->all(),
+  ];
+
+  // ── SEO: Product schema ────────────────────────────────────────
+  $productSchema = [
+    '@context' => 'https://schema.org',
+    '@type' => 'Product',
+    'name' => $product->name,
+    'description' => $schemaDescription,
+    'image' => $imgUrls,
+    'sku' => $product->sku,
+    'mpn' => $product->product_code,
+    'category' => $product->category?->name,
+    'audience' => !is_null($product->age_min) ? [
+      '@type' => 'PeopleAudience',
+      'suggestedMinAge' => $product->age_min,
+      'suggestedMaxAge' => $product->age_max,
+    ] : null,
+    'offers' => [
+      '@type' => 'Offer',
+      'url' => $productUrl,
+      'priceCurrency' => 'INR',
+      'price' => number_format((float) $product->price, 2, '.', ''),
+      'availability' => $inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      'itemCondition' => 'https://schema.org/NewCondition',
+      'seller' => ['@type' => 'Organization', 'name' => $siteName],
+    ],
+    'aggregateRating' => ($product->reviews_count > 0 && $product->rating_avg > 0) ? [
+      '@type' => 'AggregateRating',
+      'ratingValue' => number_format($product->rating_avg, 1, '.', ''),
+      'reviewCount' => $product->reviews_count,
+      'bestRating' => 5,
+      'worstRating' => 1,
+    ] : null,
+    'review' => $reviews->map(fn($r) => [
+      '@type' => 'Review',
+      'author' => ['@type' => 'Person', 'name' => $r->name ?: 'Parent'],
+      'datePublished' => $r->created_at?->toDateString(),
+      'name' => $r->title,
+      'reviewBody' => $r->comment,
+      'reviewRating' => [
+        '@type' => 'Rating',
+        'ratingValue' => (int) $r->rating,
+        'bestRating' => 5,
+        'worstRating' => 1,
+      ],
+    ])->all(),
+  ];
 @endphp
 
 @section('title', ($product->meta_title ?: $product->name) . ' | Aparatus Pastime')
 @section('meta_description', $product->meta_description ?: Str::limit(strip_tags($product->short_description ?: $product->description), 155))
 @section('active_nav', 'shop')
+
+@push('scripts')
+  @include('front-pages.partials.json-ld', ['crumbs' => $breadcrumbItems, 'schemas' => [$productSchema]])
+@endpush
 
 @section('content')
   <div class="py-6 sm:py-8 lg:py-10">
@@ -114,7 +207,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-8 items-start mb-10">
 
         <!-- CARD 1 (LEFT): GALLERY & TRUST PERKS -->
-         <div
+        <div
           class="lg:col-span-6 xl:col-span-7 bg-white rounded-3xl border border-brand-border p-4 sm:p-6 xl:p-7 shadow-xs space-y-4">
 
           {{-- CHANGED: blur background hata diya. Image ab seedha card ko end to end cover karti hai --}}
@@ -145,8 +238,7 @@
             </div>
 
             {{-- CHANGED: object-cover = image poora card bharegi, zoom card ke andar hi clip hoga --}}
-            <div id="pdp-zoom-wrap"
-              class="absolute inset-0 z-0 overflow-hidden cursor-zoom-in">
+            <div id="pdp-zoom-wrap" class="absolute inset-0 z-0 overflow-hidden cursor-zoom-in">
               @if ($mainImg)
                 <img id="pdp-main-image" src="{{ $mainImg }}" alt="{{ $product->name }}"
                   class="w-full h-full object-cover object-center will-change-transform"
@@ -185,7 +277,7 @@
           @endif
 
           <!-- Trust Perks Ribbon -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 xl:gap-3 pt-2 font-heading">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 xl:gap-3 pt-2 font-heading">
             <div
               class="bg-soft-blue px-2.5 py-2.5 sm:py-3 rounded-2xl border border-blue-100/90 flex items-center justify-center gap-1.5 sm:gap-2 shadow-2xs hover:shadow-xs transition">
               <i class="fa-solid fa-gift text-brand-orange text-sm sm:text-base shrink-0"></i>
@@ -200,11 +292,6 @@
               class="bg-soft-yellow px-2.5 py-2.5 sm:py-3 rounded-2xl border border-amber-100/90 flex items-center justify-center gap-1.5 sm:gap-2 shadow-2xs hover:shadow-xs transition">
               <i class="fa-solid fa-award text-amber-500 text-sm sm:text-base shrink-0"></i>
               <span class="font-bold text-dark-navy text-xs xl:text-[13px] whitespace-nowrap">Certified Safe</span>
-            </div>
-            <div
-              class="bg-soft-purple px-2.5 py-2.5 sm:py-3 rounded-2xl border border-purple-100/90 flex items-center justify-center gap-1.5 sm:gap-2 shadow-2xs hover:shadow-xs transition">
-              <i class="fa-solid fa-rotate-left text-purple-600 text-sm sm:text-base shrink-0"></i>
-              <span class="font-bold text-dark-navy text-xs xl:text-[13px] whitespace-nowrap">7-Day Returns</span>
             </div>
           </div>
 
@@ -273,7 +360,16 @@
               class="flex items-center justify-between text-xs text-body-text font-sans pt-1 border-t border-amber-200/60">
               <span class="text-emerald-700 font-bold font-heading flex items-center gap-1 text-[11px] sm:text-xs">
                 <i class="fa-solid fa-truck-fast text-brand-orange"></i>
-                <span>{{ $product->delivery_charge > 0 ? 'Delivery charge ₹' . number_format($product->delivery_charge) : 'Free Standard Delivery on this order' }}</span>
+                <span>
+                  @if ($product->delivery_charge > 0)
+                    Delivery charge ₹{{ number_format($product->delivery_charge) }}
+                    @if ($freeThresholdLabel)
+                      <span class="text-brand-muted font-normal">· Free above {{ $freeThresholdLabel }}</span>
+                    @endif
+                  @else
+                    Free Standard Delivery on this order
+                  @endif
+                </span>
               </span>
               <span class="text-brand-muted text-[10px] sm:text-[11px]">{{ $taxLabel }}</span>
             </div>
@@ -308,7 +404,9 @@
               <span class="flex items-center gap-1.5">
                 <i class="fa-solid fa-location-dot text-brand-blue"></i><span>Check Delivery & Pincode</span>
               </span>
-              <span class="text-[11px] text-brand-blue">Free delivery &gt; ₹999</span>
+              @if ($freeThresholdLabel)
+                <span class="text-[11px] text-brand-blue">Free delivery above {{ $freeThresholdLabel }}</span>
+              @endif
             </div>
             <div class="flex items-center gap-2">
               <input id="pincode-input" type="text" maxlength="6" placeholder="Enter 6-digit Pincode"
@@ -370,9 +468,6 @@
               <span>•</span>
               <span class="flex items-center gap-1"><i class="fa-solid fa-truck text-brand-blue"></i>Air Express
                 Shipping</span>
-              <span>•</span>
-              <span class="flex items-center gap-1"><i class="fa-solid fa-shield-heart text-amber-500"></i>7-Day
-                Replacement Guarantee</span>
             </div>
           </form>
 
@@ -902,18 +997,40 @@
         });
       }
 
-      // Pincode checker (format check only)
+      // Pincode checker (DB-backed)
       const pinBtn = document.getElementById('pincode-check-btn');
-      pinBtn?.addEventListener('click', () => {
-        const pin = document.getElementById('pincode-input').value.trim();
-        const res = document.getElementById('pincode-result');
-        res.classList.remove('hidden');
-        if (/^\d{6}$/.test(pin)) {
-          res.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i>Delivering to <strong>${pin}</strong> in <strong>${res.dataset.delivery}</strong>`;
-        } else {
-          res.innerHTML = '<span class="text-red-500 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i>Please enter a valid 6-digit Indian postal code.</span>';
+      const pinInput = document.getElementById('pincode-input');
+      const pinRes = document.getElementById('pincode-result');
+
+      const checkPin = async () => {
+        const pin = pinInput.value.trim();
+        pinRes.classList.remove('hidden');
+
+        if (!/^\d{6}$/.test(pin)) {
+          pinRes.innerHTML = '<span class="text-red-500 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i>Please enter a valid 6-digit pincode.</span>';
+          return;
         }
-      });
+
+        pinBtn.disabled = true;
+        pinRes.innerHTML = 'Checking...';
+        try {
+          const res = await fetch(@json(route('pincode.check')) + '?pincode=' + pin, {
+            headers: { 'Accept': 'application/json' }
+          });
+          const data = await res.json();
+          if (data.status) {
+            pinRes.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i>Available in <strong>${data.district}, ${data.state}</strong> (${pin}) — delivery in <strong>${pinRes.dataset.delivery}</strong>`;
+          } else {
+            pinRes.innerHTML = `<span class="text-red-500 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i>${data.message}</span>`;
+          }
+        } catch (e) {
+          pinRes.innerHTML = '<span class="text-red-500 font-bold">Network error. Please try again.</span>';
+        }
+        pinBtn.disabled = false;
+      };
+
+      pinBtn?.addEventListener('click', checkPin);
+      pinInput?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); checkPin(); } });
 
       // Review form toggle
       const reviewForm = document.getElementById('write-review-form');
@@ -991,53 +1108,53 @@
     });
   </script>
 
-<script>
-  (function () {
-    var wrap = document.getElementById('pdp-zoom-wrap');
-    var main = document.getElementById('pdp-main-image');
-    if (!wrap || !main) return;
+  <script>
+    (function () {
+      var wrap = document.getElementById('pdp-zoom-wrap');
+      var main = document.getElementById('pdp-main-image');
+      if (!wrap || !main) return;
 
-    var ZOOM = 2; // zoom level yahan se badlo
-    var zoomed = false;
+      var ZOOM = 2; // zoom level yahan se badlo
+      var zoomed = false;
 
-    function setOrigin(x, y) {
-      var r = wrap.getBoundingClientRect();
-      var px = Math.min(100, Math.max(0, ((x - r.left) / r.width) * 100));
-      var py = Math.min(100, Math.max(0, ((y - r.top) / r.height) * 100));
-      main.style.transformOrigin = px + '% ' + py + '%';
-    }
-    function zoomIn(x, y) {
-      setOrigin(x, y);
-      main.style.transform = 'scale(' + ZOOM + ')';
-      zoomed = true;
-    }
-    function zoomOut() {
-      main.style.transform = 'scale(1)';
-      main.style.transformOrigin = 'center center';
-      zoomed = false;
-    }
+      function setOrigin(x, y) {
+        var r = wrap.getBoundingClientRect();
+        var px = Math.min(100, Math.max(0, ((x - r.left) / r.width) * 100));
+        var py = Math.min(100, Math.max(0, ((y - r.top) / r.height) * 100));
+        main.style.transformOrigin = px + '% ' + py + '%';
+      }
+      function zoomIn(x, y) {
+        setOrigin(x, y);
+        main.style.transform = 'scale(' + ZOOM + ')';
+        zoomed = true;
+      }
+      function zoomOut() {
+        main.style.transform = 'scale(1)';
+        main.style.transformOrigin = 'center center';
+        zoomed = false;
+      }
 
-    // Desktop: hover pe zoom, mouse ke saath move
-    wrap.addEventListener('pointerenter', function (e) {
-      if (e.pointerType === 'mouse') zoomIn(e.clientX, e.clientY);
-    });
-    wrap.addEventListener('pointermove', function (e) {
-      if (e.pointerType === 'mouse' && zoomed) setOrigin(e.clientX, e.clientY);
-    });
-    wrap.addEventListener('pointerleave', function (e) {
-      if (e.pointerType === 'mouse') zoomOut();
-    });
+      // Desktop: hover pe zoom, mouse ke saath move
+      wrap.addEventListener('pointerenter', function (e) {
+        if (e.pointerType === 'mouse') zoomIn(e.clientX, e.clientY);
+      });
+      wrap.addEventListener('pointermove', function (e) {
+        if (e.pointerType === 'mouse' && zoomed) setOrigin(e.clientX, e.clientY);
+      });
+      wrap.addEventListener('pointerleave', function (e) {
+        if (e.pointerType === 'mouse') zoomOut();
+      });
 
-    // Mobile: tap se zoom in/out
-    wrap.addEventListener('click', function (e) {
-      if (e.pointerType === 'mouse') return;
-      zoomed ? zoomOut() : zoomIn(e.clientX, e.clientY);
-    });
+      // Mobile: tap se zoom in/out
+      wrap.addEventListener('click', function (e) {
+        if (e.pointerType === 'mouse') return;
+        zoomed ? zoomOut() : zoomIn(e.clientX, e.clientY);
+      });
 
-    // Image change (next/prev/thumbnail) par zoom reset
-    document.addEventListener('click', function (e) {
-      if (e.target.closest('#gallery-prev, #gallery-next, .thumb-btn')) zoomOut();
-    });
-  })();
-</script>
+      // Image change (next/prev/thumbnail) par zoom reset
+      document.addEventListener('click', function (e) {
+        if (e.target.closest('#gallery-prev, #gallery-next, .thumb-btn')) zoomOut();
+      });
+    })();
+  </script>
 @endpush

@@ -918,13 +918,15 @@
                                 <div class="content-tab-panel" data-panel="how_to_use">
                                     <textarea name="how_to_use" id="how_to_use"
                                         class="field-textarea">{{ old('how_to_use') }}</textarea>
-                                    <div class="field-hint">Shown in "Care &amp; Setup Guidelines" on the product page.</div>
+                                    <div class="field-hint">Shown in "Care &amp; Setup Guidelines" on the product page.
+                                    </div>
                                 </div>
 
                                 <div class="content-tab-panel" data-panel="delivery_returns">
                                     <textarea name="delivery_returns" id="delivery_returns"
                                         class="field-textarea">{{ old('delivery_returns') }}</textarea>
-                                    <div class="field-hint">Return / replacement / warranty text shown under Shipping &amp; Returns.</div>
+                                    <div class="field-hint">Return / replacement / warranty text shown under Shipping
+                                        &amp; Returns.</div>
                                 </div>
 
                             </div>
@@ -1141,7 +1143,8 @@
                                         <div class="toggle-sub">Visible to customers</div>
                                     </div>
                                     <select name="status" class="field-select-sm">
-                                        <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
+                                        <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active
+                                        </option>
                                         <option value="0" {{ old('status') === '0' ? 'selected' : '' }}>Inactive</option>
                                     </select>
                                 </div>
@@ -1186,6 +1189,11 @@
                                         <input type="number" step="0.01" name="delivery_charge" class="field-input"
                                             value="{{ old('delivery_charge') }}" placeholder="0">
                                     </div>
+                                    <div class="field-group">
+                                        <label class="field-label">Weight (grams)</label>
+                                        <input type="number" min="0" step="1" name="weight" class="field-input"
+                                            value="{{ old('weight') }}" placeholder="e.g. 450">
+                                    </div>
                                 </div>
 
                                 <div class="field-group">
@@ -1215,7 +1223,8 @@
                                             value="{{ old('age_max') }}" placeholder="No limit">
                                     </div>
                                 </div>
-                                <div class="field-hint">Leave "To" empty for "3+" style ages. Used for the shop age filter.</div>
+                                <div class="field-hint">Leave "To" empty for "3+" style ages. Used for the shop age
+                                    filter.</div>
                             </div>
                         </div>
 
@@ -1237,7 +1246,8 @@
                                         <input type="checkbox" name="is_non_toxic" value="1" {{ old('is_non_toxic') ? 'checked' : '' }}>
                                         <span>Show "100% Non-Toxic" badge</span>
                                     </label>
-                                    <div class="field-hint">Only tick if this product is actually certified non-toxic.</div>
+                                    <div class="field-hint">Only tick if this product is actually certified non-toxic.
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1254,7 +1264,8 @@
                                         <span>{{ $collection->name }}</span>
                                     </label>
                                 @endforeach
-                                <div class="field-hint">Collections with a badge show it on this product (e.g. Best Seller).</div>
+                                <div class="field-hint">Collections with a badge show it on this product (e.g. Best
+                                    Seller).</div>
                             </div>
                         </div>
 

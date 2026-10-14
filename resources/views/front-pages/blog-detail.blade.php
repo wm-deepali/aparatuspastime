@@ -4,6 +4,49 @@
 @section('meta_description', $blog->meta_description ?: \Illuminate\Support\Str::limit(strip_tags($blog->short_description ?: $blog->content), 160))
 @section('active_nav', 'home')
 
+@php
+  use Illuminate\Support\Carbon;
+  use Illuminate\Support\Str;
+
+  $blogUrl = route('blog.show', ['slug' => $blog->slug]);
+  $absUrl = fn($u) => $u ? (Str::startsWith($u, ['http://', 'https://']) ? $u : url($u)) : null;
+
+  $crumbs = [
+    ['name' => 'Home', 'url' => route('home')],
+    ['name' => 'The Playroom Stories', 'url' => route('blogs')],
+  ];
+  if ($blog->category) {
+    $crumbs[] = ['name' => $blog->category, 'url' => route('blogs', ['cat' => $blog->category_slug])];
+  }
+  $crumbs[] = ['name' => $blog->title, 'url' => $blogUrl];
+
+  // date column ka naam confirm karna (published_at / created_at)
+  $publishedAt = $blog->published_at ?? $blog->created_at;
+  $publishedAt = $publishedAt ? Carbon::parse($publishedAt) : null;
+  $modifiedAt = $blog->updated_at ? Carbon::parse($blog->updated_at) : $publishedAt;
+
+  $articleSchema = [
+    '@context' => 'https://schema.org',
+    '@type' => 'BlogPosting',
+    'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => $blogUrl],
+    'headline' => Str::limit($blog->title, 110, ''),
+    'description' => $blog->meta_description ?: Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($blog->short_description ?: $blog->content))), 160),
+    'image' => array_values(array_filter([$absUrl($blog->banner_url)])),
+    'datePublished' => $publishedAt?->toIso8601String(),
+    'dateModified' => $modifiedAt?->toIso8601String(),
+    'articleSection' => $blog->category,
+    'keywords' => !empty($blog->tags) ? implode(', ', (array) $blog->tags) : null,
+    'author' => $blog->author_name
+      ? ['@type' => 'Person', 'name' => $blog->author_name]
+      : ['@type' => 'Organization', 'name' => 'Aparatus Pastime'],
+    'publisher' => ['@type' => 'Organization', 'name' => 'Aparatus Pastime'],
+  ];
+@endphp
+
+@push('scripts')
+  @include('front-pages.partials.json-ld', ['crumbs' => $crumbs, 'schemas' => [$articleSchema]])
+@endpush
+
 @section('content')
 
   <!-- READING SCROLL PROGRESS BAR -->

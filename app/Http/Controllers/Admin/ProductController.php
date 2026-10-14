@@ -221,6 +221,7 @@ class ProductController extends Controller
             'sort_order' => 'nullable|integer|min:0',
             'is_non_toxic' => 'nullable|boolean',
             'images.*' => 'nullable|image|max:2048',
+            'weight' => 'nullable|integer|min:0',
 
             // videos + addon options
             'videos.*' => 'nullable|mimes:mp4,webm,mov,avi|max:20480',
@@ -295,6 +296,7 @@ class ProductController extends Controller
             'meta_description' => $request->meta_description,
 
             'status' => (int) $request->input('status', 1),
+            'weight' => (int) $num($request->weight),
         ];
     }
 

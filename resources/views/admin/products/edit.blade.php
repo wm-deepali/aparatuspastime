@@ -970,7 +970,8 @@
                                     <select name="category_id" id="category_id" class="field-select" required>
                                         <option value="">— Select Category —</option>
                                         @foreach($categories as $category)
-                                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                                {{ $category->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -981,7 +982,8 @@
                                     <select name="subcategory_id" id="subcategory_id" class="field-select">
                                         <option value="">Select Sub Category</option>
                                         @foreach($subcategories as $subcategory)
-                                            <option value="{{ $subcategory->id }}" {{ old('subcategory_id', $product->subcategory_id) == $subcategory->id ? 'selected' : '' }}>{{ $subcategory->name }}</option>
+                                            <option value="{{ $subcategory->id }}" {{ old('subcategory_id', $product->subcategory_id) == $subcategory->id ? 'selected' : '' }}>
+                                                {{ $subcategory->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -1037,13 +1039,15 @@
                                 <div class="content-tab-panel" data-panel="how_to_use">
                                     <textarea name="how_to_use" id="how_to_use"
                                         class="field-textarea">{{ old('how_to_use', $product->how_to_use) }}</textarea>
-                                    <div class="field-hint">Shown in "Care &amp; Setup Guidelines" on the product page.</div>
+                                    <div class="field-hint">Shown in "Care &amp; Setup Guidelines" on the product page.
+                                    </div>
                                 </div>
 
                                 <div class="content-tab-panel" data-panel="delivery_returns">
                                     <textarea name="delivery_returns" id="delivery_returns"
                                         class="field-textarea">{{ old('delivery_returns', $product->delivery_returns) }}</textarea>
-                                    <div class="field-hint">Return / replacement / warranty text shown under Shipping &amp; Returns.</div>
+                                    <div class="field-hint">Return / replacement / warranty text shown under Shipping
+                                        &amp; Returns.</div>
                                 </div>
 
                             </div>
@@ -1070,8 +1074,10 @@
                                     <div class="field-group" style="margin:0">
                                         <label class="field-label">Discount Type</label>
                                         <select name="discount_type" id="discount_type" class="field-select">
-                                            <option value="amount" {{ old('discount_type', $product->discount_type) == 'amount' ? 'selected' : '' }}>Amount (₹)</option>
-                                            <option value="percentage" {{ old('discount_type', $product->discount_type) == 'percentage' ? 'selected' : '' }}>Percentage (%)</option>
+                                            <option value="amount" {{ old('discount_type', $product->discount_type) == 'amount' ? 'selected' : '' }}>Amount (₹)
+                                            </option>
+                                            <option value="percentage" {{ old('discount_type', $product->discount_type) == 'percentage' ? 'selected' : '' }}>Percentage
+                                                (%)</option>
                                         </select>
                                     </div>
                                     <div class="field-group" style="margin:0">
@@ -1224,8 +1230,8 @@
                                                 <td><input type="text" name="benefits[{{ $i }}][icon]" class="field-input"
                                                         value="{{ $benefit->icon }}"
                                                         placeholder="fa-solid fa-hand-holding-heart"></td>
-                                                <td style="width:50px"><button type="button"
-                                                        class="remove-btn row-remove" style="position:static">×</button>
+                                                <td style="width:50px"><button type="button" class="remove-btn row-remove"
+                                                        style="position:static">×</button>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -1268,11 +1274,11 @@
                                                 <td><input type="text" name="highlights[{{ $i }}][description]"
                                                         class="field-input" value="{{ $highlight->description }}"
                                                         placeholder="Short line"></td>
-                                                <td><input type="text" name="highlights[{{ $i }}][icon]"
-                                                        class="field-input" value="{{ $highlight->icon }}"
-                                                        placeholder="fa-solid fa-seedling"></td>
-                                                <td style="width:50px"><button type="button"
-                                                        class="remove-btn row-remove" style="position:static">×</button>
+                                                <td><input type="text" name="highlights[{{ $i }}][icon]" class="field-input"
+                                                        value="{{ $highlight->icon }}" placeholder="fa-solid fa-seedling">
+                                                </td>
+                                                <td style="width:50px"><button type="button" class="remove-btn row-remove"
+                                                        style="position:static">×</button>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -1406,6 +1412,11 @@
                                             value="{{ old('delivery_charge', $product->delivery_charge) }}"
                                             placeholder="0">
                                     </div>
+                                    <div class="field-group">
+                                        <label class="field-label">Weight (grams)</label>
+                                        <input type="number" min="0" step="1" name="weight" class="field-input"
+                                            value="{{ old('weight', $product->weight) }}" placeholder="e.g. 450">
+                                    </div>
                                 </div>
 
                                 <div class="field-group">
@@ -1436,7 +1447,8 @@
                                             value="{{ old('age_max', $product->age_max) }}" placeholder="No limit">
                                     </div>
                                 </div>
-                                <div class="field-hint">Leave "To" empty for "3+" style ages. Used for the shop age filter.</div>
+                                <div class="field-hint">Leave "To" empty for "3+" style ages. Used for the shop age
+                                    filter.</div>
                             </div>
                         </div>
 
@@ -1458,7 +1470,8 @@
                                         <input type="checkbox" name="is_non_toxic" value="1" {{ old('is_non_toxic', $product->is_non_toxic) ? 'checked' : '' }}>
                                         <span>Show "100% Non-Toxic" badge</span>
                                     </label>
-                                    <div class="field-hint">Only tick if this product is actually certified non-toxic.</div>
+                                    <div class="field-hint">Only tick if this product is actually certified non-toxic.
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1475,7 +1488,8 @@
                                         <span>{{ $collection->name }}</span>
                                     </label>
                                 @endforeach
-                                <div class="field-hint">Collections with a badge show it on this product (e.g. Best Seller).</div>
+                                <div class="field-hint">Collections with a badge show it on this product (e.g. Best
+                                    Seller).</div>
                             </div>
                         </div>
 

@@ -70,7 +70,7 @@ use App\Http\Controllers\User\CustomerPasswordController;
 use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\User\UserReviewController;
 use App\Http\Controllers\User\UserNotificationController;
-
+use App\Http\Controllers\PincodeController;
 
 Route::middleware('maintenance.mode')->group(function () {
 
@@ -92,6 +92,8 @@ Route::middleware('maintenance.mode')->group(function () {
         Route::get('/search/suggest', 'searchSuggest')->middleware('throttle:60,1')->name('search.suggest');
 
     });
+
+    Route::get('/pincode/check', [PincodeController::class, 'check'])->middleware('throttle:30,1')->name('pincode.check');
 
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::post('/wishlist/clear', [WishlistController::class, 'clear'])->name('wishlist.clear');

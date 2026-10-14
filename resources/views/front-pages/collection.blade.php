@@ -4,6 +4,38 @@
 @section('meta_description', $collection->meta_description ?: 'Shop ' . $collection->name . ' at Aparatus Pastime - kids toys, games & sports goods.')
 @section('active_nav', 'collection-' . $collection->slug)
 
+@php
+  $collectionUrl = route('collections.show', ['slug' => $collection->slug]);
+
+  $crumbs = [
+    ['name' => 'Home', 'url' => route('home')],
+    ['name' => 'Shop', 'url' => route('shop')],
+    ['name' => $collection->name, 'url' => $collectionUrl],
+  ];
+
+  $listSchema = [
+    '@context' => 'https://schema.org',
+    '@type' => 'CollectionPage',
+    'name' => $collection->meta_title ?: $collection->name,
+    'description' => $collection->meta_description,
+    'url' => $collectionUrl,
+    'mainEntity' => [
+      '@type' => 'ItemList',
+      'numberOfItems' => $products->total(),
+      'itemListElement' => $products->map(fn($p, $i) => [
+        '@type' => 'ListItem',
+        'position' => (int) $products->firstItem() + $i,
+        'url' => route('product', ['slug' => $p->slug]),
+        'name' => $p->name,
+      ])->values()->all(),
+    ],
+  ];
+@endphp
+
+@push('scripts')
+  @include('front-pages.partials.json-ld', ['crumbs' => $crumbs, 'schemas' => [$listSchema]])
+@endpush
+
 @section('content')
   <div class="py-6 sm:py-8 lg:py-10">
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
