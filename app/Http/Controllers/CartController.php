@@ -361,13 +361,10 @@ class CartController extends Controller
         }
 
         $cart = $item->cart;
-
-        // capture before delete — product/qty/price won't exist on $item after this
-        $trackingEvents = PixelTracker::removeFromCart(
-            $item->product,
-            $item->quantity,
-            $item->price
-        );
+        
+        $trackingEvents = $item->product
+            ? PixelTracker::removeFromCart($item->product, $item->quantity, $item->price)
+            : null;
 
         $item->delete();
 

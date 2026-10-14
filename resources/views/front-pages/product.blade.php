@@ -959,6 +959,13 @@
 @endsection
 
 @push('scripts')
+
+  @if(!empty($viewItemScript))
+    <script>
+      {!! $viewItemScript !!}
+    </script>
+  @endif
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Copy link
@@ -1091,6 +1098,7 @@
 
             if (res.ok && data.status) {
               paint(data.wishlisted);
+              if (data.wishlisted && typeof fireTrackingEvents === 'function') fireTrackingEvents(data.tracking_events);
               document.querySelectorAll('[data-wishlist-count]').forEach(el => {
                 el.textContent = data.wishlist_count;
                 el.classList.toggle('hidden', !data.wishlist_count);

@@ -1,9 +1,28 @@
 @extends('layouts.app')
 
 @php
+  use Illuminate\Support\Str;
+
   $shopUrl = route('shop');
   $hasCat = !empty($activeCategory);
   $shopPageUrl = $hasCat ? route('shop', ['category' => $activeCategory->slug]) : $shopUrl;
+  $brand = config('app.name');
+
+  // ── SEO: category meta fields first, generated fallback second ──
+  $metaTitle = $hasCat
+    ? ($activeCategory->meta_title ?: $activeCategory->name . ' | ' . $brand)
+    : 'Shop Play Collection | ' . $brand;
+
+  $metaDescription = $hasCat
+    ? ($activeCategory->meta_description
+        ?: (Str::limit(trim(strip_tags($activeCategory->description ?? '')), 155)
+            ?: 'Shop ' . $activeCategory->name . ' at ' . $brand . '. Explore curated toys, games and sports gear for every age.'))
+    : 'Explore our collection of toys, games, sports and activities at ' . $brand . '.';
+
+  // Page 2+ of the same listing should not share an identical title
+  if ($products->currentPage() > 1) {
+    $metaTitle .= ' - Page ' . $products->currentPage();
+  }
 
   // visible breadcrumb jaisa hi
   $crumbs = $hasCat
@@ -21,6 +40,7 @@
     '@context' => 'https://schema.org',
     '@type' => 'CollectionPage',
     'name' => $hasCat ? $activeCategory->name : 'Shop Play Collection',
+    'description' => $metaDescription,
     'url' => $shopPageUrl,
     'mainEntity' => [
       '@type' => 'ItemList',
@@ -34,6 +54,10 @@
     ],
   ];
 @endphp
+
+@section('title', $metaTitle)
+@section('meta_description', $metaDescription)
+@section('canonical', $shopPageUrl)
 
 @push('scripts')
   @include('front-pages.partials.json-ld', ['crumbs' => $crumbs, 'schemas' => [$listSchema]])

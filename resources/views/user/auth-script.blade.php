@@ -45,7 +45,16 @@
 
         if (res.ok && data.status) {
           redirecting = true;
-          window.location.href = data.redirect || '/';
+          const go = () => { window.location.href = data.redirect || '/'; };
+
+          // Pixel/GA: login / sign_up event from the controller
+          if (data.tracking_events && typeof fireTrackingEvents === 'function') {
+            try { fireTrackingEvents(data.tracking_events); }
+            catch (err) { console.error('Tracking event failed (ignored):', err); }
+            setTimeout(go, 250); // let gtag/fbq beacons leave before navigating
+          } else {
+            go();
+          }
           return;
         }
 

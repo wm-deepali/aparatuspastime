@@ -187,9 +187,14 @@
   <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}">
 
   @stack('styles')
+
+  @include('layouts.tracking-head')
+
 </head>
 
 <body class="has-bottom-nav bg-warm-cream text-body-text">
+
+  @include('layouts.tracking-body-top')
 
   <!-- ============================================================
        HEADER
@@ -1558,8 +1563,9 @@
         return data;
       }
 
-      function onAdded(data) {
+      function onAdded(data, track = true) {
         if (typeof data.cart_count === 'number') setCount(data.cart_count);
+        if (track && typeof fireTrackingEvents === 'function') fireTrackingEvents(data.tracking_events);
         window.dispatchEvent(new CustomEvent('cart:added', { detail: data }));
       }
 
@@ -1782,7 +1788,7 @@
         try {
           const data = await postToCart(fd);
           onAdded(data);
-          if (data.redirect) { window.location.href = data.redirect; return; }
+          if (data.redirect) { setTimeout(() => { window.location.href = data.redirect; }, 200); return; }
           if (form.closest('#quick-view-modal')) closeQuickView();
           toast(data.product_name ? data.product_name + ' added to your play bag!' : data.message, 'ok');
         } catch (err) {
@@ -1802,12 +1808,13 @@
         busy(e.submitter, true);
         try {
           let last = null;
-          for (const id of ids) { // sequential: both calls share one cart row
+          for (const id of ids) {
             const fd = new FormData();
             fd.append('product_id', id);
             last = await postToCart(fd);
+            if (typeof fireTrackingEvents === 'function') fireTrackingEvents(last.tracking_events);
           }
-          onAdded(last);
+          onAdded(last, false);
           toast('Both items added to your play bag!', 'ok');
         } catch (err) {
           toast(err.message, 'error');
@@ -1861,6 +1868,7 @@
           const data = await res.json().catch(() => ({}));
 
           if (res.ok && data.status) {
+
             // Sync every heart for this product on the page
             document.querySelectorAll(`[data-wishlist-toggle][data-id="${btn.dataset.id}"]`)
               .forEach((b) => paint(b, data.wishlisted));
@@ -1875,6 +1883,8 @@
             if (!data.wishlisted && btn.closest('[data-wishlist-page]')) {
               btn.closest('.product-card')?.remove();
             }
+
+            if (data.wishlisted && typeof fireTrackingEvents === 'function') fireTrackingEvents(data.tracking_events);
 
             notify(data.message, data.wishlisted ? 'success' : 'info');
           } else {
@@ -2024,12 +2034,35 @@
         slides[i].classList.replace('hidden', 'flex');
       }, 4000);
     })();
+
+    function fireTrackingEvents(events) {
+      if (!events) return;
+
+      if (events.ga4 && typeof gtag === 'function') {
+        gtag('event', events.ga4.name, events.ga4.params);
+      }
+
+      if (events.meta && typeof fbq === 'function') {
+        fbq('track', events.meta.name, events.meta.params);
+      }
+    }
   </script>
+
+  @if (session('fire_login_event'))
+    <script>fireTrackingEvents(@json(\App\Services\Tracking\PixelTracker::loginEvent()));</script>
+  @endif
+
+  @if (session('fire_signup_event'))
+    <script>fireTrackingEvents(@json(\App\Services\Tracking\PixelTracker::signUpEvent(session('fire_signup_event'))));</script>
+  @endif
 
   @include('front-pages.partials.mini-cart')
 
   <!-- PAGE SPECIFIC SCRIPTS -->
   @stack('scripts')
+
+  @include('layouts.tracking-body-bottom')
+
 </body>
 
 </html>

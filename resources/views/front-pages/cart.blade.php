@@ -442,6 +442,7 @@
           try {
             const data = await post(urls.remove, { id: r.dataset.remove });
             r.closest('[data-row]').remove();
+            if (typeof fireTrackingEvents === 'function') fireTrackingEvents(data.tracking_events);
             toast('Item removed from your play bag', 'info');
             afterMutation(data);
             showEmptyIfNeeded();

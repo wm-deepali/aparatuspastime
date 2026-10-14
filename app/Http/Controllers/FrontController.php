@@ -364,8 +364,9 @@ class FrontController extends Controller
 
         // Tax wording ("Inclusive of all GST" / exclusive) comes from Invoice Settings.
         $invoice_setting = InvoiceSetting::first();
+        $viewItemScript = \App\Services\Tracking\PixelTracker::viewItemScript($product);
 
-        return view('front-pages.product', compact('product', 'related', 'recentlyViewed', 'invoice_setting'));
+        return view('front-pages.product', compact('product', 'related', 'recentlyViewed', 'invoice_setting', 'viewItemScript'));
     }
 
     public function quickView($id)

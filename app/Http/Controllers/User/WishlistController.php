@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Wishlist;
+use App\Services\Tracking\PixelTracker;
 use Illuminate\Http\Request;
 
 class WishlistController extends Controller
@@ -20,7 +21,7 @@ class WishlistController extends Controller
             ->get()
             ->sortBy(fn($p) => $ids->search($p->id))  // recently added first
             ->values();
-            
+
         return view('user.wishlist', compact('products'));
     }
 
@@ -60,6 +61,8 @@ class WishlistController extends Controller
             'message' => $message,
             'wishlisted' => $wishlisted,
             'wishlist_count' => Wishlist::current()->count(),
+            // AddToWishlist only when the product was actually added
+            'tracking_events' => $wishlisted ? PixelTracker::addToWishlist($product) : null,
         ]);
     }
 }

@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with('navAgeGroups', AgeGroup::active()->ordered()->get());
             $view->with('headerCollections', Collection::forHeader()->get());
             $view->with('footerPages', DynamicPage::where('status', 1)->orderBy('heading')->get(['heading', 'slug']));
-
+            $view->with('googleSetting', \App\Models\GoogleSetting::first());
             if (!isset($view->getData()['popularSearches'])) {
                 $view->with('popularSearches', Setting::first()?->popular_search_list ?? []);
             }
