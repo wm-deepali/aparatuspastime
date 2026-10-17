@@ -32,45 +32,55 @@
 
         /* ── Header band ── */
         .inv-header {
-            background: #303d89;
-            color: #fff;
-            padding: 32px 40px;
-            display: flex;
-            /* dompdf ignores flex but it's fine for browser */
+            background: #ffffff;
+            /* white so the logo is visible */
+            border-bottom: 4px solid #F36F21;
+            /* logo orange */
+            padding: 24px 40px;
+            display: table;
+            /* table, not flex, so DomPDF lays it out correctly */
+            width: 100%;
         }
 
         .inv-header-left {
-            flex: 1;
+            display: table-cell;
+            vertical-align: top;
+            width: 60%;
         }
 
         .inv-header-right {
+            display: table-cell;
+            vertical-align: top;
+            width: 40%;
             text-align: right;
         }
 
         .brand-name {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
-            letter-spacing: -.3px;
-            color: #fff;
+            color: #1B4B91;
         }
 
         .brand-tagline {
-            font-size: 12px;
-            color: rgba(255, 255, 255, .65);
+            font-size: 11px;
+            font-weight: 700;
+            color: #F36F21;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             margin-top: 3px;
         }
 
         .brand-address {
             font-size: 11.5px;
-            color: rgba(255, 255, 255, .75);
-            margin-top: 12px;
+            color: #6d7175;
+            margin-top: 10px;
             line-height: 1.7;
         }
 
         .inv-label {
             font-size: 28px;
             font-weight: 700;
-            color: rgba(255, 255, 255, .2);
+            color: #1B4B91;
             letter-spacing: 4px;
             text-transform: uppercase;
         }
@@ -78,14 +88,14 @@
         .inv-number {
             font-size: 16px;
             font-weight: 700;
-            color: #fff;
+            color: #F36F21;
             margin-top: 4px;
             font-family: 'Courier New', monospace;
         }
 
         .inv-date {
             font-size: 12px;
-            color: rgba(255, 255, 255, .7);
+            color: #6d7175;
             margin-top: 5px;
         }
 
@@ -307,7 +317,7 @@
         }
 
         .totals-table .t-total td {
-            border-top: 2px solid #303d89;
+            border-top: 2px solid #1B4B91;
             padding-top: 10px;
             font-size: 15px;
             font-weight: 700;
@@ -315,7 +325,7 @@
         }
 
         .totals-table .t-total .t-value {
-            color: #303d89;
+            color: #1B4B91;
             font-size: 17px;
         }
 
@@ -325,7 +335,7 @@
             padding: 16px 20px;
             background: #f8f9fa;
             border-radius: 8px;
-            border-left: 4px solid #303d89;
+            border-left: 4px solid #1B4B91;
         }
 
         .inv-notes p {
@@ -345,8 +355,8 @@
 
         .gst-pill {
             display: inline-block;
-            background: #f0f1fc;
-            color: #303d89;
+            background: #EEF3FB;
+            color: #1B4B91;
             font-size: 10.5px;
             font-weight: 700;
             padding: 2px 9px;
@@ -403,7 +413,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: #303d89;
+            background: #1B4B91;
             color: #fff;
             border: none;
             border-radius: 8px;
@@ -412,7 +422,7 @@
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(48, 61, 137, .3);
+            box-shadow: 0 2px 6px rgba(27, 75, 145, .3);
         }
 
         .btn-print {
@@ -474,13 +484,14 @@
         <div class="inv-header">
             <div class="inv-header-left">
                 @if($logo_64)
-                    <div style="margin-bottom:12px;">
-                        <img src="{{ $logo_64 }}" style="max-height:60px;">
+                    <div style="margin-bottom:8px;">
+                        <img src="{{ $logo_64 }}" style="max-height:85px;">
+                    </div>
+                @else
+                    <div class="brand-name">
+                        {{ $setting->company_name ?? config('app.name') }}
                     </div>
                 @endif
-                <div class="brand-name">
-                    {{ $setting->company_name ?? config('app.name') }}
-                </div>
                 <div class="brand-tagline">Tax Invoice</div>
                 <div class="brand-address">
 
@@ -569,7 +580,7 @@
                     <div class="meta-info-row">
                         <div class="meta-info-label" style="text-align:right;padding-right:10px">Order #</div>
                         <div class="meta-info-value"
-                            style="text-align:right;font-family:'Courier New',monospace;color:#303d89">
+                            style="text-align:right;font-family:'Courier New',monospace;color:#1B4B91">
                             {{ $order->order_number }}
                         </div>
                     </div>

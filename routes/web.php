@@ -11,7 +11,6 @@ use App\Http\Controllers\Admin\{
     CategoryController,
     ClientController,
     CollectionController,
-    ContactBranchController,
     ContactEnquiryController,
     CouponController,
     CustomerAddressController,
@@ -54,7 +53,9 @@ use App\Http\Controllers\Admin\{
     NdrController,
     NdrReportController,
     AgeGroupController,
-    AboutPageController
+    AboutPageController,
+    CancelledInvoiceController,
+    CancelledRefundController
 };
 
 use Illuminate\Support\Facades\Route;
@@ -244,7 +245,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('testimonials', TestimonialController::class)->names('testimonials');
 
-        Route::resource('contact-branches', ContactBranchController::class);
 
         Route::get('contact-enquiries/export', [ContactEnquiryController::class, 'export'])->name('contact-enquiries.export');
         Route::delete('contact-enquiries/bulk-delete', [ContactEnquiryController::class, 'bulkDelete'])->name('contact-enquiries.bulk-delete');
@@ -372,10 +372,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('stored-carts/{cart}', [StoredCartController::class, 'destroy'])->name('stored-carts.destroy');
         Route::get('stored-carts/export', [StoredCartController::class, 'export'])->name('stored-carts.export');
 
-
-
         Route::resource('return-reasons', ReturnReasonController::class)->names('return-reasons');
 
+        Route::get('cancelled-refunds', [CancelledRefundController::class, 'index'])->name('cancelled-refunds.index');
+        Route::post('cancelled-refunds/{order}/refund', [CancelledRefundController::class, 'refund'])->name('cancelled-refunds.refund');
+
+        Route::get('cancelled-invoices', [CancelledInvoiceController::class, 'index'])->name('cancelled-invoices.index');
 
         Route::get('order-returns', [OrderReturnController::class, 'index'])->name('order-returns.index');
         Route::get('order-returns/export', [OrderReturnController::class, 'export'])->name('order-returns.export');

@@ -82,25 +82,33 @@
         {{-- CUSTOMER & ORDERS --}}
         <li class="{{ request()->routeIs(
     'admin.orders.*',
+    'admin.payments.*',
     'admin.transactions.*',
+    'admin.order-returns.*',
+    'admin.return-reasons.*',
     'admin.returns.*',
     'admin.refunds.*',
+    'admin.cancelled-refunds.*',
+    'admin.cancelled-invoices.*',
     'admin.customers.*',
+    'admin.stored-carts.*',
     'admin.ndr.*'
 ) ? 'active' : '' }}">
             <a href="#"><i class="fa-solid fa-cart-shopping"></i> Customer & Orders</a>
             <ul>
-                <li><a href="{{ route('admin.orders.index')}}">Manage Orders</a></li>
+                <li><a href="{{ route('admin.orders.index') }}">Manage Orders</a></li>
                 <li><a href="{{ route('admin.orders.print-labels') }}">Print Label</a></li>
-                <li><a href="{{ route('admin.payments.index')}}">Payments & Transactions</a></li>
-                <li><a href="{{ route('admin.order-returns.index')}}">Manage Returns</a></li>
-                <li>
-                    <a href="{{ route('admin.return-reasons.index') }}">
-                        Return Reasons
-                    </a>
-                </li>
-                <li><a href="{{route('admin.refunds.index') }}">Manage Refunds</a></li>
+                <li><a href="{{ route('admin.payments.index') }}">Payments & Transactions</a></li>
+                <li><a href="{{ route('admin.order-returns.index') }}">Manage Returns</a></li>
+                <li><a href="{{ route('admin.return-reasons.index') }}">Return Reasons</a></li>
                 <li><a href="{{ route('admin.ndr.index') }}">NDR Management</a></li>
+
+                {{-- Cancellations --}}
+                <li><a href="{{ route('admin.orders.index', ['tab' => 'cancelled']) }}">Cancelled Orders</a></li>
+                <li><a href="{{ route('admin.cancelled-refunds.index') }}">Pending Cancel Refunds</a></li>
+                <li><a href="{{ route('admin.cancelled-invoices.index') }}">Cancelled Invoices</a></li>
+                <li><a href="{{ route('admin.refunds.index') }}">Manage Refunds</a></li>
+
                 <li><a href="{{ route('admin.customers.index') }}">Manage Customers</a></li>
                 <li><a href="{{ route('admin.customers.addresses.index') }}">Customer Address Book</a></li>
                 <li><a href="{{ route('admin.stored-carts.index') }}">Customer Carts</a></li>

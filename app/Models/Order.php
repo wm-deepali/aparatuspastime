@@ -127,4 +127,9 @@ class Order extends Model
         return $this->hasOne(Ndr::class)->latestOfMany();
     }
 
+    public function refundTransactions()
+    {
+        return $this->hasMany(RefundTransaction::class);
+    }
+
 }

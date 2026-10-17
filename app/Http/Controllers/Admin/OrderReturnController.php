@@ -85,7 +85,7 @@ class OrderReturnController extends Controller
             'message' => 'Your return request for Order #' . $orderReturn->order->order_number . ' has been approved.',
             'icon' => 'fa-solid fa-check-circle',
             'color' => 'success',
-            'url' => route('user.orders.show', $orderReturn->order_id),
+            'url' => route('user.order-detail', $orderReturn->order_id),
         ]);
 
         \App\Models\AdminNotification::notify([
@@ -131,7 +131,7 @@ class OrderReturnController extends Controller
             'message' => 'Your return request for Order #' . $orderReturn->order->order_number . ' has been rejected.',
             'icon' => 'fa-solid fa-times-circle',
             'color' => 'danger',
-            'url' => route('user.orders.show', $orderReturn->order_id),
+            'url' => route('user.order-detail', $orderReturn->order_id),
         ]);
 
         return redirect()
@@ -221,7 +221,7 @@ class OrderReturnController extends Controller
                     $refund->utr_id,
                 'icon' => 'fa-solid fa-money-bill-transfer',
                 'color' => 'success',
-                'url' => route('user.orders.show', $orderReturn->order_id),
+                'url' => route('user.order-detail', $orderReturn->order_id),
             ]);
 
             \App\Models\AdminNotification::notify([
@@ -269,7 +269,7 @@ class OrderReturnController extends Controller
                 'message' => 'Your refund attempt could not be completed. Our team is retrying it and will update you shortly.',
                 'icon' => 'fa-solid fa-triangle-exclamation',
                 'color' => 'danger',
-                'url' => route('user.orders.show', $orderReturn->order_id),
+                'url' => route('user.order-detail', $orderReturn->order_id),
             ]);
 
             \App\Models\AdminNotification::notify([

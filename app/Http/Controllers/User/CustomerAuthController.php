@@ -187,13 +187,12 @@ class CustomerAuthController extends Controller
             ]);
     }
 
-    public function redirectToGoogle(Request $request)
-    {
-        // Lets the modal's "Continue with Google" return to the current page
-        $this->rememberIntended($request);
-
-        return Socialite::driver('google')->redirect();
-    }
+   public function redirectToGoogle(Request $request)
+{
+ 
+    $this->rememberIntended($request);
+    return Socialite::driver('google')->redirect();
+}
 
     public function handleGoogleCallback()
     {
@@ -261,7 +260,7 @@ class CustomerAuthController extends Controller
             session()->flash('fire_login_event', true);
         }
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended(route('user.dashboard'));
     }
 
     public function logout(Request $request)

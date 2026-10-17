@@ -716,6 +716,12 @@
                         </a>
                     @endif
 
+                    @if($order->status === 'cancelled' && $order->payment_status === 'paid')
+                        <a href="{{ route('admin.cancelled-refunds.index', ['search' => $order->order_number]) }}"
+                            class="btn-secondary-dash" style="color:var(--green)!important;border-color:var(--green)">
+                            <i class="fa fa-credit-card"></i> Refund Pending
+                        </a>
+                    @endif
 
                     <a href="{{ route('admin.orders.index') }}" class="btn-secondary-dash">
                         <i class="fa fa-arrow-left"></i> Back

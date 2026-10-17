@@ -22,6 +22,7 @@ class RefundController extends Controller
 
             $query->where(function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
+                    ->orWhereHas('order', fn($o) => $o->where('order_number', 'like', "%{$search}%"))
                     ->orWhere('order_id', 'like', "%{$search}%")
                     ->orWhere('utr_id', 'like', "%{$search}%")
                     ->orWhereHas('customer', function ($customer) use ($search) {
@@ -56,9 +57,9 @@ class RefundController extends Controller
                 'created_at',
                 now()->month
             )->whereYear(
-                'created_at',
-                now()->year
-            )->count(),
+                    'created_at',
+                    now()->year
+                )->count(),
 
             'failed' => RefundTransaction::where('status', 'failed')->count(),
         ];
