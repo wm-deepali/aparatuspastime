@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Courier;
-use App\Models\InvoiceSetting;
 use App\Models\Order;
+use App\Models\Courier;
 use App\Models\SmtpSetting;
 use Illuminate\Http\Request;
+use App\Models\InvoiceSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\InvoiceService;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class OrderController extends Controller
 {
@@ -233,6 +235,10 @@ class OrderController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Manual invoice button tabhi dikhe jab invoice na ho aur order valid ho
+        $canGenerateInvoice = !$order->invoice
+            && $order->status !== 'cancelled'
+            && ($order->payment_method === 'cod' || $order->payment_status === 'paid');
 
         return view('admin.orders.show', compact(
             'order',
@@ -243,8 +249,28 @@ class OrderController extends Controller
             'statusFlow',
             'currentIdx',
             'timelineSteps',
-            'couriers'
+            'couriers',
+            'canGenerateInvoice'
         ));
+    }
+
+    public function generateInvoice(Order $order, InvoiceService $invoiceService)
+    {
+        if ($order->status === 'cancelled') {
+            return back()->with('error', 'Cancelled order ki invoice generate nahi ho sakti.');
+        }
+
+        if ($order->payment_method !== 'cod' && $order->payment_status !== 'paid') {
+            return back()->with('error', 'Online payment pending hai, pehle payment complete hona chahiye.');
+        }
+
+        DB::transaction(function () use ($order, $invoiceService) {
+            // lock taaki double click par 2 invoice na bane
+            $locked = Order::lockForUpdate()->find($order->id);
+            $invoiceService->createForOrder($locked);
+        });
+
+        return back()->with('success', 'Invoice generated successfully.');
     }
 
     // ── Status update AJAX/POST method ────────────────────────────────────────────

@@ -68,6 +68,7 @@ class RefundController extends Controller
             'upi' => 'UPI',
             'bank' => 'Bank Transfer',
             'neft_rtgs_imps' => 'NEFT / RTGS / IMPS',
+            'payment_gateway' => 'Payment Gateway',
         ];
 
         return view('admin.refunds.index', compact(

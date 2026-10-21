@@ -579,6 +579,13 @@
                                                 onchange="ndrToggleRefundMethod('rto', 'upi')">
                                             UPI
                                         </label>
+                                        <label id="rto-tab-payment_gateway" class="refund-tab"
+                                            style="flex:1;border:1px solid #e3e5e8;border-radius:8px;padding:10px 12px;text-align:center;cursor:pointer;font-size:13px;font-weight:500;color:#202223;background:#fff">
+                                            <input type="radio" name="refund_method" value="payment_gateway"
+                                                style="display:none"
+                                                onchange="ndrToggleRefundMethod('rto', 'payment_gateway')">
+                                            Refund via Payment Gateway
+                                        </label>
                                     </div>
                                 </div>
 
@@ -618,6 +625,15 @@
                                     <input type="text" name="upi_id" class="mf-input" placeholder="name@upi">
                                 </div>
 
+                                {{-- Payment Gateway note --}}
+                                <div id="rto-method-payment_gateway" style="display:none;margin-bottom:14px">
+                                    <div
+                                        style="background:#fff5cc;border:1px solid #f0d060;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#916a00">
+                                        <i class="fa fa-circle-info"></i> Refund payment gateway dashboard se manually
+                                        process karein, phir neeche gateway ka refund reference ID daalein.
+                                    </div>
+                                </div>
+
                                 <div style="margin-bottom:14px">
                                     <label class="mf-label">Reference / UTR ID <span style="color:#b22222">*</span></label>
                                     <input type="text" name="utr_id" required class="mf-input"
@@ -643,7 +659,6 @@
         </div>
     </div>
 
-    {{-- ===== Cancel Modal ===== --}}
     {{-- ===== Cancel Modal ===== --}}
     <div class="modal fade" id="cancelModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered {{ $ndr->order->payment_status === 'paid' ? 'modal-lg' : '' }}"
@@ -693,6 +708,13 @@
                                                 onchange="ndrToggleRefundMethod('cancel', 'upi')">
                                             UPI
                                         </label>
+                                        <label id="cancel-tab-payment_gateway" class="refund-tab"
+                                            style="flex:1;border:1px solid #e3e5e8;border-radius:8px;padding:10px 12px;text-align:center;cursor:pointer;font-size:13px;font-weight:500;color:#202223;background:#fff">
+                                            <input type="radio" name="refund_method" value="payment_gateway"
+                                                style="display:none"
+                                                onchange="ndrToggleRefundMethod('cancel', 'payment_gateway')">
+                                            Refund via Payment Gateway
+                                        </label>
                                     </div>
                                 </div>
 
@@ -730,6 +752,14 @@
                                     <input type="text" name="upi_id" class="mf-input" placeholder="name@upi">
                                 </div>
 
+                                <div id="cancel-method-payment_gateway" style="display:none;margin-bottom:14px">
+                                    <div
+                                        style="background:#fff5cc;border:1px solid #f0d060;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#916a00">
+                                        <i class="fa fa-circle-info"></i> Refund payment gateway dashboard se manually
+                                        process karein, phir neeche gateway ka refund reference ID daalein.
+                                    </div>
+                                </div>
+
                                 <div style="margin-bottom:14px">
                                     <label class="mf-label">Reference / UTR ID <span style="color:#b22222">*</span></label>
                                     <input type="text" name="utr_id" required class="mf-input"
@@ -759,8 +789,10 @@
 @include('admin.footer')
 
 <script>
+var NDR_REFUND_METHODS = ['neft_rtgs_imps', 'upi', 'payment_gateway'];
+
 function ndrToggleRefundMethod(context, selected) {
-    ['neft_rtgs_imps', 'upi'].forEach(function (m) {
+    NDR_REFUND_METHODS.forEach(function (m) {
         var panel = document.getElementById(context + '-method-' + m);
         if (panel) panel.style.display = (m === selected) ? 'block' : 'none';
 

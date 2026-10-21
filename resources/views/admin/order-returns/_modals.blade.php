@@ -122,6 +122,12 @@
                                        style="display:none" onchange="toggleRefundMethod('upi')">
                                 UPI
                             </label>
+                            <label id="tab-payment_gateway"
+                                   style="flex:1;border:1px solid #e3e5e8;border-radius:8px;padding:10px 12px;text-align:center;cursor:pointer;font-size:13px;font-weight:500;color:#202223;background:#fff;transition:all .15s">
+                                <input type="radio" name="refund_method" value="payment_gateway"
+                                       style="display:none" onchange="toggleRefundMethod('payment_gateway')">
+                                Refund via Payment Gateway
+                            </label>
                         </div>
                     </div>
 
@@ -173,6 +179,13 @@
                                style="width:100%;height:36px;border:1px solid #e3e5e8;border-radius:8px;padding:0 10px;font-size:13px;font-family:inherit;outline:none">
                     </div>
 
+                    {{-- Payment Gateway note --}}
+                    <div id="method-payment_gateway" style="display:none;margin-bottom:16px">
+                        <div style="background:#fff5cc;border:1px solid #f0d060;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#916a00">
+                            <i class="fa fa-circle-info"></i> Refund payment gateway dashboard se manually process karein, phir neeche gateway ka refund reference ID daalein.
+                        </div>
+                    </div>
+
                     {{-- UTR ID --}}
                     <div style="margin-bottom:14px">
                         <label style="display:block;font-size:12px;font-weight:600;color:#6d7175;text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px">
@@ -180,7 +193,7 @@
                         </label>
                         <input type="text" name="utr_id" required placeholder="Transaction reference number"
                                style="width:100%;height:36px;border:1px solid #e3e5e8;border-radius:8px;padding:0 10px;font-size:13px;font-family:inherit;outline:none">
-                        <p style="font-size:11px;color:#8c9196;margin-top:3px;margin-bottom:0">Enter the UTR or reference number from your bank</p>
+                        <p style="font-size:11px;color:#8c9196;margin-top:3px;margin-bottom:0">Enter the UTR or reference number from your bank / payment gateway</p>
                     </div>
 
                     {{-- Remarks --}}
@@ -227,6 +240,8 @@
 </div>
 
 <script>
+var REFUND_METHODS = ['neft_rtgs_imps', 'upi', 'payment_gateway'];
+
 function _infoRow(label, value) {
     return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e3e5e8;font-size:13px">
         <span style="color:#8c9196">${label}</span>
@@ -302,8 +317,9 @@ function openRefundModal(id, customer, product, amount, requested) {
     document.getElementById('file-preview').style.display = 'none';
 
     // Reset method tab styling (form.reset() unchecks radios but doesn't touch our custom styles)
-    ['neft_rtgs_imps', 'upi'].forEach(m => {
-        document.getElementById('method-' + m).style.display = 'none';
+    REFUND_METHODS.forEach(m => {
+        const panel = document.getElementById('method-' + m);
+        if (panel) panel.style.display = 'none';
         const lbl = document.getElementById('tab-' + m);
         lbl.style.borderColor = '#e3e5e8';
         lbl.style.color = '#202223';
@@ -315,8 +331,9 @@ function openRefundModal(id, customer, product, amount, requested) {
 }
 
 function toggleRefundMethod(selected) {
-    ['neft_rtgs_imps','upi'].forEach(function(m) {
-        document.getElementById('method-' + m).style.display = m === selected ? 'block' : 'none';
+    REFUND_METHODS.forEach(function(m) {
+        var panel = document.getElementById('method-' + m);
+        if (panel) panel.style.display = m === selected ? 'block' : 'none';
         var lbl = document.getElementById('tab-' + m);
         if (m === selected) {
             lbl.style.borderColor = '#303d89';

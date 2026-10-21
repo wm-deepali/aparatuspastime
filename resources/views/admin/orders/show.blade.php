@@ -681,6 +681,12 @@
                 </div>
             @endif
 
+            @if(session('error'))
+                <div class="alert-success no-print" style="background:var(--red-bg);color:var(--red);border-color:#f5c2c2">
+                    <i class="fa fa-exclamation-circle"></i> {{ session('error') }}
+                </div>
+            @endif
+
             {{-- ── Page header ── --}}
             <div class="page-header no-print">
                 <div>
@@ -714,6 +720,15 @@
                         <a href="{{ route('admin.orders.invoice', $order) }}" target="_blank" class="btn-secondary-dash">
                             <i class="fa fa-file-pdf-o"></i> Invoice
                         </a>
+                    @elseif($canGenerateInvoice)
+                        <form method="POST" action="{{ route('admin.orders.generate-invoice', $order) }}" class="no-print"
+                            style="display:inline" onsubmit="return confirm('Is order ki invoice generate karni hai?')">
+                            @csrf
+                            <button type="submit" class="btn-secondary-dash"
+                                style="color:var(--accent)!important;border-color:var(--accent)">
+                                <i class="fa fa-file-text-o"></i> Generate Invoice
+                            </button>
+                        </form>
                     @endif
 
                     @if($order->status === 'cancelled' && $order->payment_status === 'paid')

@@ -186,6 +186,10 @@
                                     <input type="radio" name="refund_method" value="upi" style="display:none"
                                         onchange="crToggle('upi')"> UPI
                                 </label>
+                                <label id="cr-tab-payment_gateway" class="refund-tab">
+                                    <input type="radio" name="refund_method" value="payment_gateway" style="display:none"
+                                        onchange="crToggle('payment_gateway')"> Refund via Payment Gateway
+                                </label>
                             </div>
                         </div>
 
@@ -211,6 +215,12 @@
                         <div id="cr-method-upi" style="display:none">
                             <label class="mf-label">UPI ID</label>
                             <input type="text" name="upi_id" class="mf-input" placeholder="name@upi">
+                        </div>
+
+                        <div id="cr-method-payment_gateway" style="display:none">
+                            <div style="background:#fff5cc;border:1px solid #f0d060;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#916a00">
+                                <i class="fa fa-circle-info"></i> Refund payment gateway dashboard se manually process karein, phir neeche gateway ka refund reference ID daalein.
+                            </div>
                         </div>
 
                         <div style="margin:14px 0">
@@ -239,6 +249,8 @@
 @include('admin.footer')
 
 <script>
+var CR_METHODS = ['neft_rtgs_imps', 'upi', 'payment_gateway'];
+
 function openCancelRefund(o) {
     document.getElementById('cr-info').innerHTML =
         '<div><b>Order:</b> #' + o.order + '</div><div><b>Customer:</b> ' + o.customer + '</div>' +
@@ -252,8 +264,9 @@ function openCancelRefund(o) {
     amt.value = o.amount;
     amt.max = o.amount;
 
-    ['neft_rtgs_imps', 'upi'].forEach(function (m) {
-        document.getElementById('cr-method-' + m).style.display = 'none';
+    CR_METHODS.forEach(function (m) {
+        var box = document.getElementById('cr-method-' + m);
+        if (box) box.style.display = 'none';
         var t = document.getElementById('cr-tab-' + m);
         t.style.borderColor = '#e3e5e8'; t.style.color = '#202223'; t.style.background = '#fff';
     });
@@ -261,8 +274,9 @@ function openCancelRefund(o) {
 }
 
 function crToggle(selected) {
-    ['neft_rtgs_imps', 'upi'].forEach(function (m) {
-        document.getElementById('cr-method-' + m).style.display = (m === selected) ? 'block' : 'none';
+    CR_METHODS.forEach(function (m) {
+        var box = document.getElementById('cr-method-' + m);
+        if (box) box.style.display = (m === selected) ? 'block' : 'none';
         var t = document.getElementById('cr-tab-' + m);
         var on = (m === selected);
         t.style.borderColor = on ? '#303d89' : '#e3e5e8';

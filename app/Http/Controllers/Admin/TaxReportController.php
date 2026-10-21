@@ -66,12 +66,7 @@ class TaxReportController extends Controller
         // original order date — a credit note belongs to the GST period it
         // was issued in, per Section 34 CGST Act, regardless of when the
         // original invoice was raised.
-        $creditNoteBaseQuery = RefundTransaction::with([
-            'ndr.order.items.product',
-            'orderReturn.order',
-            'orderReturn.orderItem.product',
-            'orderReturn.orderItem.addons',
-        ])
+        $creditNoteBaseQuery = RefundTransaction::with($this->creditNoteRelations())
             ->where('status', 'completed')
             ->whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()]);
 
@@ -112,6 +107,17 @@ class TaxReportController extends Controller
         ]);
     }
 
+    private function creditNoteRelations(): array
+    {
+        return [
+            'ndr.order.items.product',
+            'order.items.product',
+            'orderReturn.order',
+            'orderReturn.orderItem.product',
+            'orderReturn.orderItem.addons',
+        ];
+    }
+
     /**
      * Builds a single Credit Note row from a completed RefundTransaction.
      *
@@ -138,7 +144,8 @@ class TaxReportController extends Controller
             $igst = (float) $order->igst_amount;
             $tax = (float) $order->tax_amount;
             $reason = $refund->ndr->status === 'rto' ? 'RTO' : 'Cancelled (Failed Delivery)';
-        } else {
+
+        } elseif ($refund->order_return_id) {
             $orderReturn = $refund->orderReturn;
             $order = $orderReturn->order;
             $item = $orderReturn->orderItem;
@@ -153,6 +160,23 @@ class TaxReportController extends Controller
             $sgst = (float) $order->sgst_amount * $proportion;
             $igst = (float) $order->igst_amount * $proportion;
             $reason = 'Returned';
+
+        } else {
+            // Cancelled order refund (CancelledRefundController) - no ndr / return linked
+            $order = $refund->order;
+            $productNames = $order->items->pluck('product.name')->filter()->implode(', ') ?: '—';
+
+            // Admin can refund less than grand_total, so reverse tax in the same proportion
+            $proportion = $order->grand_total > 0
+                ? min(1, (float) $refund->amount / (float) $order->grand_total)
+                : 1;
+
+            $taxable = (float) $order->subtotal * $proportion;
+            $cgst = (float) $order->cgst_amount * $proportion;
+            $sgst = (float) $order->sgst_amount * $proportion;
+            $igst = (float) $order->igst_amount * $proportion;
+            $tax = (float) $order->tax_amount * $proportion;
+            $reason = 'Cancelled';
         }
 
         return [
@@ -221,12 +245,7 @@ class TaxReportController extends Controller
     {
         [$from, $to] = $this->resolveDateRange($request);
 
-        $refunds = RefundTransaction::with([
-            'ndr.order.items.product',
-            'orderReturn.order',
-            'orderReturn.orderItem.product',
-            'orderReturn.orderItem.addons',
-        ])
+        $refunds = RefundTransaction::with($this->creditNoteRelations())
             ->where('status', 'completed')
             ->whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()])
             ->orderByDesc('created_at')
@@ -269,8 +288,14 @@ class TaxReportController extends Controller
 
     private function filteredQuery(Request $request, Carbon $from, Carbon $to)
     {
-        $query = Order::whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()])
-            ->where('payment_status', 'paid');
+        $query = Order::whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()]);
+
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', strtolower($request->payment_status));
+        } else {
+            // Refunded orders were invoiced and taxed originally; the credit note reverses them in the refund period
+            $query->whereIn('payment_status', ['paid', 'refunded']);
+        }
 
         if ($request->filled('gst_slab')) {
             // Slab isn't a stored column, so filter in PHP after fetch if you need exact slab filtering.
@@ -279,10 +304,6 @@ class TaxReportController extends Controller
 
         if ($request->filled('tax_type')) {
             $query->where('gst_type', $request->tax_type === 'igst' ? 'inter' : 'intra');
-        }
-
-        if ($request->filled('payment_status')) {
-            $query->where('payment_status', strtolower($request->payment_status));
         }
 
         if ($request->filled('search')) {
