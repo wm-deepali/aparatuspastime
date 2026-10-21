@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
 
-            $table->enum('refund_method', ['neft_rtgs_imps', 'upi', 'payment_gateway']);
+            $table->enum('refund_method', ['neft_rtgs_imps', 'upi']);
             $table->string('upi_id')->nullable();
             $table->string('bank_name')->nullable();
             $table->string('account_name')->nullable();

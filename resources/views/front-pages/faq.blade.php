@@ -387,10 +387,7 @@
                 <span>The Aparatus Assurance</span>
               </h4>
               <ul class="space-y-2 text-xs text-dark-navy font-sans">
-                <li class="flex items-start gap-2">
-                  <i class="fa-solid fa-check text-emerald-600 mt-0.5 shrink-0 text-[11px]"></i>
-                  <span>100% Non-toxic & child-safe tested toys.</span>
-                </li>
+               
                 <li class="flex items-start gap-2">
                   <i class="fa-solid fa-check text-emerald-600 mt-0.5 shrink-0 text-[11px]"></i>
                   <span>Official Kashmir Willow & certified sports gear.</span>

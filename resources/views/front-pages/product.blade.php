@@ -291,7 +291,7 @@
             <div
               class="bg-soft-yellow px-2.5 py-2.5 sm:py-3 rounded-2xl border border-amber-100/90 flex items-center justify-center gap-1.5 sm:gap-2 shadow-2xs hover:shadow-xs transition">
               <i class="fa-solid fa-award text-amber-500 text-sm sm:text-base shrink-0"></i>
-              <span class="font-bold text-dark-navy text-xs xl:text-[13px] whitespace-nowrap">Certified Safe</span>
+              <span class="font-bold text-dark-navy text-xs xl:text-[13px] whitespace-nowrap">Open Box Inspection Facility</span>
             </div>
           </div>
 

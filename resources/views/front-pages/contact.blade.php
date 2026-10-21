@@ -47,7 +47,7 @@
               {{ $setting->phone }}
             </div>
             @if ($setting->working_hours)
-            <p class="text-[10px] sm:text-xs text-brand-muted font-sans truncate leading-tight mt-0.5">{{ $setting->working_hours }}</p>
+            <p class="text-[10px] sm:text-xs text-brand-muted font-sans mt-0.5">{{ $setting->working_hours }}</p>
             @endif
           </div>
         </a>
@@ -65,7 +65,7 @@
               {{ $setting->support_email }}
             </div>
             @if ($setting->email_response_note)
-            <p class="text-[10px] sm:text-xs text-brand-muted font-sans truncate leading-tight mt-0.5">{{ $setting->email_response_note }}</p>
+            <p class="text-[10px] sm:text-xs text-brand-muted font-sans  mt-0.5">{{ $setting->email_response_note }}</p>
             @endif
           </div>
         </a>
@@ -83,7 +83,7 @@
               {{ $addrTitle }}
             </div>
             @if ($setting->business_address)
-            <p class="text-[10px] sm:text-xs text-brand-muted font-sans truncate leading-tight mt-0.5" title="{{ $setting->business_address }}">{{ $setting->business_address }}</p>
+            <p class="text-[10px] sm:text-xs text-brand-muted font-sans  mt-0.5" title="{{ $setting->business_address }}">{{ $setting->business_address }}</p>
             @endif
           </div>
         </{{ $mapUrl ? 'a' : 'div' }}>

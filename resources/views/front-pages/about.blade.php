@@ -61,7 +61,7 @@
             @endif
 
             @if ($stats->isNotEmpty())
-            <div class="pt-2 flex items-center gap-6 font-heading">
+            <div style="display: none"  class="pt-2 flex items-center gap-6 font-heading">
               @foreach ($stats as $stat)
                 @if (!$loop->first)
                   <div class="w-px h-10 bg-brand-border"></div>

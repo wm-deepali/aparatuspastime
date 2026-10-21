@@ -147,6 +147,7 @@
 
   <!-- Tailwind CSS CDN with Custom Brand Tokens -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -189,6 +190,12 @@
   @stack('styles')
 
   @include('layouts.tracking-head')
+
+  <style>
+    body.has-bottom-nav {
+  padding-bottom: 0 !important;
+}
+  </style>
 
 </head>
 
@@ -748,11 +755,11 @@
         </div>
 
         <!-- Certified Safe Pill Badge (ultra-wide screens) -->
-        <div
-          class="hidden 2xl:flex absolute right-6 text-xs font-bold text-brand-blue items-center gap-1.5 font-heading bg-soft-blue/80 border border-blue-100 px-3 py-1 rounded-full shrink-0 shadow-2xs pointer-events-none">
-          <i class="fa-solid fa-shield-halved text-emerald-500"></i>
-          <span>100% Non-Toxic & Child-Safe</span>
-        </div>
+        <!--<div-->
+        <!--  class="hidden 2xl:flex absolute right-6 text-xs font-bold text-brand-blue items-center gap-1.5 font-heading bg-soft-blue/80 border border-blue-100 px-3 py-1 rounded-full shrink-0 shadow-2xs pointer-events-none">-->
+        <!--  <i class="fa-solid fa-shield-halved text-emerald-500"></i>-->
+        <!--  <span>100% Non-Toxic & Child-Safe</span>-->
+        <!--</div>-->
 
       </div>
     </nav>
@@ -1084,7 +1091,7 @@
             </span>
           @endif
           <span class="flex items-center gap-1 font-bold text-dark-navy">
-            <i class="fa-solid fa-rotate-left text-amber-500"></i>7-Day Return
+           <i class="fa-solid fa-headset"></i>Customer Support
           </span>
         </div>
 
@@ -1171,17 +1178,17 @@
         <div class="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center gap-3">
           <div
             class="w-10 h-10 rounded-xl bg-soft-orange/20 text-brand-orange flex items-center justify-center text-lg shrink-0">
-            <i class="fa-solid fa-shield-heart"></i>
+            <i class="fa-solid fa-credit-card"></i>
           </div>
           <div>
-            <h5 class="font-heading font-bold text-xs text-white">100% Child-Safe</h5>
-            <p class="text-[10px] text-white/70">Non-toxic & EN-71 certified</p>
+            <h5 class="font-heading font-bold text-xs text-white">Easy Payments</h5>
+            <p class="text-[10px] text-white/70">UPI, Cards & Net Banking</p>
           </div>
         </div>
         <div class="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center gap-3">
           <div
             class="w-10 h-10 rounded-xl bg-sky-blue/20 text-sky-blue flex items-center justify-center text-lg shrink-0">
-            <i class="fa-solid fa-truck-fast"></i>
+           <i class="fa-solid fa-headset"></i>
           </div>
           <div>
             <h5 class="font-heading font-bold text-xs text-white">Free Fast Shipping</h5>
@@ -1192,8 +1199,8 @@
           <div class="w-10 h-10 rounded-xl bg-mint/20 text-mint flex items-center justify-center text-lg shrink-0"><i
               class="fa-solid fa-rotate-left"></i></div>
           <div>
-            <h5 class="font-heading font-bold text-xs text-white">7-Day Easy Returns</h5>
-            <p class="text-[10px] text-white/70">Hassle-free replacement</p>
+            <h5 class="font-heading font-bold text-xs text-white">Customer Support</h5>
+            <p class="text-[10px] text-white/70">We're here to help you</p>
           </div>
         </div>
         <div class="bg-white/5 border border-white/10 rounded-2xl p-3.5 flex items-center gap-3">
@@ -2061,7 +2068,7 @@
   <!-- PAGE SPECIFIC SCRIPTS -->
   @stack('scripts')
 
-  @include('layouts.tracking-body-bottom')
+  <!-- @include('layouts.tracking-body-bottom') -->
 
 </body>
 
