@@ -633,10 +633,13 @@
                     @php
                         $tabs = [
                             'all' => 'All',
+                            'pending' => 'Pending',
                             'new' => 'New',
                             'processing' => 'Processing',
                             'shipped' => 'Shipped',
                             'delivered' => 'Delivered',
+                            'ndr' => 'NDR',
+                            'rto' => 'RTO',
                             'cancelled' => 'Cancelled',
                         ];
                     @endphp

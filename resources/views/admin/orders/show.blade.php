@@ -716,6 +716,14 @@
                         </button>
                     @endif
 
+                    @if($order->payment_method === 'cod' && $order->payment_status !== 'paid' && !in_array($order->status, ['cancelled', 'rto']))
+                        <button class="btn-secondary-dash no-print"
+                            style="color:var(--green)!important;border-color:var(--green)" data-toggle="modal"
+                            data-target="#updatePaymentModal">
+                            <i class="fa fa-credit-card"></i> Update Payment
+                        </button>
+                    @endif
+
                     @if($order->invoice)
                         <a href="{{ route('admin.orders.invoice', $order) }}" target="_blank" class="btn-secondary-dash">
                             <i class="fa fa-file-pdf-o"></i> Invoice
@@ -960,10 +968,54 @@
                                     </span>
                                 </div>
                             @endif
-                            <div class="info-row">
-                                <span class="info-label">Paid At</span>
-                                <span class="info-value">{{ $order->updated_at->format('d M Y, h:i A') }}</span>
-                            </div>
+                            @if($order->payment_status === 'paid')
+                                <div class="info-row">
+                                    <span class="info-label">Paid At</span>
+                                    <span
+                                        class="info-value">{{ ($order->paid_at ?? $order->updated_at)->format('d M Y, h:i A') }}</span>
+                                </div>
+                            @endif
+
+                            @if($order->latestPayment)
+                                @php $pay = $order->latestPayment; @endphp
+                                <div class="info-row">
+                                    <span class="info-label">Paid Via</span>
+                                    <span class="info-value">{{ $pay->method_label }}</span>
+                                </div>
+                                @if($pay->reference_number)
+                                    <div class="info-row">
+                                        <span class="info-label">Reference No.</span>
+                                        <span class="info-value"
+                                            style="font-family:'SF Mono','Fira Code',monospace;font-size:12px">{{ $pay->reference_number }}</span>
+                                    </div>
+                                @endif
+                                <div class="info-row">
+                                    <span class="info-label">Payment Date</span>
+                                    <span class="info-value">{{ $pay->payment_date->format('d M Y') }}</span>
+                                </div>
+                                @if($pay->remarks)
+                                    <div class="info-row">
+                                        <span class="info-label">Remarks</span>
+                                        <span class="info-value">{{ $pay->remarks }}</span>
+                                    </div>
+                                @endif
+                                @if($pay->screenshot)
+                                    <div class="info-row">
+                                        <span class="info-label">Screenshot</span>
+                                        <span class="info-value">
+                                            <a href="{{ asset('storage/' . $pay->screenshot) }}" target="_blank">
+                                                <img src="{{ asset('storage/' . $pay->screenshot) }}"
+                                                    style="height:60px;border-radius:6px;border:1px solid var(--border)">
+                                            </a>
+                                        </span>
+                                    </div>
+                                @endif
+                                <div class="info-row">
+                                    <span class="info-label">Recorded By</span>
+                                    <span class="info-value">{{ $pay->recorded_by }}</span>
+                                </div>
+                            @endif
+
                         </div>
                     </div>
 
@@ -1313,6 +1365,53 @@
                     <button type="button" class="btn-secondary-dash" data-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn-primary-dash" style="background:var(--red)">
                         <i class="fa fa-truck-ramp-box"></i> Raise NDR
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade no-print" id="updatePaymentModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius:12px;border:1px solid #e3e5e8;overflow:hidden">
+            <div class="modal-header" style="border-bottom:1px solid #e3e5e8;padding:18px 20px">
+                <h5 class="modal-title" style="font-size:15px;font-weight:600;margin:0">Update Payment</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <form method="POST" action="{{ route('admin.orders.update-payment', $order) }}" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body" style="padding:20px">
+                    <div style="margin-bottom:14px">
+                        <label class="field-label">Payment Method <span style="color:#b22222">*</span></label>
+                        <select name="method" class="field-select-full" required>
+                            <option value="">Select method…</option>
+                            @foreach(\App\Models\OrderPayment::METHODS as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div style="margin-bottom:14px">
+                        <label class="field-label">Reference Number</label>
+                        <input type="text" name="reference_number" class="field-input-full" placeholder="UTR / Txn ID / Receipt no.">
+                    </div>
+                    <div style="margin-bottom:14px">
+                        <label class="field-label">Upload Screenshot (if any)</label>
+                        <input type="file" name="screenshot" class="field-input-full" accept="image/*" style="padding-top:6px">
+                    </div>
+                    <div style="margin-bottom:14px">
+                        <label class="field-label">Payment Date <span style="color:#b22222">*</span></label>
+                        <input type="date" name="payment_date" class="field-input-full" value="{{ now()->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}" required>
+                    </div>
+                    <div>
+                        <label class="field-label">Remarks (if any)</label>
+                        <textarea name="remarks" class="field-textarea" placeholder="Any additional detail…"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid #e3e5e8;padding:14px 20px;display:flex;justify-content:flex-end;gap:8px">
+                    <button type="button" class="btn-secondary-dash" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-primary-dash" style="background:var(--green)">
+                        <i class="fa fa-check-circle"></i> Save Payment
                     </button>
                 </div>
             </form>

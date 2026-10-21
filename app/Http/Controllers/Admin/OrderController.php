@@ -34,6 +34,7 @@ class OrderController extends Controller
         $tabCounts = [
             'all' => Order::when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
             'new' => Order::where('status', 'new')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
+            'pending' => Order::where('status', 'pending')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
             'processing' => Order::where('status', 'processing')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
             'shipped' => Order::where('status', 'shipped')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
             'delivered' => Order::where('status', 'delivered')->when($customerId, fn($q) => $q->where('customer_id', $customerId))->count(),
@@ -181,6 +182,7 @@ class OrderController extends Controller
             'invoice',
             'statusHistory',
             'ndrs',                   // NDR history for the "NDR History" card + Mark NDR button gating
+            'latestPayment'
         ]);
 
 
@@ -629,6 +631,83 @@ class OrderController extends Controller
     }
 
 
+    public function updatePayment(Request $request, Order $order)
+    {
+        $request->validate([
+            'method' => 'required|in:cash,net_banking,upi,payment_link',
+            'reference_number' => 'nullable|string|max:100',
+            'screenshot' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'payment_date' => 'required|date|before_or_equal:today',
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        if ($order->payment_method !== 'cod') {
+            return back()->with('error', 'Only COD orders can be updated manually.');
+        }
+
+        if ($order->payment_status === 'paid') {
+            return back()->with('error', 'Payment is already marked as paid.');
+        }
+
+        // Admin kisi bhi stage par update kar sakta hai, bas cancelled/RTO me paisa aata hi nahi
+        if (in_array($order->status, ['cancelled', 'rto'])) {
+            return back()->with('error', 'Payment cannot be updated for cancelled / RTO orders.');
+        }
+
+        DB::transaction(function () use ($request, $order) {
+
+            $path = $request->hasFile('screenshot')
+                ? $request->file('screenshot')->store('order-payments', 'public')
+                : null;
+
+            $payment = $order->payments()->create([
+                'method' => $request->method,
+                'reference_number' => $request->reference_number,
+                'screenshot' => $path,
+                'payment_date' => $request->payment_date,
+                'remarks' => $request->remarks,
+                'recorded_by' => auth()->user()->name,
+            ]);
+
+            $order->update([
+                'payment_status' => 'paid',
+                'paid_at' => $request->payment_date,
+            ]);
+
+            $this->logCodPayment($order, $payment);
+
+            $order->statusHistory()->create([
+                'status' => $order->status,
+                'previous_status' => $order->status,
+                'remarks' => 'COD payment received via ' . $payment->method_label
+                    . ($request->reference_number ? ' | Ref: ' . $request->reference_number : '')
+                    . ($request->remarks ? ' | ' . $request->remarks : ''),
+                'triggered_by' => 'Admin (' . auth()->user()->name . ')',
+            ]);
+        });
+
+        return back()->with('success', 'Payment updated successfully.');
+    }
+
+    protected function logCodPayment(Order $order, $payment = null): void
+    {
+        try {
+            \App\Models\PaymentLog::create([
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'gateway' => 'cod',
+                'payment_id' => $payment?->reference_number,
+                'amount' => $order->grand_total,
+                'method' => $payment?->method ?? 'cod',
+                'status' => 'captured',
+                'customer_name' => $order->customer_name,
+                'customer_email' => $order->customer_email,
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('COD payment log write failed: ' . $e->getMessage());
+        }
+    }
+
     // ── 1. Browser preview ────────────────────────────────────────────────────────
     public function invoice(Order $order)
     {
@@ -649,6 +728,7 @@ class OrderController extends Controller
             'items.addons',
             'state',
             'city',
+            'latestPayment'
         ]);
 
         $logo_64 = null;
@@ -682,6 +762,7 @@ class OrderController extends Controller
             'items.addons',
             'state',
             'city',
+            'latestPayment'
         ]);
 
         $setting = InvoiceSetting::with([

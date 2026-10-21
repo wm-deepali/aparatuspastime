@@ -591,10 +591,17 @@
                         </div>
                     </div>
                     @if($order->payment_method)
+                        @php
+                            // COD + admin ne payment update ki hai → chosen method (Cash / UPI / Net Banking / Payment Link)
+                            // Baaki sab (Razorpay, ya COD abhi pending) → pehle jaisa
+                            $paymentLabel = ($order->payment_method === 'cod' && $order->payment_status === 'paid' && $order->latestPayment)
+                                ? $order->latestPayment->method_label
+                                : ucfirst(str_replace('_', ' ', $order->payment_method));
+                        @endphp
                         <div class="meta-info-row">
                             <div class="meta-info-label" style="text-align:right;padding-right:10px">Payment</div>
                             <div class="meta-info-value" style="text-align:right">
-                                {{ ucfirst(str_replace('_', ' ', $order->payment_method)) }}
+                                {{ $paymentLabel }}
                             </div>
                         </div>
                     @endif

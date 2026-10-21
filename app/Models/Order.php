@@ -44,6 +44,7 @@ class Order extends Model
 
         'payment_method',
         'payment_status',
+        'paid_at',
 
         'transaction_id',
 
@@ -55,6 +56,8 @@ class Order extends Model
         'tracking_number',
         'courier_id'
     ];
+
+    protected $casts = ['paid_at' => 'datetime'];
 
     public function customer()
     {
@@ -130,6 +133,16 @@ class Order extends Model
     public function refundTransactions()
     {
         return $this->hasMany(RefundTransaction::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(\App\Models\OrderPayment::class);
+    }
+
+    public function latestPayment()
+    {
+        return $this->hasOne(\App\Models\OrderPayment::class)->latestOfMany();
     }
 
 }
