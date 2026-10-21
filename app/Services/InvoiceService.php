@@ -6,10 +6,10 @@ use App\Models\Invoice;
 use App\Models\InvoiceSetting;
 use App\Models\Order;
 use App\Http\Controllers\Admin\AdminSettingController;
+use Illuminate\Support\Facades\Schema;
 
 class InvoiceService
 {
-    // Setting row na ho to purana behaviour (auto) hi rakhte hain
     public function autoEnabled(): bool
     {
         $setting = InvoiceSetting::first();
@@ -17,22 +17,20 @@ class InvoiceService
         return $setting ? (bool) $setting->auto_generate_invoice : true;
     }
 
-    // Checkout ke liye: sirf tab banao jab auto ON ho
     public function createIfAuto(Order $order): ?Invoice
     {
         return $this->autoEnabled() ? $this->createForOrder($order) : null;
     }
 
-    // Auto aur manual dono yahi use karenge
     public function createForOrder(Order $order): Invoice
     {
         if ($existing = Invoice::where('order_id', $order->id)->first()) {
-            return $existing; // duplicate invoice nahi banegi
+            return $existing;
         }
 
         $order->loadMissing(['city', 'state']);
 
-        return Invoice::create([
+        $data = [
             'order_id'       => $order->id,
             'invoice_number' => AdminSettingController::generateInvoiceNumber(),
             'invoice_date'   => now()->toDateString(),
@@ -49,11 +47,10 @@ class InvoiceService
                 $order->pincode,
             ])->filter()->implode(', '),
 
-            'subtotal'        => $order->subtotal,
-            'discount'        => $order->discount,
-            'shipping_charge' => $order->shipping_charge,
-            'tax_amount'      => $order->tax_amount,
-            'grand_total'     => $order->grand_total,
+            'subtotal'    => $order->subtotal,
+            'discount'    => $order->discount,
+            'tax_amount'  => $order->tax_amount,
+            'grand_total' => $order->grand_total,
 
             'gst_type'    => $order->gst_type,
             'cgst_rate'   => $order->cgst_rate,
@@ -64,6 +61,13 @@ class InvoiceService
             'igst_amount' => $order->igst_amount,
 
             'status' => 'generated',
-        ]);
+        ];
+
+        // Shipping sirf un projects me jahan dono tables me column hai
+        if (Schema::hasColumn('orders', 'shipping_charge') && Schema::hasColumn('invoices', 'shipping_charge')) {
+            $data['shipping_charge'] = $order->shipping_charge;
+        }
+
+        return Invoice::create($data);
     }
 }
