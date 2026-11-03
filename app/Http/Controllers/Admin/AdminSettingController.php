@@ -238,6 +238,8 @@ class AdminSettingController extends Controller
             'test_key_secret' => 'nullable|string',
             'live_key_id' => 'nullable|string|max:255',
             'live_key_secret' => 'nullable|string',
+            'test_webhook_secret' => 'nullable|string|max:255',
+            'live_webhook_secret' => 'nullable|string|max:255',
         ]);
 
         $validated['live_mode'] = $request->has('live_mode');

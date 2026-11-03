@@ -72,6 +72,7 @@ use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\User\UserReviewController;
 use App\Http\Controllers\User\UserNotificationController;
 use App\Http\Controllers\PincodeController;
+use App\Http\Controllers\RazorpayWebhookController;
 
 Route::middleware('maintenance.mode')->group(function () {
 
@@ -174,6 +175,8 @@ Route::middleware('maintenance.mode')->group(function () {
 
 
 });
+
+Route::post('/razorpay/webhook', [RazorpayWebhookController::class, 'handle'])->name('razorpay.webhook');
 
 
 // Admin Routes list

@@ -15,6 +15,9 @@ class PaymentSetting extends Model
 
         'live_key_id',
         'live_key_secret',
+
+        'test_webhook_secret',
+        'live_webhook_secret',
     ];
 
     protected $casts = [
