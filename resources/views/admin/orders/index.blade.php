@@ -709,7 +709,7 @@
                                 <th>Payment</th>
                                 <th>Status</th>
                                 <th>Date</th>
-                                <th style="width:110px">Actions</th>
+                                <th style="width:140px">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -808,6 +808,18 @@
                                                 <a href="{{ route('admin.orders.invoice', $order) }}" class="action-btn"
                                                     title="Download Invoice" target="_blank">
                                                     <i class="fa-solid fa-file-pdf"></i>
+                                                </a>
+                                            @endif
+
+                                            @php
+                                                $cnRefund = in_array($order->status, ['cancelled', 'rto'])
+                                                    ? $order->refundTransactions->where('status', 'completed')->whereNull('order_return_id')->first()
+                                                    : null;
+                                            @endphp
+                                            @if($cnRefund)
+                                                <a href="{{ route('admin.credit-notes.show', $cnRefund) }}" class="action-btn"
+                                                    title="Credit Note" target="_blank" style="color:var(--red)">
+                                                    <i class="fa-solid fa-file-invoice"></i>
                                                 </a>
                                             @endif
 

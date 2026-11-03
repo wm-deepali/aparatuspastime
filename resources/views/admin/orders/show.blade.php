@@ -636,12 +636,6 @@
             }
         }
 
-            {
-                {
-                -- GST info rows hidden if 0 --
-            }
-        }
-
         .gst-row {
             display: flex;
             justify-content: space-between;
@@ -737,6 +731,15 @@
                                 <i class="fa fa-file-text-o"></i> Generate Invoice
                             </button>
                         </form>
+                    @endif
+
+                    @php $creditNoteRefunds = $order->refundTransactions->where('status', 'completed'); @endphp
+
+                    @if($creditNoteRefunds->count() === 1)
+                        <a href="{{ route('admin.credit-notes.show', $creditNoteRefunds->first()) }}" target="_blank"
+                            class="btn-secondary-dash" style="color:var(--red)!important;border-color:var(--red)">
+                            <i class="fa fa-file-pdf-o"></i> Credit Note
+                        </a>
                     @endif
 
                     @if($order->status === 'cancelled' && $order->payment_status === 'paid')
@@ -1018,6 +1021,50 @@
 
                         </div>
                     </div>
+
+                    {{-- ── Credit Notes ── --}}
+                    @if($creditNoteRefunds->isNotEmpty())
+                        <div class="section-card">
+                            <div class="section-card-header">
+                                <h5>Credit Notes</h5>
+                                <span style="font-size:12px;color:var(--text-hint)">
+                                    {{ $creditNoteRefunds->count() }} {{ Str::plural('note', $creditNoteRefunds->count()) }}
+                                </span>
+                            </div>
+                            <div class="section-card-body" style="padding:14px 20px">
+                                @foreach($creditNoteRefunds as $cnRefund)
+                                    @php
+                                        $cnType = $cnRefund->ndr_id
+                                            ? 'RTO / Failed Delivery'
+                                            : ($cnRefund->order_return_id ? 'Return' : 'Cancelled');
+                                    @endphp
+                                    <div class="info-row" style="align-items:center">
+                                        <div>
+                                            <div
+                                                style="font-family:'SF Mono','Fira Code',monospace;font-weight:700;color:var(--red);font-size:13px">
+                                                CN-{{ str_pad($cnRefund->id, 4, '0', STR_PAD_LEFT) }}
+                                            </div>
+                                            <div style="font-size:11.5px;color:var(--text-hint);margin-top:2px">
+                                                {{ $cnType }} · {{ $cnRefund->created_at->format('d M Y') }} · UTR:
+                                                {{ $cnRefund->utr_id }}
+                                            </div>
+                                        </div>
+                                        <div style="display:flex;align-items:center;gap:10px">
+                                            <strong>₹{{ number_format($cnRefund->amount, 2) }}</strong>
+                                            <a href="{{ route('admin.credit-notes.show', $cnRefund) }}" target="_blank"
+                                                class="btn-secondary-dash" style="padding:5px 10px" title="View">
+                                                <i class="fa fa-eye"></i>
+                                            </a>
+                                            <a href="{{ route('admin.credit-notes.download', $cnRefund) }}"
+                                                class="btn-secondary-dash" style="padding:5px 10px" title="Download PDF">
+                                                <i class="fa fa-file-pdf-o"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
                     {{-- ── Order Timeline ── --}}
                     <div class="section-card">
@@ -1379,7 +1426,8 @@
                 <h5 class="modal-title" style="font-size:15px;font-weight:600;margin:0">Update Payment</h5>
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            <form method="POST" action="{{ route('admin.orders.update-payment', $order) }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('admin.orders.update-payment', $order) }}"
+                enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body" style="padding:20px">
                     <div style="margin-bottom:14px">
@@ -1393,22 +1441,26 @@
                     </div>
                     <div style="margin-bottom:14px">
                         <label class="field-label">Reference Number</label>
-                        <input type="text" name="reference_number" class="field-input-full" placeholder="UTR / Txn ID / Receipt no.">
+                        <input type="text" name="reference_number" class="field-input-full"
+                            placeholder="UTR / Txn ID / Receipt no.">
                     </div>
                     <div style="margin-bottom:14px">
                         <label class="field-label">Upload Screenshot (if any)</label>
-                        <input type="file" name="screenshot" class="field-input-full" accept="image/*" style="padding-top:6px">
+                        <input type="file" name="screenshot" class="field-input-full" accept="image/*"
+                            style="padding-top:6px">
                     </div>
                     <div style="margin-bottom:14px">
                         <label class="field-label">Payment Date <span style="color:#b22222">*</span></label>
-                        <input type="date" name="payment_date" class="field-input-full" value="{{ now()->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}" required>
+                        <input type="date" name="payment_date" class="field-input-full"
+                            value="{{ now()->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}" required>
                     </div>
                     <div>
                         <label class="field-label">Remarks (if any)</label>
                         <textarea name="remarks" class="field-textarea" placeholder="Any additional detail…"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top:1px solid #e3e5e8;padding:14px 20px;display:flex;justify-content:flex-end;gap:8px">
+                <div class="modal-footer"
+                    style="border-top:1px solid #e3e5e8;padding:14px 20px;display:flex;justify-content:flex-end;gap:8px">
                     <button type="button" class="btn-secondary-dash" data-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn-primary-dash" style="background:var(--green)">
                         <i class="fa fa-check-circle"></i> Save Payment

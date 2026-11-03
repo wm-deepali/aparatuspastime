@@ -16,7 +16,7 @@ class OrderReturnController extends Controller
      */
     public function index(Request $request)
     {
-        $query = OrderReturn::with(['order', 'orderItem.product', 'orderItem.addons', 'customer', 'returnReason'])
+        $query = OrderReturn::with(['order', 'orderItem.product', 'orderItem.addons', 'customer', 'returnReason', 'refundTransaction'])
             ->latest();
 
         if ($request->filled('search')) {

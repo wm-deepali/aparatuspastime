@@ -59,7 +59,7 @@ class NdrController extends Controller
 
     public function show(Ndr $ndr)
     {
-        $ndr->load(['order.items.product', 'order.customer']);
+        $ndr->load(['order.items.product', 'order.customer', 'refundTransaction']);
 
         return view('admin.ndr.show', ['ndr' => $ndr]);
     }
@@ -267,7 +267,7 @@ class NdrController extends Controller
                         $item->quantity,
                         'rto',
                         $order,
-                        Auth::user()->id(),
+                        Auth::id(),
                         'Stock reversed — RTO for order ' . $order->order_number,
                         $item->stockVariant
                     );
@@ -333,7 +333,7 @@ class NdrController extends Controller
 
         if ($requiresRefund) {
             $rules = array_merge($rules, [
-                'refund_method' => 'required|in:neft_rtgs_imps,upi',
+                'refund_method' => 'required|in:neft_rtgs_imps,upi,payment_gateway',
                 'utr_id' => 'required|string|max:100',
                 'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
                 'bank_name' => 'required_if:refund_method,neft_rtgs_imps|nullable|string|max:100',
@@ -371,6 +371,7 @@ class NdrController extends Controller
 
             if ($requiresRefund) {
                 $isUpi = $request->refund_method === 'upi';
+                $isBank = $request->refund_method === 'neft_rtgs_imps';
 
                 RefundTransaction::create([
                     'ndr_id' => $ndr->id,
@@ -383,12 +384,12 @@ class NdrController extends Controller
                     'remarks' => $request->remarks,
                     'payment_proof' => $proofPath,
                     'upi_id' => $isUpi ? $request->upi_id : null,
-                    'bank_name' => $isUpi ? null : $request->bank_name,
-                    'account_name' => $isUpi ? null : $request->account_name,
-                    'account_number' => $isUpi ? null : $request->account_number,
-                    'ifsc_code' => $isUpi ? null : $request->ifsc_code,
-                    'bank_branch' => $isUpi ? null : $request->bank_branch,
-                    'account_type' => $isUpi ? null : $request->account_type,
+                    'bank_name' => $isBank ? $request->bank_name : null,
+                    'account_name' => $isBank ? $request->account_name : null,
+                    'account_number' => $isBank ? $request->account_number : null,
+                    'ifsc_code' => $isBank ? $request->ifsc_code : null,
+                    'bank_branch' => $isBank ? $request->bank_branch : null,
+                    'account_type' => $isBank ? $request->account_type : null,
                 ]);
             }
 

@@ -100,7 +100,7 @@
                                 <th>Amount</th>
                                 <th>Invoice Status</th>
                                 <th>Refund</th>
-                                <th style="width:90px">Actions</th>
+                                <th style="width:120px">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -134,10 +134,18 @@
                                         @endif
                                     </td>
                                     <td>
+                                        <div style="display:flex;gap:5px">
                                         <a href="{{ route('admin.orders.invoice', $order) }}" target="_blank"
-                                           class="action-btn" title="View Invoice"><i class="fa fa-file-pdf-o"></i></a>
+                                           class="action-btn" title="View Invoice"><i class="fa-solid fa-file-pdf"></i></a>
                                         <a href="{{ route('admin.orders.show', $order->id) }}"
-                                           class="action-btn" title="View Order"><i class="fa fa-eye"></i></a>
+                                           class="action-btn" title="View Order"><i class="fa-solid fa-eye"></i></a>
+                                           @if($refund)
+    <a href="{{ route('admin.credit-notes.show', $refund) }}" target="_blank"
+       class="action-btn" title="Credit Note" style="color:var(--red)">
+        <i class="fa-solid fa-file-invoice"></i>
+    </a>
+@endif
+</div>
                                     </td>
                                 </tr>
                             @empty

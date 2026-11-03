@@ -1113,11 +1113,14 @@
                                     </td>
                                     <td>₹{{ number_format($order->subtotal, 2) }}</td>
                                     <td class="{{ $isIntra ? 'amt-green' : 'amt-muted' }}">
-                                        {{ $isIntra ? '₹' . number_format($order->cgst_amount, 2) : '—' }}</td>
+                                        {{ $isIntra ? '₹' . number_format($order->cgst_amount, 2) : '—' }}
+                                    </td>
                                     <td class="{{ $isIntra ? 'amt-green' : 'amt-muted' }}">
-                                        {{ $isIntra ? '₹' . number_format($order->sgst_amount, 2) : '—' }}</td>
+                                        {{ $isIntra ? '₹' . number_format($order->sgst_amount, 2) : '—' }}
+                                    </td>
                                     <td class="{{ !$isIntra ? 'amt-green' : 'amt-muted' }}">
-                                        {{ !$isIntra ? '₹' . number_format($order->igst_amount, 2) : '—' }}</td>
+                                        {{ !$isIntra ? '₹' . number_format($order->igst_amount, 2) : '—' }}
+                                    </td>
                                     <td style="font-weight:700">₹{{ number_format($order->tax_amount, 2) }}</td>
                                     <td style="font-weight:700">₹{{ number_format($order->grand_total, 2) }}</td>
                                 </tr>
@@ -1191,6 +1194,7 @@
                                 <th>IGST</th>
                                 <th>Total Tax Reversed</th>
                                 <th>Refund Amount</th>
+                                <th style="width:60px">PDF</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1198,7 +1202,12 @@
                                 <tr>
                                     <td><span class="pill" style="background:var(--red-bg);color:var(--red)">Credit</span>
                                     </td>
-                                    <td><span class="id-chip">{{ $row['credit_note_no'] }}</span></td>
+                                    <td>
+                                        <a href="{{ route('admin.credit-notes.show', $row['refund_id']) }}" target="_blank"
+                                            class="order-link">
+                                            <span class="id-chip">{{ $row['credit_note_no'] }}</span>
+                                        </a>
+                                    </td>
                                     <td><a href="#" class="order-link">#{{ $row['order_number'] }}</a></td>
                                     <td style="max-width:200px;font-size:12.5px">{{ $row['product'] }}</td>
                                     <td style="font-size:12.5px;color:var(--text-secondary)">{{ $row['reason'] }}</td>
@@ -1209,10 +1218,17 @@
                                     <td style="color:var(--red)">− ₹{{ number_format($row['igst'], 2) }}</td>
                                     <td style="font-weight:700;color:var(--red)">− ₹{{ number_format($row['tax'], 2) }}</td>
                                     <td style="font-weight:700">₹{{ number_format($row['refund_amount'], 2) }}</td>
+                                    <td>
+                                        <a href="{{ route('admin.credit-notes.download', $row['refund_id']) }}"
+                                            class="btn-secondary-dash" style="padding:5px 10px"
+                                            title="Download Credit Note PDF">
+                                            <i class="fa fa-file-pdf-o"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" style="text-align:center;padding:32px;color:var(--text-hint)">No credit
+                                    <td colspan="13" style="text-align:center;padding:32px;color:var(--text-hint)">No credit
                                         notes for this period.</td>
                                 </tr>
                             @endforelse
@@ -1229,6 +1245,7 @@
                                     <td style="color:var(--red)">− ₹{{ number_format($creditTotals['igst'], 2) }}</td>
                                     <td style="color:var(--red)">− ₹{{ number_format($creditTotals['tax'], 2) }}</td>
                                     <td>₹{{ number_format($creditTotals['refund'], 2) }}</td>
+                                    <td></td>
                                 </tr>
                             </tfoot>
                         @endif

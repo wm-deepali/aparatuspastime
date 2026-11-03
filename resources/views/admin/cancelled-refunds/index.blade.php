@@ -102,7 +102,7 @@
                                 <th>Amount</th>
                                 <th>Cancelled On</th>
                                 <th>Status</th>
-                                <th style="width:150px">Action</th>
+                                <th style="width:190px">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -137,8 +137,12 @@
                                                 <i class="fa fa-credit-card"></i> Refund
                                             </button>
                                         @else
-                                            <a href="{{ route('admin.orders.show', $order->id) }}" class="btn-secondary-dash">View</a>
-                                        @endif
+    <div style="display:flex;gap:6px">
+        <a href="{{ route('admin.orders.show', $order->id) }}" class="btn-secondary-dash">View</a>
+        <a href="{{ route('admin.credit-notes.show', $done) }}" target="_blank"
+           class="btn-secondary-dash" title="Credit Note"><i class="fa fa-file-pdf-o"></i></a>
+    </div>
+@endif
                                     </td>
                                 </tr>
                             @empty

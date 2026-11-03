@@ -44,8 +44,7 @@ class OrderController extends Controller
         ];
 
         // ── Base query ────────────────────────────────────────
-        $query = Order::with(['items', 'customer'])
-            ->latest();
+        $query = Order::with(['items', 'customer', 'refundTransactions'])->latest();
 
         // ── Customer filter ────────────────────────────────────
         if ($customerId) {
@@ -172,17 +171,18 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $order->load([
-            'items.product.images',   // product thumbnail
+            'items.product.images',
             'items.imageVariant',
-            'items.skuVariant',     // variant image (falls back to product thumb)
-            'items.addons',           // selected addons
-            'customer',               // customer profile info
+            'items.skuVariant',
+            'items.addons',
+            'customer',
             'state',
             'city',
             'invoice',
             'statusHistory',
-            'ndrs',                   // NDR history for the "NDR History" card + Mark NDR button gating
-            'latestPayment'
+            'ndrs',
+            'latestPayment',
+            'refundTransactions',
         ]);
 
 

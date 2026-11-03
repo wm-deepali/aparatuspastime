@@ -55,7 +55,8 @@ use App\Http\Controllers\Admin\{
     AgeGroupController,
     AboutPageController,
     CancelledInvoiceController,
-    CancelledRefundController
+    CancelledRefundController,
+    CreditNoteController
 };
 
 use Illuminate\Support\Facades\Route;
@@ -348,8 +349,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
         Route::get('orders/{order}/invoice/download', [OrderController::class, 'invoiceDownload'])->name('orders.invoice.download');
         Route::post('orders/{order}/generate-invoice', [OrderController::class, 'generateInvoice'])->name('orders.generate-invoice');
-        Route::post('orders/{order}/update-payment', [OrderController::class, 'updatePayment']) ->name('orders.update-payment');  
-        
+        Route::post('orders/{order}/update-payment', [OrderController::class, 'updatePayment'])->name('orders.update-payment');
+
+        // Credit Notes (keyed by completed RefundTransaction id)
+        Route::get('credit-notes/{refund}', [CreditNoteController::class, 'show'])->name('credit-notes.show');
+        Route::get('credit-notes/{refund}/download', [CreditNoteController::class, 'download'])->name('credit-notes.download');
+
         // Payments routes
         Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::get('payments/export', [PaymentController::class, 'export'])->name('payments.export');

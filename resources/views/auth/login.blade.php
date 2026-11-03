@@ -8,7 +8,7 @@
     }
 
     .login-wrapper {
-        min-height: 100vh;
+        min-height: 80vh;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -191,8 +191,7 @@
                 <div class="mb-3 d-flex justify-content-between align-items-center">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox"
-                            name="remember" id="remember"
-                            {{ old('remember') ? 'checked' : '' }}>
+                            name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
                         <label class="form-check-label">
                             Remember Me
                         </label>
